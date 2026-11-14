@@ -1,0 +1,1227 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<link rel="icon" href="../icon-192.png">
+<title>Cross Stitch Studio (test copy)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: one fixed screen. Header, the fabric canvas takes all spare height, tools and thread row sit under the thumb. */
+:root{
+  --bg:#eef0f4; --surface:#ffffff; --ink:#1b2233; --muted:#5d6678; --line:#d5d9e2;
+  --accent:#b3203a; --accent-ink:#ffffff; --work:#dde1e9;
+  --display:"Bricolage Grotesque","Figtree",system-ui,sans-serif;
+  --body:"Figtree",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#141821; --surface:#1e2430; --ink:#e9ecf3; --muted:#9aa3b5; --line:#343c4c;
+    --accent:#ff6b81; --accent-ink:#1b0a0e; --work:#0e1118; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#141821; --surface:#1e2430; --ink:#e9ecf3; --muted:#9aa3b5; --line:#343c4c;
+  --accent:#ff6b81; --accent-ink:#1b0a0e; --work:#0e1118; color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.4;height:var(--app-h,100%);
+  display:flex;flex-direction:column;overflow:hidden;-webkit-tap-highlight-color:transparent}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.bar{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--surface);border-bottom:1px solid var(--line)}
+.bar .title{flex:1;min-width:0}
+.bar h1{font-family:var(--display);font-size:18px;line-height:1.15;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar p{margin:0;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 10px;font-weight:600;font-size:13px;min-height:38px}
+.btn:disabled{opacity:.4}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+
+#stage{flex:1;min-height:0;position:relative;background:var(--work)}
+#cv{position:absolute;inset:0;width:100%;height:100%;touch-action:none;display:block}
+#toast{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);background:var(--ink);color:var(--bg);
+  padding:8px 14px;border-radius:999px;font-size:13px;font-weight:500;max-width:90%;text-align:center;pointer-events:none}
+
+.tools{display:flex;gap:6px;padding:8px 12px 4px;background:var(--surface);border-top:1px solid var(--line)}
+.tools button{flex:1;min-width:0;border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:9px 2px;font-size:13px;font-weight:600}
+.tools button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+
+.palette{display:flex;gap:8px;align-items:stretch;padding:6px 12px 10px;background:var(--surface)}
+.palette .btn{flex:none}
+#swatches{display:flex;gap:6px;overflow-x:auto;flex:1;padding-bottom:2px}
+.sw{flex:none;width:46px;border:2px solid transparent;background:none;border-radius:8px;padding:2px;text-align:center}
+.sw i{display:block;height:28px;border-radius:5px;border:1px solid var(--line)}
+.sw span{display:block;font-size:11px;font-weight:600;margin-top:2px;font-variant-numeric:tabular-nums}
+.sw[aria-pressed="true"]{border-color:var(--accent)}
+
+#shade{position:fixed;inset:0;background:rgba(10,14,24,.5);z-index:10}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:11;background:var(--surface);border-radius:16px 16px 0 0;
+  max-height:88%;display:flex;flex-direction:column;max-width:640px;margin:0 auto;box-shadow:0 -6px 24px rgba(0,0,0,.25)}
+.sheet header{display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid var(--line)}
+.sheet header h2{flex:1;font-family:var(--display);font-size:18px;margin:0}
+.sheet .body{overflow-y:auto;padding:12px 16px 20px;display:flex;flex-direction:column;gap:12px}
+.sheet h3{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:6px 0 0}
+.sheet p{margin:0;color:var(--muted);font-size:13px}
+.stack{display:flex;flex-direction:column;gap:8px}
+.stack .btn{text-align:left;padding:11px 12px;font-size:14px}
+.row{display:flex;gap:8px;align-items:center}
+.row > *{flex:1;min-width:0}
+label{display:flex;flex-direction:column;gap:4px;font-size:13px;font-weight:600}
+input[type=text],input[type=number],input[type=search],select{border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:10px;font-weight:400;width:100%}
+
+#threadGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}
+.th{display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:6px;text-align:left;min-width:0}
+.th i{flex:none;width:30px;height:30px;border-radius:6px;border:1px solid var(--line)}
+.th b{display:block;font-size:13px;font-variant-numeric:tabular-nums}
+.th small{display:block;font-size:11px;color:var(--muted);line-height:1.2}
+
+.key{width:100%;border-collapse:collapse;font-size:13px}
+.key td,.key th{padding:6px 4px;border-bottom:1px solid var(--line);text-align:left}
+.key th{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.key td.n{text-align:right;font-variant-numeric:tabular-nums}
+.key i{display:inline-block;width:22px;height:22px;border-radius:4px;border:1px solid var(--line);vertical-align:middle}
+.saved{display:flex;gap:8px;align-items:center;border:1px solid var(--line);border-radius:8px;padding:8px}
+.saved div{flex:1;min-width:0}
+.saved b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.saved small{color:var(--muted)}
+#ovBar{position:absolute;top:8px;left:8px;right:8px;z-index:2;display:flex;flex-wrap:wrap;gap:6px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:6px;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+#ovBar .btn{padding:6px 10px;min-height:36px}
+#ovBar .btn[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+#ovBar input{flex:1;min-width:90px;accent-color:var(--accent)}
+/* The menu keeps its own soft pink look in both light and dark themes. */
+.menu{background:#FBE4E8;color:#3A0F18}
+.menu header{border-bottom:none;padding-bottom:4px}
+.menu header h2{font-size:24px}
+.menu h3,.menu p,.menu .mrow small,.menu .saved small{color:#7A4450}
+.menu :focus-visible{outline-color:#8F1A2E}
+.mclose{width:44px;height:44px;border-radius:22px;border:none;background:#fff;color:#8F1A2E;display:flex;align-items:center;justify-content:center}
+.mcard{background:#fff;border-radius:16px;overflow:hidden;display:flex;flex-direction:column}
+.mrow{display:flex;align-items:center;gap:12px;width:100%;min-height:56px;padding:8px 14px;border:none;border-bottom:1px solid #F1C9D1;background:transparent;text-align:left;color:#3A0F18}
+.mrow:last-child{border-bottom:none}
+.mrow:active{background:#FDF1F3}
+.mrow b{display:block;font-size:15px;font-weight:600}
+.mrow small{display:block;font-size:12px}
+.chip{flex:none;width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center}
+.chip.rose{background:#F8D3DA;color:#8F1A2E}.chip.lav{background:#E1E0F6;color:#3B3A8C}.chip.mint{background:#D3ECE4;color:#145A4C}
+.mrow svg,.mclose svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.menu .saved{background:#fff;border-color:#F1C9D1}
+.menu .btn{background:#fff;color:#3A0F18;border-color:#F1C9D1}
+.exGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px}
+.ex{display:flex;flex-direction:column;align-items:center;gap:4px;border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:8px 4px;font-size:12px;font-weight:600;min-width:0}
+.ex canvas{width:60px;height:60px;object-fit:contain;image-rendering:pixelated;border-radius:4px}
+#phPrev{width:100%;max-height:45vh;object-fit:contain;image-rendering:pixelated;border:1px solid var(--line);border-radius:6px}
+#pics img{max-width:100%;border:1px solid var(--line);border-radius:6px;background:#fff}
+</style>
+</head>
+<body>
+
+<header class="bar">
+  <div class="title">
+    <h1 id="pname">Cross Stitch Studio</h1>
+    <p id="pinfo"></p>
+  </div>
+  <button class="btn" id="undo" type="button">Undo</button>
+  <button class="btn" id="redo" type="button">Redo</button>
+  <button class="btn primary" id="menuBtn" type="button">Menu</button>
+</header>
+
+<main id="stage">
+  <canvas id="cv" aria-label="Fabric grid. Touch to place stitches. Use two fingers to zoom and move."></canvas>
+  <div id="ovBar" hidden>
+    <button class="btn" id="ovMove" type="button" aria-pressed="false">Move picture</button>
+    <button class="btn" id="ovShow" type="button">Hide</button>
+    <input type="range" id="ovAlpha" min="10" max="90" value="45" aria-label="How strong the picture looks">
+    <button class="btn" id="ovDel" type="button">Remove</button>
+  </div>
+  <div id="toast" hidden></div>
+</main>
+
+<nav class="tools" aria-label="Tools">
+  <button type="button" data-tool="draw" aria-pressed="true">Stitch</button>
+  <button type="button" data-tool="erase" aria-pressed="false">Unpick</button>
+  <button type="button" data-tool="fill" aria-pressed="false">Fill</button>
+  <button type="button" data-tool="pick" aria-pressed="false">Pick</button>
+  <button type="button" data-tool="move" aria-pressed="false">Move</button>
+  <button type="button" id="symBtn" aria-pressed="false">Symbols</button>
+</nav>
+
+<div class="palette">
+  <button class="btn" id="addThread" type="button">+ Threads</button>
+  <div id="swatches" aria-label="Threads in this design"></div>
+</div>
+
+<div id="shade" hidden></div>
+
+<section class="sheet menu" id="sheet-menu" hidden aria-label="Menu">
+  <header><h2>Menu</h2><button class="mclose" data-close type="button" aria-label="Close menu"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></header>
+  <div class="body">
+    <h3>New</h3>
+    <div class="mcard">
+      <button class="mrow" id="mNew" type="button"><span class="chip rose"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"></path><path d="M14 3v5h5M12 11v6M9 14h6"></path></svg></span><span><b>New blank design</b><small>Choose a size and fabric</small></span></button>
+      <button class="mrow" id="mExamples" type="button"><span class="chip rose"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-9.6A4 4 0 0 1 12 8a4 4 0 0 1 7 2.4C19 15.6 12 20 12 20z"></path></svg></span><span><b>Example designs</b><small>54 ready-made motifs</small></span></button>
+      <button class="mrow" id="mPhoto" type="button"><span class="chip rose"><svg aria-hidden="true" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="9" cy="10" r="1.6"></circle><path d="M21 16l-5-5-8 8"></path></svg></span><span><b>Photo to pattern</b><small>Turn a picture into stitches</small></span></button>
+      <button class="mrow" id="mTrace" type="button"><span class="chip rose"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 4l8 4-8 4-8-4z"></path><path d="M4 12l8 4 8-4M4 16l8 4 8-4"></path></svg></span><span><b>Trace a photo</b><small>Stitch over a picture by hand</small></span></button>
+    </div>
+    <h3>Edit</h3>
+    <div class="mcard">
+      <button class="mrow" id="mSetup" type="button"><span class="chip lav"><svg aria-hidden="true" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="1"></rect><path d="M4 9.3h16M4 14.7h16M9.3 4v16M14.7 4v16"></path></svg></span><span><b>Fabric and size</b><small>Aida count, colour, size and name</small></span></button>
+      <button class="mrow" id="mKey" type="button"><span class="chip lav"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"></path><circle cx="4.5" cy="6" r="1.2"></circle><circle cx="4.5" cy="12" r="1.2"></circle><circle cx="4.5" cy="18" r="1.2"></circle></svg></span><span><b>Threads used</b><small>Thread key and stitch counts</small></span></button>
+      <button class="mrow" id="mFit" type="button"><span class="chip lav"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"></path></svg></span><span><b>Fit to screen</b><small>See the whole design</small></span></button>
+    </div>
+    <h3>Save</h3>
+    <div class="mcard">
+      <button class="mrow" id="mImage" type="button"><span class="chip mint"><svg aria-hidden="true" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="9" cy="10" r="1.6"></circle><path d="M21 16l-5-5-8 8"></path></svg></span><span><b>Save as image</b><small>A picture of the design</small></span></button>
+      <button class="mrow" id="mBackup" type="button"><span class="chip mint"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"></path><path d="M14 3v5h5M12 11v6M9.5 14.5L12 17l2.5-2.5"></path></svg></span><span><b>Save as backup</b><small>A file you can keep or send</small></span></button>
+      <button class="mrow" id="mRestore" type="button"><span class="chip mint"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><path d="M12 16v-5M9.5 13.5L12 11l2.5 2.5"></path></svg></span><span><b>Open the backup</b><small>Bring a saved design back</small></span></button>
+      <button class="mrow" id="mPrint" type="button"><span class="chip mint"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M7 9V4h10v5"></path><rect x="4" y="9" width="16" height="8" rx="2"></rect><path d="M7 14h10v6H7z"></path></svg></span><span><b>Print the pattern</b><small>Chart and thread key as a file to print</small></span></button>
+    </div>
+    <p>The design you are working on is kept automatically on this device.</p>
+    <div class="stack" id="savedWrap" hidden>
+      <h3>Saved earlier on this device</h3>
+      <div class="stack" id="savedList"></div>
+    </div>
+    <input type="file" id="restoreFile" accept=".json,application/json" hidden>
+    <input type="file" id="trFile" accept="image/*" hidden>
+  </div>
+</section>
+
+<section class="sheet" id="sheet-examples" hidden aria-label="Example designs">
+  <header><h2>Example designs</h2><button class="btn" data-close type="button">Close</button></header>
+  <div class="body">
+    <p>An example replaces the design on screen. Save yours to the list first if you want to keep it.</p>
+    <div class="stack" id="exBody"></div>
+  </div>
+</section>
+
+<section class="sheet" id="sheet-photo" hidden aria-label="Photo to pattern">
+  <header><h2>Photo to pattern</h2><button class="btn" data-close type="button">Close</button></header>
+  <div class="body">
+    <button class="btn primary" id="phPick" type="button">Choose a photo</button>
+    <input type="file" id="phFile" accept="image/*" hidden>
+    <div class="row">
+      <label for="phW">Width in stitches<input type="number" id="phW" min="20" max="300" value="80" inputmode="numeric"></label>
+      <label for="phN">Thread colours<select id="phN"><option>6</option><option>8</option><option>12</option><option selected>16</option><option>24</option><option>32</option><option>48</option></select></label>
+    </div>
+    <label for="phWhite" style="flex-direction:row;align-items:center;gap:8px;font-weight:400"><input type="checkbox" id="phWhite" style="width:20px;height:20px"> Leave white areas as bare fabric</label>
+    <p id="phInfo">The photo stays on your phone. Simple pictures with clear shapes and few colours convert best.</p>
+    <canvas id="phPrev" hidden></canvas>
+    <button class="btn primary" id="phUse" type="button" hidden>Use this pattern</button>
+  </div>
+</section>
+
+<section class="sheet" id="sheet-guard" hidden aria-label="Keep the current design?">
+  <header><h2>Keep the current design?</h2><button class="btn" data-close type="button">Cancel</button></header>
+  <div class="body">
+    <p>Starting something new replaces the design on screen. Save a backup file first if you want to keep it.</p>
+    <button class="btn primary" id="gSave" type="button">Save a backup, then continue</button>
+    <button class="btn" id="gSkip" type="button">Continue without saving</button>
+  </div>
+</section>
+
+<section class="sheet" id="sheet-setup" hidden aria-label="Fabric and size">
+  <header><h2 id="fTitle">Fabric and size</h2><button class="btn" data-close type="button">Close</button></header>
+  <div class="body">
+    <label for="fName">Design name<input type="text" id="fName" maxlength="60"></label>
+    <div class="row">
+      <label for="fW">Width in stitches<input type="number" id="fW" min="5" max="300" inputmode="numeric"></label>
+      <label for="fH">Height in stitches<input type="number" id="fH" min="5" max="300" inputmode="numeric"></label>
+    </div>
+    <label for="fCount">Fabric sheet<select id="fCount"></select></label>
+    <label for="fFabric">Fabric colour<select id="fFabric"></select></label>
+    <p id="fSize"></p>
+    <button class="btn primary" id="fApply" type="button">Apply to this design</button>
+    <p id="fHint">Applying keeps your stitches. A smaller size trims from the right and bottom edges.</p>
+  </div>
+</section>
+
+<section class="sheet" id="sheet-threads" hidden aria-label="Choose a thread">
+  <header><h2>DMC threads</h2><button class="btn" data-close type="button">Close</button></header>
+  <div class="body">
+    <input type="search" id="thSearch" placeholder="Search by number or name, such as 321 or rose" aria-label="Search threads">
+    <p id="thCount"></p>
+    <div id="threadGrid"></div>
+  </div>
+</section>
+
+<section class="sheet" id="sheet-key" hidden aria-label="Threads used">
+  <header><h2>Threads used</h2><button class="btn" data-close type="button">Close</button></header>
+  <div class="body">
+    <p id="keyTotal"></p>
+    <table class="key"><thead><tr><th>Symbol</th><th>Colour</th><th>DMC</th><th>Name</th><th style="text-align:right">Stitches</th></tr></thead><tbody id="keyBody"></tbody></table>
+    <button class="btn" id="keyClean" type="button">Remove threads with no stitches</button>
+    <p>Screen colours are close approximations of the real thread. Buy by the DMC number.</p>
+  </div>
+</section>
+
+<section class="sheet" id="sheet-pics" hidden aria-label="Pictures to save">
+  <header><h2>Press and hold to save</h2><button class="btn" data-close type="button">Close</button></header>
+  <div class="body">
+    <p>Saving a file is not available in this view. Press and hold a picture, then choose to download or share it.</p>
+    <div class="stack" id="pics"></div>
+  </div>
+</section>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+"use strict";
+/* DMC stranded cotton: number, name, screen colour. Screen colours are approximations. */
+const DMC_RAW = `3713,Salmon Very Light,FFE2E2
+761,Salmon Light,FFC9C9
+760,Salmon,F5ADAD
+3712,Salmon Medium,F18787
+3328,Salmon Dark,E36D6D
+347,Salmon Very Dark,BF2D2D
+353,Peach,FED7CC
+352,Coral Light,FD9C97
+351,Coral,E96A67
+350,Coral Medium,E04848
+349,Coral Dark,D21035
+817,Coral Red Very Dark,BB051F
+3708,Melon Light,FFCBD5
+3706,Melon Medium,FFADBC
+3705,Melon Dark,FF7992
+3801,Melon Very Dark,E74967
+666,Bright Red,E31D42
+321,Red,C72B3B
+304,Red Medium,B71F33
+498,Red Dark,A7132B
+816,Garnet,970B23
+815,Garnet Medium,87071F
+814,Garnet Dark,7B001B
+894,Carnation Very Light,FFB2BB
+893,Carnation Light,FC90A2
+892,Carnation Medium,FF798C
+891,Carnation Dark,FF5773
+818,Baby Pink,FFDFD9
+957,Geranium Pale,FDB5B5
+956,Geranium,FF9191
+309,Rose Dark,BA4A4A
+963,Dusty Rose Ultra Very Light,FFD7D7
+3716,Dusty Rose Medium Very Light,FFBDBD
+962,Dusty Rose Medium,E68A8A
+961,Dusty Rose Dark,CF7373
+3833,Raspberry Light,EA8699
+3832,Raspberry Medium,DB556E
+3831,Raspberry Dark,B32F48
+777,Raspberry Very Dark,913546
+819,Baby Pink Light,FFEEEB
+3326,Rose Light,FBADB4
+776,Pink Medium,FCB0B9
+899,Rose Medium,F27688
+335,Rose,EE546E
+326,Rose Very Dark,B33B4B
+151,Dusty Rose Very Light,F0CED4
+3354,Dusty Rose Light,E4A6AC
+3733,Dusty Rose,E8879B
+3731,Dusty Rose Very Dark,DA6783
+3350,Dusty Rose Ultra Dark,BC4365
+150,Dusty Rose Ultra Very Dark,AB0249
+3689,Mauve Light,FBBFC2
+3688,Mauve Medium,E7A9AC
+3687,Mauve,C96B70
+3803,Mauve Dark,AB3357
+3685,Mauve Very Dark,881531
+605,Cranberry Very Light,FFC0CD
+604,Cranberry Light,FFB0BE
+603,Cranberry,FFA4BE
+602,Cranberry Medium,E24874
+601,Cranberry Dark,D1286A
+600,Cranberry Very Dark,CD2F63
+3806,Cyclamen Pink Light,FF8CAE
+3805,Cyclamen Pink,F3478B
+3804,Cyclamen Pink Dark,E02876
+3609,Plum Ultra Light,F4AED5
+3608,Plum Very Light,EA9CC4
+3607,Plum Light,C54989
+718,Plum,9C2462
+917,Plum Medium,9B1359
+915,Plum Dark,820043
+225,Shell Pink Ultra Very Light,FFDFD5
+224,Shell Pink Very Light,EBB7AF
+152,Shell Pink Medium Light,E2A099
+223,Shell Pink Light,CC847C
+3722,Shell Pink Medium,BC6C64
+3721,Shell Pink Dark,A14B51
+221,Shell Pink Very Dark,883E43
+778,Antique Mauve Very Light,DFB3BB
+3727,Antique Mauve Light,DBA9B2
+316,Antique Mauve Medium,B7737F
+3726,Antique Mauve Dark,9B5B66
+315,Antique Mauve Medium Dark,814952
+3802,Antique Mauve Very Dark,714149
+902,Garnet Very Dark,822637
+3743,Antique Violet Very Light,D7CBD3
+3042,Antique Violet Light,B79DA7
+3041,Antique Violet Medium,956F7C
+3740,Antique Violet Dark,785762
+3836,Grape Light,BA91AA
+3835,Grape Medium,946083
+3834,Grape Dark,72375D
+154,Grape Very Dark,572433
+211,Lavender Light,E3CBE3
+210,Lavender Medium,C39FC3
+209,Lavender Dark,A37BA7
+208,Lavender Very Dark,835B8B
+3837,Lavender Ultra Dark,6C3A6E
+327,Violet Dark,633666
+153,Violet Very Light,E6CCD9
+554,Violet Light,DBB3CB
+553,Violet,A3638B
+552,Violet Medium,803A6B
+550,Violet Very Dark,5C184E
+3747,Blue Violet Very Light,D3D7ED
+341,Blue Violet Light,B7BFDD
+156,Blue Violet Medium Light,A3AED1
+340,Blue Violet Medium,ADA7C7
+155,Blue Violet Medium Dark,9891B6
+3746,Blue Violet Dark,776B98
+333,Blue Violet Very Dark,5C5478
+157,Cornflower Blue Very Light,BBC3D9
+794,Cornflower Blue Light,8F9CC1
+793,Cornflower Blue Medium,707DA2
+3807,Cornflower Blue,60678C
+792,Cornflower Blue Dark,555B7B
+158,Cornflower Blue Medium Very Dark,4C526E
+791,Cornflower Blue Very Dark,464563
+3840,Lavender Blue Light,B0C0DA
+3839,Lavender Blue Medium,7B8EAB
+3838,Lavender Blue Dark,5C7294
+800,Delft Blue Pale,C0CCDE
+809,Delft Blue,94A8C6
+799,Delft Blue Medium,748EB6
+798,Delft Blue Dark,466A8E
+797,Royal Blue,13477D
+796,Royal Blue Dark,11416D
+820,Royal Blue Very Dark,0E365C
+162,Blue Ultra Very Light,DBECF5
+827,Blue Very Light,BDDDED
+813,Blue Light,A1C2D7
+826,Blue Medium,6B9EBF
+825,Blue Dark,4781A5
+824,Blue Very Dark,396987
+996,Electric Blue Medium,30C2EC
+3843,Electric Blue,14AAD0
+995,Electric Blue Dark,2696B6
+3846,Turquoise Bright Light,06E3E6
+3845,Turquoise Bright Medium,04C4CA
+3844,Turquoise Bright Dark,12AEBA
+159,Blue Gray Light,C7CAD7
+160,Blue Gray Medium,999FB7
+161,Blue Gray,7880A4
+3756,Baby Blue Ultra Very Light,EEFCFC
+775,Baby Blue Very Light,D9EBF1
+3841,Baby Blue Pale,CDDFED
+3325,Baby Blue Light,B8D2E6
+3755,Baby Blue,93B4CE
+334,Baby Blue Medium,739FC1
+322,Baby Blue Dark,5A8FB8
+312,Baby Blue Very Dark,35668B
+803,Baby Blue Ultra Very Dark,2C597C
+336,Navy Blue,253B73
+823,Navy Blue Dark,213063
+939,Navy Blue Very Dark,1B2853
+3753,Antique Blue Ultra Very Light,DBE2E9
+3752,Antique Blue Very Light,C7D1DB
+932,Antique Blue Light,A2B5C6
+931,Antique Blue Medium,6A859E
+930,Antique Blue Dark,455C71
+3750,Antique Blue Very Dark,384C5E
+828,Sky Blue Very Light,C5E8ED
+3761,Sky Blue Light,ACD8E2
+519,Sky Blue,7EB1C8
+518,Wedgwood Light,4F93A7
+3760,Wedgwood Medium,3E85A2
+517,Wedgwood Dark,3B768F
+3842,Wedgwood Very Dark,32667C
+311,Wedgwood Ultra Very Dark,1C5066
+747,Peacock Blue Very Light,E5FCFD
+3766,Peacock Blue Light,99CFD9
+807,Peacock Blue,64ABBA
+806,Peacock Blue Dark,3D95A5
+3765,Peacock Blue Very Dark,347F8C
+3811,Turquoise Very Light,BCE3E6
+598,Turquoise Light,90C3CC
+597,Turquoise,5BA3B3
+3810,Turquoise Dark,488E9A
+3809,Turquoise Very Dark,3F7C85
+3808,Turquoise Ultra Very Dark,366970
+928,Gray Green Very Light,DDE3E3
+927,Gray Green Light,BDCBCB
+926,Gray Green Medium,98AEAE
+3768,Gray Green Dark,657F7F
+924,Gray Green Very Dark,566A6A
+3849,Teal Green Light,52B3A4
+3848,Teal Green Medium,559392
+3847,Teal Green Dark,347D75
+964,Sea Green Light,A9E2D8
+959,Sea Green Medium,59C7B4
+958,Sea Green Dark,3EB6A1
+3812,Sea Green Very Dark,2F8C84
+3851,Bright Green Light,49B3A1
+943,Bright Green Medium,3D9384
+3850,Bright Green Dark,378477
+993,Aquamarine Very Light,90C0B4
+992,Aquamarine Light,6FAE9F
+3814,Aquamarine,508B7D
+991,Aquamarine Dark,477B6E
+966,Baby Green Medium,B9D7C0
+564,Jade Very Light,A7CDAF
+563,Jade Light,8FC098
+562,Jade Medium,53976A
+505,Jade Green,338362
+3817,Celadon Green Light,99C3AA
+3816,Celadon Green,65A57D
+163,Celadon Green Medium,4D8361
+3815,Celadon Green Dark,477759
+561,Celadon Green Very Dark,2C6A45
+504,Blue Green Very Light,C4DECC
+3813,Blue Green Light,B2D4BD
+503,Blue Green Medium,7BAC94
+502,Blue Green,5B9071
+501,Blue Green Dark,396F52
+500,Blue Green Very Dark,044D33
+955,Nile Green Light,A2D6AD
+954,Nile Green,88BA91
+913,Nile Green Medium,6DAB77
+912,Emerald Green Light,1B9D6B
+911,Emerald Green Medium,189065
+910,Emerald Green Dark,187E56
+909,Emerald Green Very Dark,156F49
+3818,Emerald Green Ultra Very Dark,115A3B
+369,Pistachio Green Very Light,D7EDCC
+368,Pistachio Green Light,A6C298
+320,Pistachio Green Medium,69885A
+367,Pistachio Green Dark,617A52
+319,Pistachio Green Very Dark,205F2E
+890,Pistachio Green Ultra Dark,174923
+164,Forest Green Light,C8D8B8
+989,Forest Green,8DA675
+988,Forest Green Medium,738B5B
+987,Forest Green Dark,587141
+986,Forest Green Very Dark,405230
+772,Yellow Green Very Light,E4ECD4
+3348,Yellow Green Light,CCD9B1
+3347,Yellow Green Medium,71935C
+3346,Hunter Green,406A3A
+3345,Hunter Green Dark,1B5915
+895,Hunter Green Very Dark,1B5300
+704,Chartreuse Bright,9ECF34
+703,Chartreuse,7BB547
+702,Kelly Green,47A72F
+701,Green Light,3F8F29
+700,Green Bright,07731B
+699,Green,056517
+907,Parrot Green Light,C7E666
+906,Parrot Green Medium,7FB335
+905,Parrot Green Dark,628A28
+904,Parrot Green Very Dark,557822
+472,Avocado Green Ultra Light,D8E498
+471,Avocado Green Very Light,AEBF79
+470,Avocado Green Light,94AB4F
+469,Avocado Green,72843C
+937,Avocado Green Medium,627133
+936,Avocado Green Very Dark,4C5826
+935,Avocado Green Dark,424D21
+934,Avocado Green Black,313919
+523,Fern Green Light,ABB197
+3053,Green Gray,9CA482
+3052,Green Gray Medium,889268
+3051,Green Gray Dark,5F6648
+524,Fern Green Very Light,C4CDAC
+522,Fern Green,969E7E
+520,Fern Green Dark,666D4F
+3364,Pine Green,83975F
+3363,Pine Green Medium,728256
+3362,Pine Green Dark,5E6B47
+165,Moss Green Very Light,EFF4A4
+3819,Moss Green Light,E0E868
+166,Moss Green Medium Light,C0C840
+581,Moss Green,A7AE38
+580,Moss Green Dark,888D33
+734,Olive Green Light,C7C077
+733,Olive Green Medium,BCB34C
+732,Olive Green,948C36
+731,Olive Green Dark,938B37
+730,Olive Green Very Dark,827B30
+3013,Khaki Green Light,B9B982
+3012,Khaki Green Medium,A6A75D
+3011,Khaki Green Dark,898A58
+372,Mustard Light,CCB784
+371,Mustard,BFA671
+370,Mustard Medium,B89D64
+834,Golden Olive Very Light,DBBE7F
+833,Golden Olive Light,C8AB6C
+832,Golden Olive,BD9B51
+831,Golden Olive Medium,AA8F56
+830,Golden Olive Dark,8D784B
+829,Golden Olive Very Dark,7E6B42
+613,Drab Brown Very Light,DCC4AA
+612,Drab Brown Light,BC9A78
+611,Drab Brown,967656
+610,Drab Brown Dark,796047
+3047,Yellow Beige Light,E7D6C1
+3046,Yellow Beige Medium,D8BC9A
+3045,Yellow Beige Dark,BC966A
+167,Yellow Beige Very Dark,A77C49
+746,Off White,FCFCEE
+677,Old Gold Very Light,F5ECCB
+422,Hazelnut Brown Light,C69F7B
+3828,Hazelnut Brown,B78B61
+420,Hazelnut Brown Dark,A07042
+869,Hazelnut Brown Very Dark,835E39
+728,Topaz,E4B468
+783,Topaz Medium,CE9124
+782,Topaz Dark,AE7720
+781,Topaz Very Dark,A26D20
+780,Topaz Ultra Very Dark,94631A
+676,Old Gold Light,E5CE97
+729,Old Gold Medium,D0A53E
+680,Old Gold Dark,BC8D0E
+3829,Old Gold Very Dark,A98204
+3822,Straw Light,F6DC98
+3821,Straw,F3CE75
+3820,Straw Dark,DFB65F
+3852,Straw Very Dark,CD9D37
+445,Lemon Light,FFFB8B
+307,Lemon,FDED54
+973,Canary Bright,FFE300
+444,Lemon Dark,FFD600
+3078,Golden Yellow Very Light,FDF9CD
+727,Topaz Very Light,FFF1AF
+726,Topaz Light,FDD755
+725,Topaz Medium Light,FFC840
+972,Canary Deep,FFB515
+745,Yellow Pale Light,FFE9AD
+744,Yellow Pale,FFE793
+743,Yellow Medium,FED376
+742,Tangerine Light,FFBF57
+741,Tangerine Medium,FFA32B
+740,Tangerine,FF8B00
+970,Pumpkin Light,F78B13
+971,Pumpkin,F67F00
+947,Burnt Orange,FF7B4D
+946,Burnt Orange Medium,EB6307
+900,Burnt Orange Dark,D15807
+967,Apricot Very Light,FFDED5
+3824,Apricot Light,FECDC2
+3341,Apricot,FCAB98
+3340,Apricot Medium,FF836F
+608,Burnt Orange Bright,FD5D35
+606,Orange Red Bright,FA3203
+951,Tawny Light,FFE2CF
+3856,Mahogany Ultra Very Light,FFD3B5
+722,Orange Spice Light,F7976F
+721,Orange Spice Medium,F27842
+720,Orange Spice Dark,E55C1F
+3825,Pumpkin Pale,FDBD96
+922,Copper Light,E27323
+921,Copper,C66218
+920,Copper Medium,AC5414
+919,Red Copper,A64510
+918,Red Copper Dark,82340A
+3770,Tawny Very Light,FFEEE3
+945,Tawny,FBD5BB
+402,Mahogany Very Light,F7A777
+3776,Mahogany Light,CF7939
+301,Mahogany Medium,B35F2B
+400,Mahogany Dark,8F430F
+300,Mahogany Very Dark,6F2F00
+3823,Yellow Ultra Pale,FFFDE3
+3855,Autumn Gold Light,FAD396
+3854,Autumn Gold Medium,F2AF68
+3853,Autumn Gold Dark,F29746
+3827,Golden Brown Pale,F7BB77
+977,Golden Brown Light,DC9C56
+976,Golden Brown Medium,C28142
+3826,Golden Brown,AD7239
+975,Golden Brown Dark,914F12
+948,Peach Very Light,FEE7DA
+754,Peach Light,F7CBBF
+3771,Terra Cotta Ultra Very Light,F4BBA9
+758,Terra Cotta Very Light,EEAA9B
+3778,Terra Cotta Light,D98978
+356,Terra Cotta Medium,C56A5B
+3830,Terra Cotta,B95544
+355,Terra Cotta Dark,984436
+3777,Terra Cotta Very Dark,863022
+3779,Rosewood Ultra Very Light,F8CAC8
+3859,Rosewood Light,BA8B7C
+3858,Rosewood Medium,964A3F
+3857,Rosewood Dark,68251A
+3774,Desert Sand Very Light,F3E1D7
+950,Desert Sand Light,EED3C4
+3064,Desert Sand,C48E70
+407,Desert Sand Medium,BB8161
+3773,Desert Sand Dark,B67552
+3772,Desert Sand Very Dark,A06C50
+632,Desert Sand Ultra Very Dark,875539
+453,Shell Gray Light,D7CECB
+452,Shell Gray Medium,C0B3AE
+451,Shell Gray Dark,917B73
+3861,Cocoa Light,A68881
+3860,Cocoa,7D5D57
+779,Cocoa Dark,624B45
+712,Cream,FFFBEF
+739,Tan Ultra Very Light,F8E4C8
+738,Tan Very Light,ECCC9E
+437,Tan Light,E4BB8E
+436,Tan,CB9051
+435,Brown Very Light,B87748
+434,Brown Light,985E33
+433,Brown Medium,7A451F
+801,Coffee Brown Dark,653919
+898,Coffee Brown Very Dark,492A13
+938,Coffee Brown Ultra Dark,361F0E
+3371,Black Brown,1E1108
+543,Beige Brown Ultra Very Light,F2E3CE
+3864,Mocha Beige Light,CBB69C
+3863,Mocha Beige Medium,A4835C
+3862,Mocha Beige Dark,8A6E4E
+3031,Mocha Brown Very Dark,4B3C2A
+B5200,Snow White,FFFFFF
+Blanc,White,FCFBF8
+3865,Winter White,F9F7F1
+Ecru,Ecru,F0EADA
+822,Beige Gray Light,E7E2D3
+644,Beige Gray Medium,DDD8CB
+642,Beige Gray Dark,A49878
+640,Beige Gray Very Dark,857B61
+3787,Brown Gray Dark,625D50
+3021,Brown Gray Very Dark,4F4B41
+3024,Brown Gray Very Light,EBEAE7
+3023,Brown Gray Light,B1AA97
+3022,Brown Gray Medium,8E9078
+535,Ash Gray Very Light,636458
+3033,Mocha Brown Very Light,E3D8CC
+3782,Mocha Brown Light,D2BCA6
+3032,Mocha Brown Medium,B39F8B
+3790,Beige Gray Ultra Dark,7F6A55
+3781,Mocha Brown Dark,6B5743
+3866,Mocha Brown Ultra Very Light,FAF6F0
+842,Beige Brown Very Light,D1BAA1
+841,Beige Brown Light,B69B7E
+840,Beige Brown Medium,9A7C5C
+839,Beige Brown Dark,675541
+838,Beige Brown Very Dark,594937
+3072,Beaver Gray Very Light,E6E8E8
+648,Beaver Gray Light,BCB4AC
+647,Beaver Gray Medium,B0A69C
+646,Beaver Gray Dark,877D73
+645,Beaver Gray Very Dark,6E655C
+844,Beaver Gray Ultra Dark,484848
+762,Pearl Gray Very Light,ECECEC
+415,Pearl Gray,D3D3D6
+318,Steel Gray Light,ABABAB
+414,Steel Gray Dark,8C8C8C
+168,Pewter Very Light,D1D1D1
+169,Pewter Light,848484
+317,Pewter Gray,6C6C6C
+413,Pewter Gray Dark,565656
+3799,Pewter Gray Very Dark,424242
+310,Black,000000
+01,White Tin,E3E3E6
+02,Tin,D7D7D8
+03,Tin Medium,B8B8BB
+04,Tin Dark,AEAEB1
+05,Driftwood Light,E3CCBE
+06,Driftwood Medium Light,DCC6B8
+07,Driftwood,8F7B6E
+08,Driftwood Dark,6B5347
+09,Cocoa Very Dark,552014
+10,Tender Green Very Light,EDFED9
+11,Tender Green Light,E2EDB5
+12,Tender Green,CDD99A
+13,Nile Green Medium Light,BEE6A6
+14,Apple Green Pale,D0FBB2
+15,Apple Green,D1EDA4
+16,Chartreuse Light,B5D56A
+17,Yellow Plum Light,E5E272
+18,Yellow Plum,D9D56D
+19,Autumn Gold Medium Light,F7C95F
+20,Shrimp,F7AF93
+21,Alizarin Light,D79982
+22,Alizarin,BC604E
+23,Apple Blossom,EDE2ED
+24,White Lavender,E0D7EE
+25,Lavender Ultra Light,DAD2E9
+26,Lavender Pale,D7CAE6
+27,White Violet,F0EEF9
+28,Eggplant Medium Light,9086A9
+29,Eggplant,674076
+30,Blueberry Medium Light,7D77A5
+31,Blueberry,50518D
+32,Blueberry Dark,4D2E8A
+33,Fuchsia,9C599E
+34,Fuchsia Dark,7D3064
+35,Fuchsia Very Dark,46052D`;
+
+const DMC = DMC_RAW.split("\n").map(l => { const a = l.split(","); return { n: a[0], name: a[1].replace(/Gray/g, "Grey"), hex: "#" + a[2] }; });
+const BY = {}; DMC.forEach(d => BY[d.n] = d);
+const FABRICS = [["White","#FFFFFF"],["Antique white","#F2EADB"],["Cream","#F3E7C6"],["Natural linen","#D8C8A6"],["Pale blue","#CFE0EC"],["Black","#1A1A1A"],["Navy","#1F2A4A"]];
+const COUNTS = [11,14,16,18,20,22];
+const SYM = "●■▲◆★+○□△◇×/=#%@&ABCDEFGHJKLMNPRSTUVWXYZ23456789abdeghkmnqrt".split("");
+const $ = id => document.getElementById(id);
+
+/* ---------- pure helpers ---------- */
+function lum(hex){ const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16); return (0.299*r+0.587*g+0.114*b)/255; }
+function fabricHex(name){ const f = FABRICS.find(x => x[0]===name); return f ? f[1] : "#FFFFFF"; }
+function sizeText(w,h,count){
+  const cm = v => (v/count*2.54).toFixed(1), inch = v => (v/count).toFixed(1);
+  return cm(w)+" × "+cm(h)+" cm ("+inch(w)+" × "+inch(h)+" inches)";
+}
+function toB64(u8){ let s=""; for(let i=0;i<u8.length;i+=8192) s+=String.fromCharCode.apply(null,u8.subarray(i,i+8192)); return btoa(s); }
+function fromB64(b){ const s=atob(b), u=new Uint8Array(s.length); for(let i=0;i<s.length;i++) u[i]=s.charCodeAt(i); return u; }
+function pack(p){ return {v:1,id:p.id||null,name:p.name,w:p.w,h:p.h,count:p.count,fabric:p.fabric,palette:p.palette,cur:p.cur,cells:toB64(p.cells)}; }
+function unpack(o){
+  if(!o || !o.w || !o.h || !Array.isArray(o.palette) || typeof o.cells!=="string") throw new Error("not a design");
+  const cells = fromB64(o.cells); if(cells.length !== o.w*o.h) throw new Error("size mismatch");
+  return {id:o.id||null,name:String(o.name||"Untitled"),w:o.w,h:o.h,count:COUNTS.includes(o.count)?o.count:14,fabric:o.fabric||"White",palette:o.palette.map(String),cur:Math.min(o.cur||0,o.palette.length-1),cells};
+}
+function newProject(name,w,h,count,fabric){ return {id:null,name,w,h,count,fabric,palette:["310","Blanc","321","815","444","702","798","3371"],cur:0,cells:new Uint8Array(w*h)}; }
+function resized(p,nw,nh){ const c=new Uint8Array(nw*nh); for(let r=0;r<Math.min(nh,p.h);r++) for(let x=0;x<Math.min(nw,p.w);x++) c[r*nw+x]=p.cells[r*p.w+x]; return c; }
+function lineCells(c0,r0,c1,r1){ const out=[]; let dx=Math.abs(c1-c0),dy=-Math.abs(r1-r0),sx=c0<c1?1:-1,sy=r0<r1?1:-1,e=dx+dy;
+  for(;;){ out.push([c0,r0]); if(c0===c1&&r0===r1) break; const e2=2*e; if(e2>=dy){e+=dy;c0+=sx;} if(e2<=dx){e+=dx;r0+=sy;} } return out; }
+function floodCells(cells,w,h,start){ const target=cells[start], seen=new Uint8Array(w*h), out=[], st=[start]; seen[start]=1;
+  while(st.length){ const i=st.pop(); out.push(i); const c=i%w, r=(i-c)/w;
+    if(c>0&&!seen[i-1]&&cells[i-1]===target){seen[i-1]=1;st.push(i-1);}
+    if(c<w-1&&!seen[i+1]&&cells[i+1]===target){seen[i+1]=1;st.push(i+1);}
+    if(r>0&&!seen[i-w]&&cells[i-w]===target){seen[i-w]=1;st.push(i-w);}
+    if(r<h-1&&!seen[i+w]&&cells[i+w]===target){seen[i+w]=1;st.push(i+w);} }
+  return out; }
+function counts(p){ const n=new Array(p.palette.length+1).fill(0); for(let i=0;i<p.cells.length;i++) n[p.cells[i]]++; return n; }
+function inTri(px,py,a,b,c){ const s=(p,q)=>(px-q[0])*(p[1]-q[1])-(p[0]-q[0])*(py-q[1]); const d1=s(a,b),d2=s(b,c),d3=s(c,a); return !((d1<0||d2<0||d3<0)&&(d1>0||d2>0||d3>0)); }
+function inEll(c,r,cx,cy,rx,ry){ if(rx<=0||ry<=0) return false; const x=(c-cx)/rx, y=(r-cy)/ry; return x*x+y*y<=1; }
+function inPoly(x,y,p){ let k=false; for(let i=0,j=p.length-2;i<p.length;j=i,i+=2){ const xi=p[i],yi=p[i+1],xj=p[j],yj=p[j+1]; if((yi>y)!==(yj>y)&&x<(xj-xi)*(y-yi)/(yj-yi)+xi) k=!k; } return k; }
+/* Examples are drawn from simple shapes. Each step is [kind, thread, numbers]. */
+function paint(w,h,ops){
+  const g=new Uint8Array(w*h);
+  const set=(c,r,v)=>{ if(c>=0&&r>=0&&c<w&&r<h) g[r*w+c]=v; };
+  const each=(fn,v,only)=>{ for(let r=0;r<h;r++) for(let c=0;c<w;c++) if((only===undefined||g[r*w+c]===only)&&fn(c,r)) g[r*w+c]=v; };
+  for(const o of ops){ const k=o[0], v=o[1];
+    if(k==="e") each((c,r)=>inEll(c,r,o[2],o[3],o[4],o[5]),v);
+    else if(k==="r") each((c,r)=>c>=o[2]&&c<=o[4]&&r>=o[3]&&r<=o[5],v);
+    else if(k==="x") each((c,r)=>c>=o[3]&&c<=o[5]&&r>=o[4]&&r<=o[6],v,o[2]);
+    else if(k==="d") each((c,r)=>((c+r)%o[3])<o[4],v,o[2]);
+    else if(k==="t") each((c,r)=>inTri(c,r,[o[2],o[3]],[o[4],o[5]],[o[6],o[7]]),v);
+    else if(k==="y") each((c,r)=>inPoly(c,r,o[2]),v);
+    else if(k==="s"){ const p=[]; for(let i=0;i<10;i++){ const a=-Math.PI/2+i*Math.PI/5, R=i%2?o[5]:o[4]; p.push(o[2]+Math.cos(a)*R,o[3]+Math.sin(a)*R); } each((c,r)=>inPoly(c,r,p),v); }
+    else if(k==="h") each((c,r)=>{ const x=(c-o[2])/o[4], y=-(r-o[3])/o[4], a=x*x+y*y-1; return a*a*a-x*x*y*y*y<=0; },v);
+    else if(k==="a") each((c,r)=>inEll(c,r,o[2],o[3],o[4],o[5])&&!inEll(c,r,o[2],o[3],o[4]-o[6],o[5]-o[6])&&(!o[7]||(o[7]===1?r<=o[3]:r>=o[3])),v);
+    else if(k==="l") lineCells(o[2],o[3],o[4],o[5]).forEach(q=>set(q[0],q[1],v));
+    else if(k==="p") for(let i=2;i<o.length;i+=2) set(o[i],o[i+1],v);
+    else if(k==="o"){ const hit=[], ok=n=>n&&(!o[2]||o[2].includes(n));
+      for(let r=0;r<h;r++) for(let c=0;c<w;c++){ const i=r*w+c; if(g[i]) continue;
+        if((c>0&&ok(g[i-1]))||(c<w-1&&ok(g[i+1]))||(r>0&&ok(g[i-w]))||(r<h-1&&ok(g[i+w]))) hit.push(i); }
+      hit.forEach(i=>g[i]=v); } }
+  return g;
+}
+const W="White", B="Pale blue", N="Navy";
+const EX=[
+["Heart","Nature",32,30,W,["815","321","3708"],[["h",2,15.5,14.5,11],["r",3,7,8,9,10],["o",1]]],
+["Sun","Nature",33,33,B,["741","444","3371"],[["e",2,16,16,7,7],["o",1],["l",1,16,2,16,5],["l",1,16,27,16,30],["l",1,2,16,5,16],["l",1,27,16,30,16],["l",1,6,6,8,8],["l",1,26,6,24,8],["l",1,6,26,8,24],["l",1,26,26,24,24],["p",3,13,14,13,15,19,14,19,15,12,18,20,18],["l",3,13,19,19,19]]],
+["Cloud","Nature",38,28,B,["799","Blanc","3753"],[["e",2,10,16,5,5],["e",2,17,13,6.5,6.5],["e",2,24,15,5.5,5.5],["e",2,29,17,4,4],["r",2,8,16,30,20],["r",0,0,21,37,27],["x",3,2,0,19,37,20],["o",1]]],
+["Rainbow","Nature",38,24,B,["321","741","444","702","798","553","Blanc"],[["a",1,18.5,20,16,16,2,1],["a",2,18.5,20,14,14,2,1],["a",3,18.5,20,12,12,2,1],["a",4,18.5,20,10,10,2,1],["a",5,18.5,20,8,8,2,1],["a",6,18.5,20,6,6,2,1],["e",7,5,20,4.5,3],["e",7,32,20,4.5,3]]],
+["Star","Nature",33,32,W,["782","444"],[["s",2,16,17,14,6],["o",1]]],
+["Moon and stars","Nature",32,32,N,["444","3078"],[["e",1,14,16,10.5,10.5],["e",0,19,13,9.5,9.5],["p",2,26,5,25,6,27,6,26,7,26,6,28,22,5,4,23,27]]],
+["Daisy","Nature",32,33,B,["318","Blanc","444","702"],[["r",4,15,18,16,31],["e",4,11,26,3.5,1.8],["e",4,20,23,3.5,1.8],["e",2,15.5,4.5,2.5,3.5],["e",2,15.5,17.5,2.5,3.5],["e",2,9,11,3.5,2.5],["e",2,22,11,3.5,2.5],["e",2,11,6.5,3,3],["e",2,20,6.5,3,3],["e",2,11,15.5,3,3],["e",2,20,15.5,3,3],["o",1,[2]],["e",3,15.5,11,3.5,3.5]]],
+["Tulip","Nature",32,32,W,["326","335","702"],[["r",3,15,16,16,30],["t",3,14,29,8,17,14,22],["t",3,17,29,23,17,17,22],["e",2,15.5,11,6,6.5],["r",0,0,0,31,7],["t",2,9,10,9,3,13,8],["t",2,22,10,22,3,18,8],["t",2,12.5,8,15.5,2,18.5,8],["o",1,[2]]]],
+["Tree","Nature",32,32,W,["699","702","433","321"],[["r",3,14,20,17,30],["e",2,15.5,12,10,10],["o",1,[2]],["p",4,11,9,19,8,15,14,21,14,10,15]]],
+["Mushroom","Nature",32,31,W,["3371","321","Blanc","Ecru"],[["e",2,15.5,15,12,10],["r",0,0,16,31,30],["r",4,12,16,19,27],["e",4,15.5,27,5.5,2.5],["e",3,10,10,2,2],["e",3,17,8,2.5,2],["e",3,22,12,1.5,1.5],["o",1]]],
+["Raindrop","Nature",32,30,W,["798","813","Blanc"],[["e",2,15.5,19,8,8],["t",2,15.5,3,8.5,16,22.5,16],["p",3,11,19,11,20,12,22],["o",1]]],
+["Shamrock","Nature",32,31,W,["699","702"],[["e",2,15.5,8,5.5,5.5],["e",2,9,16,5.5,5.5],["e",2,22,16,5.5,5.5],["e",2,15.5,14,3,3],["r",2,15,17,16,22],["l",2,16,22,19,28],["l",2,17,22,20,28],["o",1]]],
+["Cat","Animals",31,30,W,["413","318","310","3706"],[["e",2,15,18,10.4,8.6],["t",2,7,15,7,4,14,11],["t",2,23,15,23,4,16,11],["o",1],["p",3,11,16,11,17,19,16,19,17,14,22,15,21,16,22],["p",4,15,20]]],
+["Fish","Animals",36,30,B,["720","741","Blanc","310"],[["e",2,15,15,10,6.5],["t",2,23,15,31,8,31,22],["x",3,2,13,0,14,29],["x",3,2,19,0,20,29],["p",4,9,13],["o",1]]],
+["Butterfly","Animals",32,29,W,["3371","553","209","444"],[["e",2,9,11,7,7],["e",2,22,11,7,7],["e",2,10,21,5.5,5],["e",2,21,21,5.5,5],["e",3,9,11,3.5,3.5],["e",3,22,11,3.5,3.5],["e",4,10,21,2,2],["e",4,21,21,2,2],["o",1],["r",1,15,7,16,25],["l",1,15,6,12,2],["l",1,16,6,19,2]]],
+["Ladybird","Animals",32,30,W,["310","321","Blanc"],[["e",2,15.5,17,10,10],["e",1,15.5,7,5,4],["r",1,15,8,16,27],["e",1,10,13,2,2],["e",1,21,13,2,2],["e",1,9,20,2,2],["e",1,22,20,2,2],["e",1,12.5,24.5,1.5,1.5],["e",1,18.5,24.5,1.5,1.5],["o",1],["p",3,13,6,18,6],["l",1,13,3,11,1],["l",1,18,3,20,1]]],
+["Bee","Animals",32,28,W,["310","444","3753"],[["e",2,16,18,10,7],["x",1,2,12,0,13,31],["x",1,2,17,0,18,31],["x",1,2,22,0,23,31],["e",3,12,9,5,4],["e",3,21,9,5,4],["o",1],["p",1,8,17],["l",1,27,18,29,18]]],
+["Rabbit","Animals",32,32,W,["413","415","3708","310"],[["e",2,11,9,3,7.5],["e",2,20,9,3,7.5],["e",3,11,9,1.2,5],["e",3,20,9,1.2,5],["e",2,15.5,21,9,8],["o",1],["p",4,12,19,12,20,19,19,19,20],["p",3,15,23,16,23],["p",1,15,24,16,24,14,25,17,25]]],
+["Bear","Animals",32,30,W,["898","435","738","310"],[["e",2,7,7,4,4],["e",2,24,7,4,4],["e",3,7,7,2,2],["e",3,24,7,2,2],["e",2,15.5,17,11,10.5],["e",3,15.5,21,5,4],["o",1],["p",4,11,14,11,15,20,14,20,15,15,19,16,19,15,20,16,20,15,22,16,22,14,23,17,23]]],
+["Pig","Animals",32,29,W,["3350","3716","3733","310"],[["t",2,5,10,7,3,12,7],["t",2,26,10,24,3,19,7],["e",2,15.5,17,11,10],["e",3,15.5,20,5,3.5],["p",1,14,20,17,20],["o",1],["p",4,11,13,11,14,20,13,20,14]]],
+["Frog","Animals",32,29,W,["986","702","Blanc","310"],[["e",2,15.5,19,12,8],["e",2,9,10,4.5,4.5],["e",2,22,10,4.5,4.5],["e",3,9,10,2.5,2.5],["e",3,22,10,2.5,2.5],["p",4,9,10,10,10,9,11,10,11,21,10,22,10,21,11,22,11],["o",1],["l",1,9,22,22,22],["p",1,8,21,23,21]]],
+["Owl","Animals",32,31,W,["3371","435","738","Blanc","741"],[["e",2,15.5,17,10,12],["t",2,6,10,6,3,11,7],["t",2,25,10,25,3,20,7],["e",3,15.5,22,6,6],["e",4,11,12,4,4],["e",4,20,12,4,4],["p",1,11,12,12,12,11,13,12,13,19,12,20,12,19,13,20,13],["p",5,15,15,16,15,15,16,16,16],["o",1]]],
+["Penguin","Animals",32,32,B,["310","Blanc","741"],[["e",1,15.5,17,9,12],["e",2,15.5,20,6,8.5],["p",2,12,9,19,9],["p",3,15,10,16,10,15,11,16,11],["e",3,11,29.5,3,1.5],["e",3,20,29.5,3,1.5]]],
+["Chick","Animals",32,32,W,["782","444","741","310"],[["e",2,15.5,20,9,8],["e",2,15.5,10,6.5,6.5],["o",1],["p",4,13,9,18,9],["p",3,15,11,16,11,15,12,16,12],["l",3,12,30,13,30],["l",3,18,30,19,30]]],
+["Whale","Animals",34,30,B,["336","798","Blanc","310","813"],[["e",2,14,19,12,8],["t",2,23,20,30,12,30,22],["x",3,2,0,23,33,29],["o",1],["p",4,7,17],["p",5,13,9,13,8,13,7,11,5,12,6,14,6,15,5]]],
+["Apple","Food",32,30,W,["815","321","433","702","Blanc"],[["e",2,11,18,8,9],["e",2,20,18,8,9],["o",1],["r",3,15,5,15,10],["e",4,20,5,3.5,1.8],["p",5,8,13,8,14,9,12]]],
+["Cherries","Food",32,31,W,["815","321","702","Blanc","433"],[["e",2,9,22,6,6],["e",2,22,23,6,6],["o",1],["l",5,10,15,16,4],["l",5,21,16,16,4],["e",3,21,5,4,2.5],["p",4,7,19,6,20,20,20,19,21]]],
+["Strawberry","Food",32,32,W,["815","321","702","444"],[["e",2,15.5,14,10,8],["t",2,6,16,25,16,15.5,29],["o",1],["r",3,15,2,16,5],["e",3,10,7,3.5,1.8],["e",3,21,7,3.5,1.8],["e",3,15.5,7,3,2.5],["p",4,11,12,16,11,20,13,13,16,18,17,10,18,15,21,21,18,13,23,17,24]]],
+["Cupcake","Food",32,31,W,["898","3716","798","Blanc","321"],[["r",3,9,19,22,28],["t",3,6,19,9,19,9,28],["t",3,25,19,22,19,22,28],["x",4,3,11,19,11,28],["x",4,3,14,19,14,28],["x",4,3,17,19,17,28],["x",4,3,20,19,20,28],["e",2,15.5,15,11,5],["e",2,15.5,10,8,4.5],["e",2,15.5,6,4.5,3],["e",5,15.5,2.5,2,2],["o",1]]],
+["Ice cream","Food",32,33,W,["3371","437","3716","321"],[["t",2,8,17,23,17,15.5,30],["e",3,15.5,11,9,8],["e",4,15.5,3,2,2],["o",1]]],
+["Watermelon","Food",32,27,W,["699","704","3705","310"],[["e",1,15.5,10,14,14],["e",2,15.5,10,12.5,12.5],["e",3,15.5,10,11,11],["r",0,0,0,31,9],["p",4,9,14,13,17,18,17,22,14,12,12,19,12,15,20]]],
+["House","Things",32,31,W,["3371","739","321","813","433"],[["r",3,21,6,23,11],["r",2,7,15,24,28],["t",3,4,15,27,15,15.5,4],["r",5,14,21,17,28],["r",4,9,18,12,21],["r",4,19,18,22,21],["o",1]]],
+["Sailing boat","Things",32,31,B,["336","321","Blanc","433","798"],[["r",2,8,22,23,26],["t",2,4,22,8,22,8,26],["t",2,27,22,23,22,23,26],["r",4,15,3,15,21],["t",3,17,4,17,19,27,19],["t",3,13,7,13,19,5,19],["o",1,[2,3]],["l",5,1,29,30,29],["p",5,2,28,3,28,10,28,11,28,18,28,19,28,26,28,27,28]]],
+["Anchor","Things",32,31,W,["336"],[["a",1,15.5,5,3.5,3.5,1.5],["r",1,15,8,16,27],["r",1,10,11,21,12],["a",1,15.5,17,11,11,2.5,2],["t",1,2,19,9,19,5,14],["t",1,22,19,29,19,26,14]]],
+["Hot air balloon","Things",32,32,B,["3371","321","444","798","435"],[["e",2,15.5,11,10,10.5],["t",2,9,19,22,19,15.5,24],["x",3,2,10,0,12,31],["x",4,2,14,0,17,31],["x",3,2,19,0,21,31],["r",5,13,26,18,29],["o",1],["l",1,12,23,13,25],["l",1,19,23,18,25]]],
+["Umbrella","Things",32,31,W,["3371","321","798","433"],[["e",2,15.5,14,13,11],["r",0,0,15,31,30],["e",0,6.5,15,2.5,2],["e",0,12.5,15,2.5,2],["e",0,18.5,15,2.5,2],["e",0,24.5,15,2.5,2],["x",3,2,9,0,12,30],["x",3,2,19,0,22,30],["o",1],["r",4,15,14,15,27],["p",4,15,28,14,29,13,29,12,28,12,27]]],
+["Crown","Things",32,28,W,["782","725","321","798"],[["r",2,6,20,25,25],["t",2,6,20,6,8,12,20],["t",2,10,20,15.5,6,21,20],["t",2,25,20,25,8,19,20],["o",1],["p",3,15,22,16,22,15,23,16,23],["p",4,9,22,9,23,22,22,22,23]]],
+["Birthday cake","Celebrations",32,31,W,["3371","3716","Blanc","321","444","798"],[["r",2,5,17,26,27],["r",3,5,15,26,18],["p",3,8,19,8,20,14,19,20,19,20,20,24,19],["o",1],["r",6,9,9,10,13],["r",6,15,9,16,13],["r",6,21,9,22,13],["r",5,9,6,10,7],["r",5,15,6,16,7],["r",5,21,6,22,7],["p",4,8,23,12,23,16,23,20,23,24,23],["l",1,3,29,28,29]]],
+["Balloons","Celebrations",32,32,W,["3371","321","798","444"],[["e",2,9,10,6,7.5],["e",3,22,9,6,7.5],["e",4,15.5,13,6,7.5],["o",1],["l",1,9,19,14,30],["l",1,22,18,17,30],["l",1,15,22,15,30]]],
+["Gift","Celebrations",32,31,W,["3371","321","444"],[["r",2,6,14,25,28],["r",2,4,10,27,14],["r",3,14,10,17,28],["e",3,11,6,4,3],["e",3,20,6,4,3],["r",3,14,6,17,9],["o",1]]],
+["Party hat","Celebrations",32,32,W,["3371","798","444","321"],[["t",2,15.5,5,6,28,25,28],["x",3,2,0,12,31,13],["x",3,2,0,18,31,19],["x",3,2,0,24,31,25],["e",4,15.5,3.5,2.5,2.5],["r",4,5,28,26,29],["o",1]]],
+["Wedding rings","Celebrations",32,29,W,["782","725","321"],[["a",2,11,18,9,9,2.5],["a",2,21,18,9,9,2.5],["o",1],["h",3,15.5,5,3.4]]],
+["Graduation cap","Celebrations",32,28,W,["310","444"],[["r",1,9,14,22,21],["y",1,[15.5,5,30,12,15.5,19,1,12]],["l",2,15,12,24,14],["l",2,24,14,24,22],["p",2,23,23,24,23,25,23,24,24]]],
+["Christmas tree","Celebrations",32,32,W,["890","702","433","444","321"],[["t",2,15.5,4,8,13,23,13],["t",2,15.5,9,5,20,26,20],["t",2,15.5,15,3,27,28,27],["r",3,14,28,17,30],["o",1,[2]],["e",4,15.5,2.5,1.6,1.6],["p",5,13,10,18,12,10,17,16,18,21,18,8,24,14,23,20,25,24,25]]],
+["Snowman","Celebrations",32,32,B,["414","Blanc","310","741","321"],[["e",2,15.5,22,8,7.5],["e",2,15.5,10,5.5,5.5],["o",1],["r",3,12,1,19,4],["r",3,10,5,21,5],["p",3,13,9,18,9,15,20,15,23,15,26],["p",4,15,11,16,11,17,11],["r",5,10,15,21,16],["r",5,19,17,20,20]]],
+["Santa hat","Celebrations",32,31,B,["3371","321","Blanc"],[["t",2,5,24,25,24,17,5],["t",2,17,5,27,13,20,13],["e",3,26,14,3,3],["e",3,15,26,12,3.5],["o",1]]],
+["Candy cane","Celebrations",32,32,B,["414","Blanc","321"],[["r",2,17,10,21,29],["a",2,13.5,10,7.5,7.5,5,1],["r",2,6,10,10,12],["d",3,2,6,3],["o",1]]],
+["Bauble","Celebrations",32,31,W,["815","321","444","414","Blanc"],[["e",2,15.5,18,10,10],["x",3,2,0,16,31,19],["r",4,13,5,18,8],["a",4,15.5,3.5,2.5,2.5,1],["o",1,[2,3]],["p",5,10,12,9,13,9,14]]],
+["Snowflake","Celebrations",33,33,N,["Blanc"],[["l",1,16,2,16,30],["l",1,2,16,30,16],["l",1,6,6,26,26],["l",1,26,6,6,26],["l",1,13,4,16,7],["l",1,19,4,16,7],["l",1,13,28,16,25],["l",1,19,28,16,25],["l",1,4,13,7,16],["l",1,4,19,7,16],["l",1,28,13,25,16],["l",1,28,19,25,16]]],
+["Easter egg","Celebrations",32,32,W,["208","3708","444","798","702"],[["e",2,15.5,17,9.5,12],["x",3,2,0,10,31,11],["x",4,2,0,16,31,18],["x",5,2,0,23,31,24],["p",3,8,17,11,17,14,17,17,17,20,17,23,17],["o",1]]],
+["Pumpkin","Celebrations",32,30,W,["918","740","702","310"],[["e",2,10,18,7,9],["e",2,21,18,7,9],["e",2,15.5,18,7,9.5],["o",1],["r",3,15,5,16,8],["t",4,9,16,13,16,11,13],["t",4,18,16,22,16,20,13],["r",4,10,21,21,22],["p",2,12,21,15,22,16,22,19,21]]],
+["Ghost","Celebrations",32,31,N,["Blanc","310"],[["e",1,15.5,12,9,9],["r",1,7,12,24,26],["e",1,9.5,26.5,3,2.5],["e",1,15.5,26.5,3,2.5],["e",1,21.5,26.5,3,2.5],["e",2,12,11,1.5,2],["e",2,19,11,1.5,2],["e",2,15.5,16,1.5,2]]],
+["Crescent and star","Celebrations",32,32,N,["444"],[["e",1,13,16,10.5,10.5],["e",0,17,14,9,9],["s",1,23,14,6,2.6]]],
+["Diya lamp","Celebrations",32,31,W,["3371","921","741","444"],[["e",2,15.5,19,11,8],["r",0,0,0,31,18],["r",2,12,27,19,28],["e",3,15.5,12,3.5,6],["e",4,15.5,14,1.8,3.5],["o",1,[2]]]]
+];
+const EXAMPLES=EX.map(e=>({name:e[0],cat:e[1],make:()=>{ const p=newProject(e[0],e[2],e[3],14,e[4]); p.palette=e[5].slice(); p.cur=0; p.cells=paint(e[2],e[3],e[6]); return p; }}));
+/* Photo to pattern: group the photo's colours, then match each group to the nearest DMC thread. */
+DMC.forEach(d=>{ d.rgb=[parseInt(d.hex.slice(1,3),16),parseInt(d.hex.slice(3,5),16),parseInt(d.hex.slice(5,7),16)]; });
+function colDist(r1,g1,b1,r2,g2,b2){ const rm=(r1+r2)/2, dr=r1-r2, dg=g1-g2, db=b1-b2; return (2+rm/256)*dr*dr+4*dg*dg+(2+(255-rm)/256)*db*db; }
+function nearestDMC(r,g,b){ let best=0,bd=Infinity; for(let i=0;i<DMC.length;i++){ const q=DMC[i].rgb, d=colDist(r,g,b,q[0],q[1],q[2]); if(d<bd){bd=d;best=i;} } return best; }
+function photoToPattern(px,w,h,n,skipWhite){
+  const cells=new Uint8Array(w*h), idx=[];
+  for(let i=0;i<w*h;i++){ const o=i*4; if(px[o+3]<128) continue; if(skipWhite&&px[o]>232&&px[o+1]>232&&px[o+2]>232) continue; idx.push(i); }
+  if(!idx.length) return {palette:["310"],cells};
+  const step=Math.max(1,Math.floor(idx.length/3000)), cen=[]; let sr=0,sg=0,sb=0;
+  for(const i of idx){ sr+=px[i*4]; sg+=px[i*4+1]; sb+=px[i*4+2]; } cen.push([sr/idx.length,sg/idx.length,sb/idx.length]);
+  const near=new Float64Array(Math.ceil(idx.length/step)).fill(Infinity);
+  while(cen.length<n){ const c=cen[cen.length-1]; let far=-1,fd=0;
+    for(let k=0,j=0;k<idx.length;k+=step,j++){ const o=idx[k]*4, d=(px[o]-c[0])**2+(px[o+1]-c[1])**2+(px[o+2]-c[2])**2; if(d<near[j]) near[j]=d; if(near[j]>fd){fd=near[j];far=idx[k];} }
+    if(far<0||fd<30) break; cen.push([px[far*4],px[far*4+1],px[far*4+2]]); }
+  for(let it=0;it<8;it++){ const sum=cen.map(()=>[0,0,0,0]);
+    for(const i of idx){ const o=i*4, r=px[o],g=px[o+1],b=px[o+2]; let best=0,bd=Infinity;
+      for(let k=0;k<cen.length;k++){ const c=cen[k], d=(r-c[0])**2+(g-c[1])**2+(b-c[2])**2; if(d<bd){bd=d;best=k;} }
+      const s=sum[best]; s[0]+=r; s[1]+=g; s[2]+=b; s[3]++; }
+    sum.forEach((s,k)=>{ if(s[3]) cen[k]=[s[0]/s[3],s[1]/s[3],s[2]/s[3]]; }); }
+  const pick=[]; cen.forEach(c=>{ const d=nearestDMC(c[0],c[1],c[2]); if(!pick.includes(d)) pick.push(d); });
+  const used=new Array(pick.length).fill(0), tmp=new Uint8Array(w*h);
+  for(const i of idx){ const o=i*4; let best=0,bd=Infinity;
+    for(let k=0;k<pick.length;k++){ const q=DMC[pick[k]].rgb, d=colDist(px[o],px[o+1],px[o+2],q[0],q[1],q[2]); if(d<bd){bd=d;best=k;} }
+    tmp[i]=best+1; used[best]++; }
+  const map=[0], palette=[]; pick.forEach((d,k)=>{ if(used[k]){ palette.push(DMC[d].n); map[k+1]=palette.length; } else map[k+1]=0; });
+  for(const i of idx) cells[i]=map[tmp[i]];
+  return {palette,cells};
+}
+if(typeof module!=="undefined"){ module.exports={photoToPattern,DMC,BY,pack,unpack,newProject,resized,lineCells,floodCells,counts,EXAMPLES,sizeText,SYM}; }
+
+/* ---------- app ---------- */
+if(typeof document!=="undefined"){ (function(){
+let P, undo=[], redo=[], tool="draw", sym=false, PHEX=[], ov=null, ovDrag=null, ovPinch=null, pending=null, setupNew=false;
+const TEST=/\/test\//.test(location.pathname), KEY=TEST?"xs-test.":"xs.";
+const view={s:10,x:0,y:0};
+const cv=$("cv"), ctx=cv.getContext("2d"), stage=$("stage");
+let dpr=1, needFit=true, raf=0;
+
+function store(k,v){ try{ localStorage.setItem(k,v); return true; }catch(e){ return false; } }
+function load(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+let saveT=0; function autosave(){ clearTimeout(saveT); saveT=setTimeout(()=>store(KEY+"current",JSON.stringify(pack(P))),500); }
+function savedAll(){ try{ const a=JSON.parse(load(KEY+"saved")||"[]"); return Array.isArray(a)?a:[]; }catch(e){ return []; } }
+
+let toastT=0; function toast(msg){ const t=$("toast"); t.textContent=msg; t.hidden=false; clearTimeout(toastT); toastT=setTimeout(()=>t.hidden=true,2600); }
+
+function refreshInfo(){ $("pname").textContent=(TEST?"TEST: ":"")+P.name; $("pinfo").textContent=P.count+" count Aida, "+P.w+" × "+P.h+" stitches, "+sizeText(P.w,P.h,P.count).split(" (")[0];
+  $("undo").disabled=!undo.length; $("redo").disabled=!redo.length; }
+function refreshPalette(){ PHEX=P.palette.map(n=>(BY[n]||{hex:"#888888"}).hex);
+  const box=$("swatches"); box.textContent="";
+  P.palette.forEach((n,i)=>{ const b=document.createElement("button"); b.type="button"; b.className="sw"; b.setAttribute("aria-pressed",i===P.cur?"true":"false");
+    b.title="DMC "+n+" "+((BY[n]||{}).name||""); const sw=document.createElement("i"); sw.style.background=PHEX[i]; const s=document.createElement("span"); s.textContent=n;
+    b.append(sw,s); b.onclick=()=>{ P.cur=i; if(tool!=="draw"&&tool!=="fill") setTool("draw"); refreshPalette(); autosave(); }; box.append(b); });
+  const act=box.children[P.cur]; if(act){ const l=act.offsetLeft-box.offsetLeft, r=l+act.offsetWidth; if(l<box.scrollLeft) box.scrollLeft=l; else if(r>box.scrollLeft+box.clientWidth) box.scrollLeft=r-box.clientWidth; }
+}
+function setTool(t){ tool=t; document.querySelectorAll(".tools [data-tool]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.tool===t?"true":"false")); }
+function setProject(p,keepPicture){ P=p; undo=[]; redo=[]; if(!keepPicture) clearOverlay(); refreshPalette(); refreshInfo(); fit(); autosave(); }
+
+/* drawing the canvas */
+function fit(){ const cw=stage.clientWidth, ch=stage.clientHeight; if(!cw||!ch){ needFit=true; return; } needFit=false;
+  view.s=Math.max(2,Math.min(40,Math.min((cw-24)/P.w,(ch-24)/P.h))); view.x=(cw-P.w*view.s)/2; view.y=(ch-P.h*view.s)/2; redraw(); }
+function redraw(){ if(!raf) raf=requestAnimationFrame(()=>{ raf=0; draw(); }); }
+function draw(){
+  const W=cv.width,H=cv.height, s=view.s*dpr, ox=view.x*dpr, oy=view.y*dpr, w=P.w, h=P.h;
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.fillStyle=getComputedStyle(document.documentElement).getPropertyValue("--work").trim()||"#dde1e9"; ctx.fillRect(0,0,W,H);
+  const fab=fabricHex(P.fabric), dark=lum(fab)<0.45;
+  ctx.fillStyle=fab; ctx.fillRect(Math.round(ox),Math.round(oy),Math.round(w*s),Math.round(h*s));
+  if(ov&&ov.vis){ ctx.save(); if(!ov.moving){ ctx.beginPath(); ctx.rect(Math.round(ox),Math.round(oy),Math.round(w*s),Math.round(h*s)); ctx.clip(); }
+    ctx.globalAlpha=ov.moving?Math.max(ov.a,0.6):ov.a; ctx.drawImage(ov.cv,ox+ov.x*s,oy+ov.y*s,ov.w*s,ov.h*s); ctx.restore(); }
+  const c0=Math.max(0,Math.floor(-ox/s)), c1=Math.min(w,Math.ceil((W-ox)/s)), r0=Math.max(0,Math.floor(-oy/s)), r1=Math.min(h,Math.ceil((H-oy)/s));
+  const showSym=sym&&s>=12; if(showSym){ ctx.font=Math.floor(s*0.7)+"px sans-serif"; ctx.textAlign="center"; ctx.textBaseline="middle"; }
+  for(let r=r0;r<r1;r++){ const y0=Math.round(oy+r*s), y1=Math.round(oy+(r+1)*s);
+    for(let c=c0;c<c1;c++){ const v=P.cells[r*w+c]; if(!v) continue; const x0=Math.round(ox+c*s), x1=Math.round(ox+(c+1)*s), hex=PHEX[v-1]||"#888888";
+      ctx.fillStyle=hex; ctx.fillRect(x0,y0,x1-x0,y1-y0);
+      if(showSym){ ctx.fillStyle=lum(hex)<0.5?"#ffffff":"#000000"; ctx.fillText(SYM[(v-1)%SYM.length],(x0+x1)/2,(y0+y1)/2+1); } } }
+  const thin=dark?"rgba(255,255,255,.16)":"rgba(0,0,0,.13)", bold=dark?"rgba(255,255,255,.55)":"rgba(0,0,0,.5)";
+  const lines=(step,style,lw)=>{ ctx.strokeStyle=style; ctx.lineWidth=lw; ctx.beginPath();
+    for(let c=Math.ceil(c0/step)*step;c<=c1;c+=step){ const x=Math.round(ox+c*s)+0.5; ctx.moveTo(x,Math.max(0,oy)); ctx.lineTo(x,Math.min(H,oy+h*s)); }
+    for(let r=Math.ceil(r0/step)*step;r<=r1;r+=step){ const y=Math.round(oy+r*s)+0.5; ctx.moveTo(Math.max(0,ox),y); ctx.lineTo(Math.min(W,ox+w*s),y); }
+    ctx.stroke(); };
+  if(s>=5*dpr) lines(1,thin,1);
+  lines(10,bold,Math.max(1,dpr));
+  ctx.strokeStyle=bold; ctx.lineWidth=Math.max(1,dpr); ctx.strokeRect(Math.round(ox)+0.5,Math.round(oy)+0.5,Math.round(w*s),Math.round(h*s));
+}
+/* Keep the whole app inside the visible screen, and never let the page itself scroll the top bar away. */
+function fitScreen(){ const hh=window.innerHeight; if(hh) document.documentElement.style.setProperty("--app-h",hh+"px"); if(window.scrollX||window.scrollY) window.scrollTo(0,0); }
+window.addEventListener("resize",fitScreen); window.addEventListener("orientationchange",fitScreen); window.addEventListener("scroll",()=>{ if(window.scrollY||window.scrollX) window.scrollTo(0,0); });
+if(window.visualViewport) window.visualViewport.addEventListener("resize",fitScreen);
+fitScreen();
+function resize(){ dpr=window.devicePixelRatio||1; const cw=stage.clientWidth, ch=stage.clientHeight; if(!cw||!ch) return;
+  cv.width=Math.round(cw*dpr); cv.height=Math.round(ch*dpr); if(needFit) fit(); else redraw(); }
+if(window.ResizeObserver) new ResizeObserver(resize).observe(stage); window.addEventListener("resize",resize);
+try{ matchMedia("(prefers-color-scheme: dark)").addEventListener("change",redraw); new MutationObserver(redraw).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]}); }catch(e){}
+
+/* strokes and history */
+let stroke=null, last=null, blocked=false, pan=null, pinch=null; const pts=new Map();
+function pos(e){ const b=cv.getBoundingClientRect(); return {x:e.clientX-b.left,y:e.clientY-b.top}; }
+function cellAt(p){ const c=Math.floor((p.x-view.x)/view.s), r=Math.floor((p.y-view.y)/view.s); return (c<0||r<0||c>=P.w||r>=P.h)?null:[c,r]; }
+function put(i,val){ if(P.cells[i]===val) return; if(!stroke.map.has(i)) stroke.map.set(i,P.cells[i]); P.cells[i]=val; }
+function commit(){ if(!stroke) return; const m=stroke.map; if(m.size){ const idx=new Uint32Array(m.size), before=new Uint8Array(m.size); let k=0; m.forEach((b,i)=>{ idx[k]=i; before[k++]=b; });
+    undo.push({idx,before,after:stroke.val}); if(undo.length>100) undo.shift(); redo=[]; autosave(); refreshInfo(); } stroke=null; last=null; }
+function cancelStroke(){ if(!stroke) return; stroke.map.forEach((b,i)=>P.cells[i]=b); stroke=null; last=null; redraw(); }
+function doUndo(){ const u=undo.pop(); if(!u) return; for(let k=0;k<u.idx.length;k++) P.cells[u.idx[k]]=u.before[k]; redo.push(u); autosave(); refreshInfo(); redraw(); }
+function doRedo(){ const u=redo.pop(); if(!u) return; for(let k=0;k<u.idx.length;k++) P.cells[u.idx[k]]=u.after; undo.push(u); autosave(); refreshInfo(); redraw(); }
+
+cv.addEventListener("pointerdown",e=>{ e.preventDefault(); try{ cv.setPointerCapture(e.pointerId); }catch(_){}
+  const p=pos(e); pts.set(e.pointerId,p);
+  if(ov&&ov.moving){ const a=[...pts.values()];
+    if(pts.size===1){ ovDrag={px:p.x,py:p.y,x:ov.x,y:ov.y}; ovPinch=null; }
+    else if(pts.size===2){ ovDrag=null; const mx=(a[0].x+a[1].x)/2, my=(a[0].y+a[1].y)/2;
+      ovPinch={d:Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y)||1,fx:((mx-view.x)/view.s-ov.x)/ov.w,fy:((my-view.y)/view.s-ov.y)/ov.h,w:ov.w,h:ov.h}; }
+    return; }
+  if(pts.size===2){ cancelStroke(); pan=null; blocked=true; const a=[...pts.values()];
+    pinch={d:Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y)||1,mx:(a[0].x+a[1].x)/2,my:(a[0].y+a[1].y)/2,s:view.s,x:view.x,y:view.y}; return; }
+  if(pts.size>2||blocked) return;
+  if(tool==="move"){ pan={px:p.x,py:p.y,x:view.x,y:view.y}; return; }
+  const cell=cellAt(p); if(!cell) return; const i=cell[1]*P.w+cell[0];
+  if(tool==="pick"){ const v=P.cells[i]; if(v){ P.cur=v-1; setTool("draw"); refreshPalette(); toast("Picked DMC "+P.palette[v-1]); } else if(!pickFromPicture(cell)) toast("No stitch there"); return; }
+  const val=tool==="erase"?0:P.cur+1; stroke={map:new Map(),val};
+  if(tool==="fill"){ if(P.cells[i]!==val) floodCells(P.cells,P.w,P.h,i).forEach(j=>put(j,val)); commit(); redraw(); return; }
+  put(i,val); last=cell; redraw(); });
+cv.addEventListener("pointermove",e=>{ if(!pts.has(e.pointerId)) return; const p=pos(e); pts.set(e.pointerId,p);
+  if(ov&&ov.moving){ const a=[...pts.values()];
+    if(ovPinch&&pts.size>=2){ const d=Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y)||1, mx=(a[0].x+a[1].x)/2, my=(a[0].y+a[1].y)/2;
+      const nw=Math.max(3,Math.min(3000,ovPinch.w*d/ovPinch.d)), k=nw/ovPinch.w; ov.w=nw; ov.h=ovPinch.h*k;
+      ov.x=(mx-view.x)/view.s-ovPinch.fx*ov.w; ov.y=(my-view.y)/view.s-ovPinch.fy*ov.h; redraw(); }
+    else if(ovDrag&&pts.size===1){ ov.x=ovDrag.x+(p.x-ovDrag.px)/view.s; ov.y=ovDrag.y+(p.y-ovDrag.py)/view.s; redraw(); }
+    return; }
+  if(pinch&&pts.size>=2){ const a=[...pts.values()], d=Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y)||1, mx=(a[0].x+a[1].x)/2, my=(a[0].y+a[1].y)/2;
+    const s=Math.max(2,Math.min(60,pinch.s*d/pinch.d)); view.x=mx-(pinch.mx-pinch.x)/pinch.s*s; view.y=my-(pinch.my-pinch.y)/pinch.s*s; view.s=s; redraw(); return; }
+  if(pan){ view.x=pan.x+p.x-pan.px; view.y=pan.y+p.y-pan.py; redraw(); return; }
+  if(stroke&&last){ const cell=cellAt(p); if(!cell) return; if(cell[0]===last[0]&&cell[1]===last[1]) return;
+    lineCells(last[0],last[1],cell[0],cell[1]).forEach(q=>put(q[1]*P.w+q[0],stroke.val)); last=cell; redraw(); } });
+function up(e){ if(!pts.has(e.pointerId)) return; pts.delete(e.pointerId); if(pts.size<2){ pinch=null; ovPinch=null; } if(pts.size===0){ commit(); pan=null; blocked=false; if(ovDrag||(ov&&ov.moving)){ ovDrag=null; saveOverlay(); } } }
+cv.addEventListener("pointerup",up); cv.addEventListener("pointercancel",up);
+cv.addEventListener("wheel",e=>{ e.preventDefault();
+  if(ov&&ov.moving){ const q=pos(e), cx=(q.x-view.x)/view.s, cy=(q.y-view.y)/view.s, nw=Math.max(3,Math.min(3000,ov.w*(e.deltaY<0?1.08:1/1.08))), k=nw/ov.w;
+    ov.x=cx-(cx-ov.x)*k; ov.y=cy-(cy-ov.y)*k; ov.w=nw; ov.h*=k; redraw(); saveOverlay(); return; }
+  const p=pos(e), s=Math.max(2,Math.min(60,view.s*(e.deltaY<0?1.15:1/1.15)));
+  view.x=p.x-(p.x-view.x)/view.s*s; view.y=p.y-(p.y-view.y)/view.s*s; view.s=s; redraw(); },{passive:false});
+
+/* sheets */
+function openSheet(id){ document.querySelectorAll(".sheet").forEach(s=>s.hidden=true); $("shade").hidden=false; $(id).hidden=false; }
+function closeSheet(){ document.querySelectorAll(".sheet").forEach(s=>s.hidden=true); $("shade").hidden=true; if(document.activeElement&&document.activeElement.blur) document.activeElement.blur(); fitScreen(); }
+$("shade").onclick=closeSheet; document.querySelectorAll("[data-close]").forEach(b=>b.onclick=closeSheet);
+function twoTap(btn,fn){ if(btn.dataset.armed){ delete btn.dataset.armed; btn.textContent=btn.dataset.label; fn(); return; }
+  btn.dataset.armed="1"; btn.dataset.label=btn.textContent; btn.textContent="Tap again to confirm";
+  setTimeout(()=>{ if(btn.dataset.armed){ delete btn.dataset.armed; btn.textContent=btn.dataset.label; } },3000); }
+
+document.querySelectorAll(".tools [data-tool]").forEach(b=>b.onclick=()=>setTool(b.dataset.tool));
+$("symBtn").onclick=()=>{ sym=!sym; $("symBtn").setAttribute("aria-pressed",sym?"true":"false"); if(sym&&view.s*dpr<12) toast("Zoom in to see the symbols"); redraw(); };
+$("undo").onclick=doUndo; $("redo").onclick=doRedo;
+$("menuBtn").onclick=()=>{ renderSaved(); openSheet("sheet-menu"); };
+$("mFit").onclick=()=>{ closeSheet(); fit(); };
+
+/* examples */
+let exBuilt=false;
+function buildExamples(){ if(exBuilt) return; exBuilt=true; const body=$("exBody"), cats=[]; EXAMPLES.forEach(e=>{ if(!cats.includes(e.cat)) cats.push(e.cat); });
+  cats.forEach(cat=>{ const hd=document.createElement("h3"); hd.textContent=cat; const grid=document.createElement("div"); grid.className="exGrid";
+    EXAMPLES.filter(e=>e.cat===cat).forEach(ex=>{ const p=ex.make(), b=document.createElement("button"); b.type="button"; b.className="ex";
+      const c=document.createElement("canvas"); c.width=p.w; c.height=p.h; const g=c.getContext("2d"); g.fillStyle=fabricHex(p.fabric); g.fillRect(0,0,p.w,p.h);
+      for(let i=0;i<p.cells.length;i++){ const v=p.cells[i]; if(v){ g.fillStyle=(BY[p.palette[v-1]]||{hex:"#888888"}).hex; g.fillRect(i%p.w,Math.floor(i/p.w),1,1); } }
+      const label=document.createElement("span"); label.textContent=ex.name; b.append(c,label);
+      b.onclick=()=>guard(()=>{ setProject(ex.make()); closeSheet(); toast(ex.name+" example opened"); });
+      grid.append(b); });
+    body.append(hd,grid); }); }
+$("mExamples").onclick=()=>{ buildExamples(); openSheet("sheet-examples"); };
+
+/* photo to pattern */
+let phImg=null, phRes=null, phName="Photo pattern", phT=0;
+function runPhoto(){ if(!phImg) return; const iw=phImg.naturalWidth, ih=phImg.naturalHeight; if(!iw||!ih) return;
+  let w=Math.max(20,Math.min(300,Math.round(Number($("phW").value)||80))), hh=Math.max(5,Math.round(w*ih/iw)); if(hh>300){ w=Math.max(5,Math.round(w*300/hh)); hh=300; }
+  try{ const t=document.createElement("canvas"); t.width=w; t.height=hh; const g=t.getContext("2d",{willReadFrequently:true}); g.imageSmoothingEnabled=true; g.imageSmoothingQuality="high"; g.drawImage(phImg,0,0,w,hh);
+    const r=photoToPattern(g.getImageData(0,0,w,hh).data,w,hh,Number($("phN").value),$("phWhite").checked); phRes={w,h:hh,palette:r.palette,cells:r.cells};
+    const pv=$("phPrev"); pv.width=w; pv.height=hh; const pg=pv.getContext("2d"); pg.fillStyle=fabricHex(P.fabric); pg.fillRect(0,0,w,hh);
+    for(let i=0;i<r.cells.length;i++){ const v=r.cells[i]; if(v){ pg.fillStyle=BY[r.palette[v-1]].hex; pg.fillRect(i%w,Math.floor(i/w),1,1); } }
+    pv.hidden=false; $("phUse").hidden=false;
+    $("phInfo").textContent=w+" × "+hh+" stitches in "+r.palette.length+" DMC threads. Finished size on "+P.count+" count Aida: "+sizeText(w,hh,P.count)+".";
+  }catch(e){ phRes=null; $("phInfo").textContent="That photo could not be converted. Try a different picture."; } }
+function queuePhoto(){ clearTimeout(phT); phT=setTimeout(runPhoto,250); }
+$("mPhoto").onclick=()=>openSheet("sheet-photo");
+$("phPick").onclick=()=>$("phFile").click();
+$("phFile").onchange=e=>{ const f=e.target.files[0]; e.target.value=""; if(!f) return; phName=(f.name||"").replace(/\.[^.]*$/,"").slice(0,60)||"Photo pattern";
+  const url=URL.createObjectURL(f), img=new Image(); $("phInfo").textContent="Reading the photo";
+  img.onload=()=>{ phImg=img; runPhoto(); URL.revokeObjectURL(url); };
+  img.onerror=()=>{ URL.revokeObjectURL(url); $("phInfo").textContent="This phone's browser could not open that file. Try a JPEG or PNG picture."; };
+  img.src=url; };
+["phW","phN","phWhite"].forEach(id=>$(id).addEventListener("input",queuePhoto));
+$("phUse").onclick=function(){ if(!phRes){ toast("Choose a photo first"); return; }
+  const go=()=>{ const p=newProject(phName,phRes.w,phRes.h,P.count,P.fabric); p.palette=phRes.palette.slice(); p.cells=phRes.cells.slice(); p.cur=0; setProject(p); closeSheet(); toast("Pattern ready with "+p.palette.length+" threads"); };
+  guard(go); };
+
+/* ask before replacing a design that has stitches */
+function guard(fn){ if(counts(P)[0]===P.cells.length){ fn(); return; } pending=fn; openSheet("sheet-guard"); }
+$("gSkip").onclick=()=>{ const f=pending; pending=null; closeSheet(); if(f) f(); };
+$("gSave").onclick=async()=>{ const r=await offer(fileBase()+"-backup.json",JSON.stringify(pack(P)));
+  if(r==="saved"){ const f=pending; pending=null; closeSheet(); if(f) f(); }
+  else if(r==="declined") toast("Not saved"); else toast("The backup could not be saved here"); };
+
+/* trace a photo: a picture shown under the grid as a guide */
+let ovT=0;
+function ovUI(){ $("ovBar").hidden=!ov; if(!ov) return; $("ovMove").textContent=ov.moving?"Done":"Move picture"; $("ovMove").setAttribute("aria-pressed",ov.moving?"true":"false");
+  $("ovShow").textContent=ov.vis?"Hide":"Show"; $("ovAlpha").value=Math.round(ov.a*100); }
+function saveOverlay(){ clearTimeout(ovT); ovT=setTimeout(()=>{ if(!ov){ try{ localStorage.removeItem(KEY+"overlay"); }catch(e){} return; }
+    if(ov.d) store(KEY+"overlay",JSON.stringify({d:ov.d,x:ov.x,y:ov.y,w:ov.w,h:ov.h,a:ov.a,v:ov.vis})); },400); }
+function clearOverlay(){ const had=!!ov; ov=null; ovDrag=null; ovPinch=null; ovUI(); if(had){ saveOverlay(); redraw(); } }
+function makeOverlay(img,saved){ const k=Math.min(1,1100/Math.max(img.naturalWidth,img.naturalHeight)), c=document.createElement("canvas");
+  c.width=Math.max(1,Math.round(img.naturalWidth*k)); c.height=Math.max(1,Math.round(img.naturalHeight*k));
+  const g=c.getContext("2d",{willReadFrequently:true}); g.fillStyle="#ffffff"; g.fillRect(0,0,c.width,c.height); g.drawImage(img,0,0,c.width,c.height);
+  if(saved) ov={cv:c,d:saved.d,x:saved.x,y:saved.y,w:saved.w,h:saved.h,a:saved.a,vis:saved.v!==false,moving:false};
+  else { let d=""; try{ d=c.toDataURL("image/jpeg",0.8); }catch(e){} const sc=Math.min(P.w/c.width,P.h/c.height), w=c.width*sc, hh=c.height*sc;
+    ov={cv:c,d,x:(P.w-w)/2,y:(P.h-hh)/2,w,h:hh,a:0.45,vis:true,moving:true}; }
+  ovUI(); saveOverlay(); redraw(); }
+function loadOverlay(){ try{ const s=JSON.parse(load(KEY+"overlay")||"null"); if(!s||!s.d||!(s.w>0)||!(s.h>0)) return; const img=new Image(); img.onload=()=>{ if(!ov) makeOverlay(img,s); }; img.src=s.d; }catch(e){} }
+function pickFromPicture(cell){ if(!ov||!ov.vis) return false; const u=(cell[0]+0.5-ov.x)/ov.w, v=(cell[1]+0.5-ov.y)/ov.h; if(u<0||u>1||v<0||v>1) return false;
+  try{ const sw=Math.max(1,ov.cv.width/ov.w), sh=Math.max(1,ov.cv.height/ov.h), sx=Math.max(0,Math.min(ov.cv.width-sw,u*ov.cv.width-sw/2)), sy=Math.max(0,Math.min(ov.cv.height-sh,v*ov.cv.height-sh/2));
+    const one=document.createElement("canvas"); one.width=1; one.height=1; const g=one.getContext("2d"); g.drawImage(ov.cv,sx,sy,sw,sh,0,0,1,1); const d=g.getImageData(0,0,1,1).data, t=DMC[nearestDMC(d[0],d[1],d[2])];
+    let i=P.palette.indexOf(t.n); if(i<0){ if(P.palette.length>=250){ toast("This design already has 250 threads"); return true; } P.palette.push(t.n); i=P.palette.length-1; }
+    P.cur=i; setTool("draw"); refreshPalette(); autosave(); toast("Picked DMC "+t.n+" from the picture"); return true; }catch(e){ return false; } }
+$("mTrace").onclick=()=>$("trFile").click();
+$("trFile").onchange=e=>{ const f=e.target.files[0]; e.target.value=""; if(!f) return; const url=URL.createObjectURL(f), img=new Image();
+  img.onload=()=>{ URL.revokeObjectURL(url); makeOverlay(img); closeSheet(); toast("Drag to move the picture, pinch to resize, then tap Done"); };
+  img.onerror=()=>{ URL.revokeObjectURL(url); toast("This browser could not open that file. Try a JPEG or PNG picture."); }; img.src=url; };
+$("ovMove").onclick=()=>{ if(!ov) return; ov.moving=!ov.moving; if(ov.moving) ov.vis=true; ovUI(); redraw(); saveOverlay(); if(ov.moving) toast("Drag to move the picture, pinch to resize"); };
+$("ovShow").onclick=()=>{ if(!ov) return; ov.vis=!ov.vis; if(!ov.vis) ov.moving=false; ovUI(); redraw(); saveOverlay(); };
+$("ovAlpha").oninput=()=>{ if(!ov) return; ov.a=Number($("ovAlpha").value)/100; redraw(); saveOverlay(); };
+$("ovDel").onclick=function(){ twoTap(this,()=>{ clearOverlay(); toast("Picture removed") }); };
+
+/* threads */
+(function(){ const g=$("threadGrid"); DMC.forEach(d=>{ const b=document.createElement("button"); b.type="button"; b.className="th"; b.dataset.q=(d.n+" "+d.name).toLowerCase();
+    const sw=document.createElement("i"); sw.style.background=d.hex; const t=document.createElement("span"); const n=document.createElement("b"); n.textContent="DMC "+d.n; const s=document.createElement("small"); s.textContent=d.name; t.append(n,s);
+    b.append(sw,t); b.onclick=()=>{ let i=P.palette.indexOf(d.n); if(i<0){ if(P.palette.length>=250){ toast("This design already has 250 threads"); return; } P.palette.push(d.n); i=P.palette.length-1; }
+      P.cur=i; if(tool!=="fill") setTool("draw"); refreshPalette(); autosave(); closeSheet(); }; g.append(b); }); })();
+function filterThreads(){ const q=$("thSearch").value.trim().toLowerCase(); let n=0; document.querySelectorAll("#threadGrid .th").forEach(b=>{ const ok=!q||b.dataset.q.includes(q); b.hidden=!ok; if(ok) n++; });
+  $("thCount").textContent=n+" of "+DMC.length+" threads. Tap one to add it to your design."; }
+$("thSearch").oninput=filterThreads;
+$("addThread").onclick=()=>{ $("thSearch").value=""; filterThreads(); openSheet("sheet-threads"); };
+
+/* key */
+function renderKey(){ const n=counts(P), body=$("keyBody"); body.textContent=""; let total=0, used=0;
+  P.palette.forEach((num,i)=>{ const c=n[i+1]; if(!c) return; total+=c; used++; const tr=document.createElement("tr");
+    const cell=(txt,cls)=>{ const td=document.createElement("td"); if(cls) td.className=cls; td.textContent=txt; tr.append(td); return td; };
+    cell(SYM[i%SYM.length]); const sw=cell(""); const s=document.createElement("i"); s.style.background=PHEX[i]; sw.append(s);
+    cell(num); cell((BY[num]||{name:""}).name); cell(String(c),"n"); body.append(tr); });
+  $("keyTotal").textContent=used? total+" stitches in "+used+(used===1?" thread.":" threads.") : "No stitches yet."; }
+$("mKey").onclick=()=>{ renderKey(); openSheet("sheet-key"); };
+$("keyClean").onclick=()=>{ const n=counts(P), map=[0], pal=[]; P.palette.forEach((num,i)=>{ if(n[i+1]){ pal.push(num); map[i+1]=pal.length; } else map[i+1]=0; });
+  if(pal.length===P.palette.length){ toast("Every thread is in use"); return; } if(!pal.length) pal.push("310");
+  for(let i=0;i<P.cells.length;i++) P.cells[i]=map[P.cells[i]]; P.palette=pal; P.cur=0; undo=[]; redo=[]; refreshPalette(); refreshInfo(); renderKey(); autosave(); redraw(); toast("Unused threads removed"); };
+
+/* setup */
+COUNTS.forEach(c=>{ const o=document.createElement("option"); o.value=c; o.textContent=c+" count Aida ("+c+" stitches per inch)"; $("fCount").append(o); });
+FABRICS.forEach(f=>{ const o=document.createElement("option"); o.value=f[0]; o.textContent=f[0]; $("fFabric").append(o); });
+function formVals(){ const cl=v=>Math.max(5,Math.min(300,Math.round(Number(v)||0))); return {name:$("fName").value.trim()||"Untitled",w:cl($("fW").value),h:cl($("fH").value),count:Number($("fCount").value),fabric:$("fFabric").value}; }
+function formSize(){ const f=formVals(); $("fSize").textContent="Finished size: "+sizeText(f.w,f.h,f.count)+". Sizes run from 5 to 300 stitches."; }
+["fW","fH","fCount"].forEach(id=>$(id).addEventListener("input",formSize));
+function openSetup(isNew){ setupNew=isNew; $("fTitle").textContent=isNew?"New blank design":"Fabric and size"; $("fApply").textContent=isNew?"Start the design":"Apply to this design";
+  $("fHint").textContent=isNew?"This opens an empty grid in the size you chose.":"Applying keeps your stitches. A smaller size trims from the right and bottom edges.";
+  $("fName").value=isNew?"My design":P.name; $("fW").value=isNew?60:P.w; $("fH").value=isNew?60:P.h; $("fCount").value=P.count; $("fFabric").value=P.fabric; formSize(); openSheet("sheet-setup"); }
+$("mSetup").onclick=()=>openSetup(false); $("mNew").onclick=()=>openSetup(true);
+$("fApply").onclick=()=>{ const f=formVals();
+  if(setupNew){ guard(()=>{ setProject(newProject(f.name,f.w,f.h,f.count,f.fabric)); closeSheet(); toast("Blank design ready"); }); return; }
+  if(f.w!==P.w||f.h!==P.h){ P.cells=resized(P,f.w,f.h); P.w=f.w; P.h=f.h; undo=[]; redo=[]; needFit=true; }
+  P.name=f.name; P.count=f.count; P.fabric=f.fabric; refreshInfo(); autosave(); closeSheet(); if(needFit) fit(); else redraw(); };
+
+
+/* saved list */
+function renderSaved(){ const box=$("savedList"), all=savedAll(); box.textContent=""; $("savedWrap").hidden=!all.length; if(!all.length) return;
+  all.forEach(o=>{ const row=document.createElement("div"); row.className="saved"; const d=document.createElement("div"); const b=document.createElement("b"); b.textContent=o.name; const s=document.createElement("small"); s.textContent=o.w+" × "+o.h+" stitches, saved "+(o.when||"");
+    d.append(b,s); const open=document.createElement("button"); open.type="button"; open.className="btn"; open.textContent="Open";
+    open.onclick=()=>guard(()=>{ try{ setProject(unpack(o)); closeSheet(); toast("Opened "+o.name); }catch(e){ toast("That saved design could not be opened"); } });
+    const del=document.createElement("button"); del.type="button"; del.className="btn"; del.textContent="Delete";
+    del.onclick=function(){ twoTap(this,()=>{ store(KEY+"saved",JSON.stringify(savedAll().filter(x=>x.id!==o.id))); if(P.id===o.id) P.id=null; renderSaved(); }); };
+    row.append(d,open,del); box.append(row); }); }
+
+
+/* files out */
+function stamp(){ const d=new Date(), z=(n,l)=>String(n).padStart(l||2,"0"); return d.getFullYear()+z(d.getMonth()+1)+z(d.getDate())+"-"+z(d.getHours())+z(d.getMinutes())+z(d.getSeconds()); }
+function fileBase(){ return (P.name.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"design")+"-"+stamp(); }
+function plainDownload(filename,data){ try{ const blob=data instanceof Blob?data:new Blob([data],{type:"application/octet-stream"}), url=URL.createObjectURL(blob), a=document.createElement("a");
+    a.href=url; a.download=filename; document.body.append(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),60000); return "saved"; }catch(e){ return "unavailable"; } }
+async function offer(filename,data){ if(!(window.claude&&window.claude.use)) return plainDownload(filename,data);
+  let d=null; try{ d=await window.claude.use("downloads"); }catch(e){}
+  if(!d) return "unavailable"; try{ await d.save({filename,data}); return "saved"; }catch(e){ const c=e&&e.code; return c==="declined"?"declined":c==="rate_limited"?"busy":"unavailable"; } }
+function report(r){ if(r==="saved") toast("Saved"); else if(r==="declined") toast("Not saved"); else if(r==="busy") toast("A save is already open. Try again in a moment."); return r==="unavailable"; }
+function canvasBlob(c,type,q){ return new Promise(res=>c.toBlob(res,type,q)); }
+async function showPics(canvases){ const box=$("pics"); box.querySelectorAll("img").forEach(i=>URL.revokeObjectURL(i.src)); box.textContent="";
+  for(const c of canvases){ const b=await canvasBlob(c,"image/png"); if(!b) continue; const img=document.createElement("img"); img.alt="Design picture"; img.src=URL.createObjectURL(b); box.append(img); }
+  openSheet("sheet-pics"); }
+
+function imageCanvas(){ const px=Math.max(4,Math.min(40,Math.floor(2400/Math.max(P.w,P.h)))), c=document.createElement("canvas"); c.width=P.w*px; c.height=P.h*px; const g=c.getContext("2d");
+  g.fillStyle=fabricHex(P.fabric); g.fillRect(0,0,c.width,c.height);
+  for(let r=0;r<P.h;r++) for(let x=0;x<P.w;x++){ const v=P.cells[r*P.w+x]; if(v){ g.fillStyle=PHEX[v-1]; g.fillRect(x*px,r*px,px,px); } } return c; }
+$("mImage").onclick=async()=>{ closeSheet(); toast("Preparing the image"); const c=imageCanvas(), blob=await canvasBlob(c,"image/png");
+  if(blob&&!report(await offer(fileBase()+".png",blob))) return; showPics([c]); };
+
+function patternPages(){ const PW=1654, PHt=2339, M=110, pages=[], n=counts(P);
+  const used=[]; P.palette.forEach((num,i)=>{ if(n[i+1]) used.push(i); });
+  const page=()=>{ const c=document.createElement("canvas"); c.width=PW; c.height=PHt; const g=c.getContext("2d"); g.fillStyle="#fff"; g.fillRect(0,0,PW,PHt); g.fillStyle="#000"; g.textBaseline="alphabetic"; pages.push(c); return g; };
+  const foot=g=>{ g.font="26px sans-serif"; g.fillStyle="#666"; g.textAlign="center"; g.fillText("Page "+pages.length,PW/2,PHt-60); g.textAlign="left"; g.fillStyle="#000"; };
+  /* key pages */
+  let g=page(), y=M+50; g.font="bold 64px sans-serif"; g.fillText(P.name,M,y); y+=70; g.font="32px sans-serif";
+  ["Fabric: "+P.count+" count Aida, "+P.fabric.toLowerCase(),"Design size: "+P.w+" × "+P.h+" stitches","Finished size: "+sizeText(P.w,P.h,P.count),"Threads: DMC stranded cotton, "+used.length+(used.length===1?" colour, ":" colours, ")+(P.cells.length-n[0])+" stitches"]
+    .forEach(t=>{ g.fillText(t,M,y); y+=46; });
+  y+=30; const head=()=>{ g.font="bold 28px sans-serif"; g.fillText("Symbol",M,y); g.fillText("Colour",M+150,y); g.fillText("DMC",M+310,y); g.fillText("Name",M+470,y); g.textAlign="right"; g.fillText("Stitches",PW-M,y); g.textAlign="left"; y+=16; g.fillRect(M,y,PW-2*M,2); y+=44; };
+  head();
+  used.forEach(i=>{ if(y>PHt-140){ foot(g); g=page(); y=M+40; head(); }
+    g.font="34px sans-serif"; g.textAlign="center"; g.fillText(SYM[i%SYM.length],M+45,y); g.textAlign="left";
+    g.fillStyle=PHEX[i]; g.fillRect(M+150,y-32,90,40); g.strokeStyle="#000"; g.lineWidth=1; g.strokeRect(M+150.5,y-31.5,90,40); g.fillStyle="#000";
+    g.font="30px sans-serif"; g.fillText(P.palette[i],M+310,y); g.fillText((BY[P.palette[i]]||{name:""}).name,M+470,y); g.textAlign="right"; g.fillText(String(n[i+1]),PW-M,y); g.textAlign="left"; y+=52; });
+  foot(g);
+  /* chart pages: 50 stitches wide, 70 high */
+  const TW=50, TH=70, cs=28, X0=M+40, Y0=M+110;
+  for(let tr=0;tr<P.h;tr+=TH) for(let tc=0;tc<P.w;tc+=TW){ g=page(); const cw=Math.min(TW,P.w-tc), ch=Math.min(TH,P.h-tr);
+    g.font="bold 36px sans-serif"; g.fillText(P.name,M,M+20); g.font="26px sans-serif"; g.fillText("Columns "+(tc+1)+" to "+(tc+cw)+", rows "+(tr+1)+" to "+(tr+ch),M,M+60);
+    g.textAlign="center"; g.textBaseline="middle";
+    for(let r=0;r<ch;r++) for(let c=0;c<cw;c++){ const v=P.cells[(tr+r)*P.w+tc+c]; if(!v) continue; const hex=PHEX[v-1]; g.fillStyle=hex; g.fillRect(X0+c*cs,Y0+r*cs,cs,cs);
+      g.fillStyle=lum(hex)<0.5?"#fff":"#000"; g.font="20px sans-serif"; g.fillText(SYM[(v-1)%SYM.length],X0+c*cs+cs/2,Y0+r*cs+cs/2+1); }
+    for(let c=0;c<=cw;c++){ const b=(tc+c)%10===0||c===0||c===cw; g.fillStyle=b?"#000":"#9a9a9a"; g.fillRect(X0+c*cs-(b?1:0),Y0,b?3:1,ch*cs); }
+    for(let r=0;r<=ch;r++){ const b=(tr+r)%10===0||r===0||r===ch; g.fillStyle=b?"#000":"#9a9a9a"; g.fillRect(X0,Y0+r*cs-(b?1:0),cw*cs,b?3:1); }
+    g.fillStyle="#000"; g.font="20px sans-serif";
+    for(let c=0;c<=cw;c++) if((tc+c)%10===0&&tc+c>0) g.fillText(String(tc+c),X0+c*cs,Y0-16);
+    g.textAlign="right"; for(let r=0;r<=ch;r++) if((tr+r)%10===0&&tr+r>0) g.fillText(String(tr+r),X0-10,Y0+r*cs);
+    g.textAlign="left"; g.textBaseline="alphabetic"; foot(g); }
+  return pages; }
+$("mPrint").onclick=async()=>{ closeSheet(); toast("Preparing the pattern"); await new Promise(r=>setTimeout(r,30)); const pages=patternPages();
+  try{ if(window.jspdf&&window.jspdf.jsPDF){ const doc=new window.jspdf.jsPDF({unit:"pt",format:"a4",orientation:"portrait"});
+      pages.forEach((c,i)=>{ if(i) doc.addPage(); doc.addImage(c.toDataURL("image/jpeg",0.9),"JPEG",0,0,595.28,841.89); });
+      if(!report(await offer(fileBase()+"-pattern.pdf",doc.output("blob")))) return; } }catch(e){}
+  showPics(pages); };
+
+$("mBackup").onclick=async()=>{ closeSheet(); const txt=JSON.stringify(pack(P)); if(!report(await offer(fileBase()+"-backup.json",txt))) return; toast("Backup files cannot be saved in this view"); };
+$("mRestore").onclick=()=>$("restoreFile").click();
+$("restoreFile").onchange=e=>{ const f=e.target.files[0]; e.target.value=""; if(!f) return; const rd=new FileReader();
+  rd.onload=()=>{ let p; try{ p=unpack(JSON.parse(rd.result)); p.id=null; }catch(err){ toast("That file is not a Cross Stitch Studio backup"); return; }
+    guard(()=>{ setProject(p); closeSheet(); toast("Opened "+p.name); }); };
+  rd.onerror=()=>toast("The file could not be read"); rd.readAsText(f); };
+
+/* start */
+let start=null; try{ const raw=load(KEY+"current"); if(raw) start=unpack(JSON.parse(raw)); }catch(e){ start=null; }
+const first=!start; setProject(start||newProject("My design",60,60,14,"White"),true); loadOverlay(); resize();
+if(first) toast("Tap Menu for examples and fabric choices");
+})(); }
+</script>
+</body>
+</html>
