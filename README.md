@@ -10,14 +10,18 @@ No account and no download are needed. It works on phones, tablets and computers
 
 - Aida fabric in 11, 14, 16, 18, 20 and 22 count
 - 489 DMC stranded cotton shades (screen colours are approximations)
-- 54 example designs
-- Photo to pattern converter
-- Save as an image, and save a printable pattern with a thread key
+- 237 example designs in ten groups
+- Photo to pattern converter, and Trace a photo for stitching over a picture by hand
+- Cross Stitch it: tick stitches off as you sew, with a count of what is done and what is left
+- Save as an image with or without the grid, and save a printable pattern with the finished picture, a thread key and charts
+- Backup files to keep or send a design
+- Six colour themes
 
 ## Files
 
 - `index.html` is the whole app
-- `manifest.webmanifest` and the two icons make it installable
+- `manifest.webmanifest` and the icon files make it installable
+- `test/index.html` is a test copy, where changes are tried before they reach the app
 - `sw.js` lets it open without an internet connection
 
 ## Install on Android
