@@ -34,4 +34,6 @@ Copyright (C) 2026 Arturas Gulevskis
 
 This program is free software. You can redistribute it and modify it under the terms of the GNU General Public License, version 2, as published by the Free Software Foundation. It comes with no warranty. The full text is in the `LICENSE` file.
 
+The example designs are original drawings made for this project. They show everyday subjects, with no characters, logos or artwork taken from anyone else, and they are covered by the same licence.
+
 DMC is a trademark of its owner. This project is not affiliated with or endorsed by DMC.
