@@ -41,6 +41,8 @@ button{cursor:pointer}
 .btn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 10px;font-weight:600;font-size:13px;min-height:38px}
 .btn:disabled{opacity:.4}
 .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.icon{width:38px;padding:0;display:flex;align-items:center;justify-content:center;flex:none}
+.btn.icon[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
 
 #stage{flex:1;min-height:0;position:relative;background:var(--work)}
 #cv{position:absolute;inset:0;width:100%;height:100%;touch-action:none;display:block}
@@ -129,13 +131,14 @@ input[type=text],input[type=number],input[type=search],select{border:1px solid v
     <h1 id="pname">Cross Stitch Studio</h1>
     <p id="pinfo"></p>
   </div>
+  <button class="btn icon" id="symBtn" type="button" aria-pressed="false" aria-label="Show symbols" title="Show symbols"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="16" height="16" rx="2"/><line x1="10" y1="2" x2="10" y2="18"/><line x1="2" y1="10" x2="18" y2="10"/><circle cx="6" cy="6" r="1.4" fill="currentColor"/><path d="M12.6 12.6l2.8 2.8M15.4 12.6l-2.8 2.8"/></svg></button>
   <button class="btn" id="undo" type="button">Undo</button>
   <button class="btn" id="redo" type="button">Redo</button>
   <button class="btn primary" id="menuBtn" type="button">Menu</button>
 </header>
 
 <main id="stage">
-  <canvas id="cv" aria-label="Fabric grid. Touch to place stitches. Use two fingers to zoom and move."></canvas>
+  <canvas id="cv" aria-label="Fabric grid. Touch to place stitches or draw backstitch lines. Use two fingers to zoom and move."></canvas>
   <div id="stBar" hidden>
     <b id="stCount"></b>
     <button class="btn" id="stView" type="button">Done: faded</button>
@@ -161,11 +164,11 @@ input[type=text],input[type=number],input[type=search],select{border:1px solid v
 
 <nav class="tools" id="dsTools" aria-label="Tools">
   <button type="button" data-tool="draw" aria-pressed="true">Stitch</button>
+  <button type="button" data-tool="line" aria-pressed="false">Line</button>
   <button type="button" data-tool="erase" aria-pressed="false">Unpick</button>
   <button type="button" data-tool="fill" aria-pressed="false">Fill</button>
   <button type="button" data-tool="pick" aria-pressed="false">Pick</button>
   <button type="button" data-tool="move" aria-pressed="false">Move</button>
-  <button type="button" id="symBtn" aria-pressed="false">Symbols</button>
 </nav>
 
 <div class="palette" id="paletteRow">
@@ -296,8 +299,8 @@ input[type=text],input[type=number],input[type=search],select{border:1px solid v
   <header><h2>Threads used</h2><button class="btn" data-close type="button">Close</button></header>
   <div class="body">
     <p id="keyTotal"></p>
-    <table class="key"><thead><tr><th>Symbol</th><th>Colour</th><th>DMC</th><th>Name</th><th style="text-align:right">Stitches</th></tr></thead><tbody id="keyBody"></tbody></table>
-    <button class="btn" id="keyClean" type="button">Remove threads with no stitches</button>
+    <table class="key"><thead><tr><th>Symbol</th><th>Colour</th><th>DMC</th><th>Name</th><th style="text-align:right">Amount</th></tr></thead><tbody id="keyBody"></tbody></table>
+    <button class="btn" id="keyClean" type="button">Remove threads that are not used</button>
     <p>Screen colours are close approximations of the real thread. Buy by the DMC number.</p>
   </div>
 </section>
@@ -820,17 +823,33 @@ function sizeText(w,h,count){
 }
 function toB64(u8){ let s=""; for(let i=0;i<u8.length;i+=8192) s+=String.fromCharCode.apply(null,u8.subarray(i,i+8192)); return btoa(s); }
 function fromB64(b){ const s=atob(b), u=new Uint8Array(s.length); for(let i=0;i<s.length;i++) u[i]=s.charCodeAt(i); return u; }
-function pack(p){ const o={v:1,id:p.id||null,name:p.name,w:p.w,h:p.h,count:p.count,fabric:p.fabric,palette:p.palette,cur:p.cur,cells:toB64(p.cells)}; if(p.done&&p.done.some(v=>v)) o.done=toB64(p.done); return o; }
+function pack(p){ const o={v:1,id:p.id||null,name:p.name,w:p.w,h:p.h,count:p.count,fabric:p.fabric,palette:p.palette,cur:p.cur,cells:toB64(p.cells)}; if(p.done&&p.done.some(v=>v)) o.done=toB64(p.done);
+  if(p.lines&&p.lines.length) o.lines=p.lines.map(l=>l.slice(0,6)); return o; }
+/* Backstitch lines. Each is [x0,y0,x1,y1,thread,done]: two grid corners, a thread (1 is the first in the palette) and 1 once it is sewn. */
+function cleanLines(a,w,h,npal){ const out=[]; if(!Array.isArray(a)) return out;
+  for(const l of a){ if(!Array.isArray(l)||l.length<5) continue; const v=l.slice(0,5).map(Number);
+    if(!v.every(Number.isInteger)) continue; const [x0,y0,x1,y1,t]=v;
+    if(x0<0||x1<0||y0<0||y1<0||x0>w||x1>w||y0>h||y1>h||(x0===x1&&y0===y1)||t<1||t>npal) continue;
+    out.push([x0,y0,x1,y1,t,l[5]?1:0]); if(out.length>=20000) break; }
+  return out; }
+function sameLine(a,b){ return (a[0]===b[0]&&a[1]===b[1]&&a[2]===b[2]&&a[3]===b[3])||(a[0]===b[2]&&a[1]===b[3]&&a[2]===b[0]&&a[3]===b[1]); }
+/* distance from a point to a line, in stitches */
+function lineDist(x,y,l){ const dx=l[2]-l[0], dy=l[3]-l[1], k=Math.max(0,Math.min(1,((x-l[0])*dx+(y-l[1])*dy)/(dx*dx+dy*dy))); return Math.hypot(x-(l[0]+k*dx),y-(l[1]+k*dy)); }
+function nearestLine(lines,x,y,tol){ let best=-1, bd=tol; for(let i=0;i<lines.length;i++){ const d=lineDist(x,y,lines[i]); if(d<=bd){ bd=d; best=i; } } return best; }
+/* length of backstitch for each thread, in stitches: index 0 is unused, index 1 is the first palette thread */
+function lineLengths(p){ const n=new Array(p.palette.length+1).fill(0); (p.lines||[]).forEach(l=>{ n[l[4]]+=Math.hypot(l[2]-l[0],l[3]-l[1]); }); return n; }
+function lengthText(len,count){ const cm=len/count*2.54; return cm<1?"under 1 cm":"about "+Math.ceil(cm)+" cm"; }
 function unpack(o){
   if(!o || !o.w || !o.h || !Array.isArray(o.palette) || typeof o.cells!=="string") throw new Error("not a design");
   const cells = fromB64(o.cells); if(cells.length !== o.w*o.h) throw new Error("size mismatch");
   let done=null; try{ if(typeof o.done==="string"){ const d=fromB64(o.done); if(d.length===o.w*o.h) done=d; } }catch(e){}
-  return {id:o.id||null,name:String(o.name||"Untitled"),w:o.w,h:o.h,count:COUNTS.includes(o.count)?o.count:14,fabric:o.fabric||"White",palette:o.palette.map(String),cur:Math.min(o.cur||0,o.palette.length-1),cells,done:done||new Uint8Array(o.w*o.h)};
+  return {id:o.id||null,name:String(o.name||"Untitled"),w:o.w,h:o.h,count:COUNTS.includes(o.count)?o.count:14,fabric:o.fabric||"White",palette:o.palette.map(String),cur:Math.min(o.cur||0,o.palette.length-1),cells,done:done||new Uint8Array(o.w*o.h),lines:cleanLines(o.lines,o.w,o.h,o.palette.length)};
 }
-function newProject(name,w,h,count,fabric){ return {id:null,name,w,h,count,fabric,palette:["310","Blanc","321","815","444","702","798","3371"],cur:0,cells:new Uint8Array(w*h),done:new Uint8Array(w*h)}; }
+function newProject(name,w,h,count,fabric){ return {id:null,name,w,h,count,fabric,palette:["310","Blanc","321","815","444","702","798","3371"],cur:0,cells:new Uint8Array(w*h),done:new Uint8Array(w*h),lines:[]}; }
 function resized(p,nw,nh,src){ src=src||p.cells; const c=new Uint8Array(nw*nh); for(let r=0;r<Math.min(nh,p.h);r++) for(let x=0;x<Math.min(nw,p.w);x++) c[r*nw+x]=src[r*p.w+x]; return c; }
 /* Cross Stitch it: how many stitches exist and how many are ticked as sewn */
-function progress(p){ let total=0,done=0; for(let i=0;i<p.cells.length;i++) if(p.cells[i]){ total++; if(p.done[i]) done++; } return {total,done,left:total-done,pct:total?Math.floor(100*done/total):0}; }
+function progress(p){ let total=0,done=0; for(let i=0;i<p.cells.length;i++) if(p.cells[i]){ total++; if(p.done[i]) done++; }
+  (p.lines||[]).forEach(l=>{ total++; if(l[5]) done++; }); return {total,done,left:total-done,pct:total?Math.floor(100*done/total):0}; }
 /* The stitched cells a tap covers: one cell, its whole row, its whole column, or its 10 by 10 square */
 function tickGroup(p,c,r,kind){ const out=[]; let c0=c,c1=c,r0=r,r1=r;
   if(kind==="row"){ c0=0; c1=p.w-1; } else if(kind==="col"){ r0=0; r1=p.h-1; } else if(kind==="square"){ c0=Math.floor(c/10)*10; c1=Math.min(p.w-1,c0+9); r0=Math.floor(r/10)*10; r1=Math.min(p.h-1,r0+9); }
@@ -1166,11 +1185,11 @@ function photoToPattern(px,w,h,n,skipWhite){
   for(const i of idx) cells[i]=map[tmp[i]];
   return {palette,cells};
 }
-if(typeof module!=="undefined"){ module.exports={paint,FONT,photoToPattern,progress,tickGroup,DMC,BY,pack,unpack,newProject,resized,lineCells,floodCells,counts,EXAMPLES,sizeText,SYM}; }
+if(typeof module!=="undefined"){ module.exports={cleanLines,sameLine,lineDist,nearestLine,lineLengths,lengthText,paint,FONT,photoToPattern,progress,tickGroup,DMC,BY,pack,unpack,newProject,resized,lineCells,floodCells,counts,EXAMPLES,sizeText,SYM}; }
 
 /* ---------- app ---------- */
 if(typeof document!=="undefined"){ (function(){
-let P, undo=[], redo=[], tool="draw", sym=false, PHEX=[], ov=null, ovDrag=null, ovPinch=null, pending=null, setupNew=false, mode="design", stTool="one", doneView=0, tk=null;
+let P, undo=[], redo=[], tool="draw", sym=false, PHEX=[], ov=null, ovDrag=null, ovPinch=null, pending=null, setupNew=false, mode="design", stTool="one", doneView=0, tk=null, draft=null;
 const TEST=/\/test\//.test(location.pathname), KEY=TEST?"xs-test.":"xs.";
 const view={s:10,x:0,y:0};
 const cv=$("cv"), ctx=cv.getContext("2d"), stage=$("stage");
@@ -1189,11 +1208,11 @@ function refreshPalette(){ PHEX=P.palette.map(n=>(BY[n]||{hex:"#888888"}).hex);
   const box=$("swatches"); box.textContent="";
   P.palette.forEach((n,i)=>{ const b=document.createElement("button"); b.type="button"; b.className="sw"; b.setAttribute("aria-pressed",i===P.cur?"true":"false");
     b.title="DMC "+n+" "+((BY[n]||{}).name||""); const sw=document.createElement("i"); sw.style.background=PHEX[i]; const s=document.createElement("span"); s.textContent=n;
-    b.append(sw,s); b.onclick=()=>{ P.cur=i; if(tool!=="draw"&&tool!=="fill") setTool("draw"); refreshPalette(); autosave(); }; box.append(b); });
+    b.append(sw,s); b.onclick=()=>{ P.cur=i; if(tool!=="draw"&&tool!=="fill"&&tool!=="line") setTool("draw"); refreshPalette(); autosave(); }; box.append(b); });
   const act=box.children[P.cur]; if(act){ const l=act.offsetLeft-box.offsetLeft, r=l+act.offsetWidth; if(l<box.scrollLeft) box.scrollLeft=l; else if(r>box.scrollLeft+box.clientWidth) box.scrollLeft=r-box.clientWidth; }
 }
-function setTool(t){ tool=t; document.querySelectorAll(".tools [data-tool]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.tool===t?"true":"false")); }
-function setProject(p,keepPicture){ P=p; undo=[]; redo=[]; if(!P.done||P.done.length!==P.cells.length) P.done=new Uint8Array(P.cells.length); if(mode==="stitch") exitStitch(); if(!keepPicture) clearOverlay(); refreshPalette(); refreshInfo(); fit(); autosave(); }
+function setTool(t){ tool=t; draft=null; document.querySelectorAll(".tools [data-tool]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.tool===t?"true":"false")); }
+function setProject(p,keepPicture){ P=p; undo=[]; redo=[]; if(!P.done||P.done.length!==P.cells.length) P.done=new Uint8Array(P.cells.length); P.lines=cleanLines(P.lines,P.w,P.h,P.palette.length); draft=null; if(mode==="stitch") exitStitch(); if(!keepPicture) clearOverlay(); refreshPalette(); refreshInfo(); fit(); autosave(); }
 
 /* drawing the canvas */
 function fit(){ const cw=stage.clientWidth, ch=stage.clientHeight; if(!cw||!ch){ needFit=true; return; } needFit=false;
@@ -1223,6 +1242,16 @@ function draw(){
   if(s>=5*dpr) lines(1,thin,1);
   lines(10,bold,Math.max(1,dpr));
   ctx.strokeStyle=bold; ctx.lineWidth=Math.max(1,dpr); ctx.strokeRect(Math.round(ox)+0.5,Math.round(oy)+0.5,Math.round(w*s),Math.round(h*s));
+  /* backstitch lines sit on top of the stitches and the grid */
+  if(P.lines.length||draft){ ctx.lineCap="round"; ctx.lineWidth=Math.max(2*dpr,s*0.16);
+    for(const l of P.lines){ if(st) ctx.globalAlpha=doneView===0?(l[5]?0.22:1):doneView===2?(l[5]?1:0.1):1;
+      ctx.strokeStyle=PHEX[l[4]-1]||"#888888"; ctx.beginPath(); ctx.moveTo(ox+l[0]*s,oy+l[1]*s); ctx.lineTo(ox+l[2]*s,oy+l[3]*s); ctx.stroke(); }
+    ctx.globalAlpha=1;
+    if(draft){ const ax=ox+draft[0]*s, ay=oy+draft[1]*s, bx=ox+draft[2]*s, by=oy+draft[3]*s, acc=getComputedStyle(document.documentElement).getPropertyValue("--accent").trim()||"#8F1A2E";
+      if(ax!==bx||ay!==by){ ctx.strokeStyle=PHEX[P.cur]||"#888888"; ctx.setLineDash([ctx.lineWidth*0.6,ctx.lineWidth*2]); ctx.beginPath(); ctx.moveTo(ax,ay); ctx.lineTo(bx,by); ctx.stroke(); ctx.setLineDash([]); }
+      ctx.fillStyle=acc; ctx.strokeStyle="#ffffff"; ctx.lineWidth=2*dpr;
+      [[ax,ay],[bx,by]].forEach(q=>{ ctx.beginPath(); ctx.arc(q[0],q[1],Math.max(5*dpr,s*0.2),0,6.2832); ctx.fill(); ctx.stroke(); }); }
+    ctx.lineCap="butt"; }
 }
 /* Keep the whole app inside the visible screen, and never let the page itself scroll the top bar away. */
 function fitScreen(){ const hh=window.innerHeight; if(hh) document.documentElement.style.setProperty("--app-h",hh+"px"); if(window.scrollX||window.scrollY) window.scrollTo(0,0); }
@@ -1242,8 +1271,14 @@ function put(i,val){ if(P.cells[i]===val) return; if(!stroke.map.has(i)) stroke.
 function commit(){ if(!stroke) return; const m=stroke.map; if(m.size){ const idx=new Uint32Array(m.size), before=new Uint8Array(m.size); let k=0; m.forEach((b,i)=>{ idx[k]=i; before[k++]=b; });
     undo.push({idx,before,after:stroke.val}); if(undo.length>100) undo.shift(); redo=[]; autosave(); refreshInfo(); } stroke=null; last=null; }
 function cancelStroke(){ if(!stroke) return; stroke.map.forEach((b,i)=>P.cells[i]=b); stroke=null; last=null; redraw(); }
-function doUndo(){ const u=undo.pop(); if(!u) return; const a=u.done?P.done:P.cells; for(let k=0;k<u.idx.length;k++) a[u.idx[k]]=u.before[k]; redo.push(u); autosave(); refreshInfo(); showCount(); redraw(); }
-function doRedo(){ const u=redo.pop(); if(!u) return; const a=u.done?P.done:P.cells; for(let k=0;k<u.idx.length;k++) a[u.idx[k]]=u.after; undo.push(u); autosave(); refreshInfo(); showCount(); redraw(); }
+function copyLines(a){ return a.map(l=>l.slice()); }
+/* every change to the lines is one step in the history, kept as the list before and after */
+function setLines(next){ undo.push({ln:true,before:copyLines(P.lines),after:copyLines(next)}); if(undo.length>100) undo.shift(); redo=[]; P.lines=next; autosave(); refreshInfo(); showCount(); redraw(); }
+function cornerAt(p){ const x=(p.x-view.x)/view.s, y=(p.y-view.y)/view.s; if(x<-1||y<-1||x>P.w+1||y>P.h+1) return null; return [Math.max(0,Math.min(P.w,Math.round(x))),Math.max(0,Math.min(P.h,Math.round(y)))]; }
+/* the line under a touch, if one is close enough: about a fingertip, and never more than a third of a stitch */
+function lineAt(p){ if(!P.lines.length) return -1; return nearestLine(P.lines,(p.x-view.x)/view.s,(p.y-view.y)/view.s,Math.max(0.18,Math.min(0.35,10/view.s))); }
+function doUndo(){ const u=undo.pop(); if(!u) return; if(u.ln){ P.lines=copyLines(u.before); redo.push(u); autosave(); refreshInfo(); showCount(); redraw(); return; } const a=u.done?P.done:P.cells; for(let k=0;k<u.idx.length;k++) a[u.idx[k]]=u.before[k]; redo.push(u); autosave(); refreshInfo(); showCount(); redraw(); }
+function doRedo(){ const u=redo.pop(); if(!u) return; if(u.ln){ P.lines=copyLines(u.after); undo.push(u); autosave(); refreshInfo(); showCount(); redraw(); return; } const a=u.done?P.done:P.cells; for(let k=0;k<u.idx.length;k++) a[u.idx[k]]=u.after; undo.push(u); autosave(); refreshInfo(); showCount(); redraw(); }
 
 cv.addEventListener("pointerdown",e=>{ e.preventDefault(); try{ cv.setPointerCapture(e.pointerId); }catch(_){}
   const p=pos(e); pts.set(e.pointerId,p);
@@ -1252,13 +1287,19 @@ cv.addEventListener("pointerdown",e=>{ e.preventDefault(); try{ cv.setPointerCap
     else if(pts.size===2){ ovDrag=null; const mx=(a[0].x+a[1].x)/2, my=(a[0].y+a[1].y)/2;
       ovPinch={d:Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y)||1,fx:((mx-view.x)/view.s-ov.x)/ov.w,fy:((my-view.y)/view.s-ov.y)/ov.h,w:ov.w,h:ov.h}; }
     return; }
-  if(pts.size===2){ cancelStroke(); cancelTick(); pan=null; blocked=true; const a=[...pts.values()];
+  if(pts.size===2){ cancelStroke(); cancelTick(); if(draft){ draft=null; redraw(); } pan=null; blocked=true; const a=[...pts.values()];
     pinch={d:Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y)||1,mx:(a[0].x+a[1].x)/2,my:(a[0].y+a[1].y)/2,s:view.s,x:view.x,y:view.y}; return; }
   if(pts.size>2||blocked) return;
   if(mode==="stitch"){ if(stTool==="move"){ pan={px:p.x,py:p.y,x:view.x,y:view.y}; return; }
+    if(stTool==="one"){ const li=lineAt(p); if(li>=0){ const next=copyLines(P.lines); next[li][5]=next[li][5]?0:1; setLines(next); return; } }
     const sc=cellAt(p); if(!sc) return; const g=tickGroup(P,sc[0],sc[1],stTool); if(!g.length){ if(stTool==="one") toast("No stitch there"); return; }
     tk={map:new Map(),val:g.every(j=>P.done[j])?0:1}; g.forEach(tickPut); if(stTool==="one") last=sc; else commitTick(); showCount(); redraw(); return; }
   if(tool==="move"){ pan={px:p.x,py:p.y,x:view.x,y:view.y}; return; }
+  if(tool==="line"){ const k=cornerAt(p); if(k){ draft=[k[0],k[1],k[0],k[1]]; redraw(); } return; }
+  if(tool==="erase"||tool==="pick"){ const li=lineAt(p); if(li>=0){
+      if(tool==="erase"){ const next=copyLines(P.lines); next.splice(li,1); setLines(next); toast("Line removed"); }
+      else { P.cur=P.lines[li][4]-1; setTool("line"); refreshPalette(); toast("Picked DMC "+P.palette[P.cur]); }
+      return; } }
   const cell=cellAt(p); if(!cell) return; const i=cell[1]*P.w+cell[0];
   if(tool==="pick"){ const v=P.cells[i]; if(v){ P.cur=v-1; setTool("draw"); refreshPalette(); toast("Picked DMC "+P.palette[v-1]); } else if(!pickFromPicture(cell)) toast("No stitch there"); return; }
   const val=tool==="erase"?0:P.cur+1; stroke={map:new Map(),val};
@@ -1274,12 +1315,18 @@ cv.addEventListener("pointermove",e=>{ if(!pts.has(e.pointerId)) return; const p
   if(pinch&&pts.size>=2){ const a=[...pts.values()], d=Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y)||1, mx=(a[0].x+a[1].x)/2, my=(a[0].y+a[1].y)/2;
     const s=Math.max(2,Math.min(60,pinch.s*d/pinch.d)); view.x=mx-(pinch.mx-pinch.x)/pinch.s*s; view.y=my-(pinch.my-pinch.y)/pinch.s*s; view.s=s; redraw(); return; }
   if(pan){ view.x=pan.x+p.x-pan.px; view.y=pan.y+p.y-pan.py; redraw(); return; }
+  if(draft){ const k=cornerAt(p)||[Math.max(0,Math.min(P.w,Math.round((p.x-view.x)/view.s))),Math.max(0,Math.min(P.h,Math.round((p.y-view.y)/view.s)))];
+    if(k[0]!==draft[2]||k[1]!==draft[3]){ draft[2]=k[0]; draft[3]=k[1]; redraw(); } return; }
   if(tk&&last){ const cell=cellAt(p); if(!cell||(cell[0]===last[0]&&cell[1]===last[1])) return;
     lineCells(last[0],last[1],cell[0],cell[1]).forEach(q=>tickPut(q[1]*P.w+q[0])); last=cell; showCount(); redraw(); return; }
   if(stroke&&last){ const cell=cellAt(p); if(!cell) return; if(cell[0]===last[0]&&cell[1]===last[1]) return;
     lineCells(last[0],last[1],cell[0],cell[1]).forEach(q=>put(q[1]*P.w+q[0],stroke.val)); last=cell; redraw(); } });
-function up(e){ if(!pts.has(e.pointerId)) return; pts.delete(e.pointerId); if(pts.size<2){ pinch=null; ovPinch=null; } if(pts.size===0){ commit(); commitTick(); pan=null; blocked=false; if(ovDrag||(ov&&ov.moving)){ ovDrag=null; saveOverlay(); } } }
-cv.addEventListener("pointerup",up); cv.addEventListener("pointercancel",up);
+function up(e){ if(!pts.has(e.pointerId)) return; pts.delete(e.pointerId); if(pts.size<2){ pinch=null; ovPinch=null; } if(pts.size===0){ commit(); commitTick(); commitDraft(); pan=null; blocked=false; if(ovDrag||(ov&&ov.moving)){ ovDrag=null; saveOverlay(); } } }
+/* finishing a line: a line drawn over an existing one replaces it, so its colour can be changed */
+function commitDraft(){ if(!draft) return; const d=draft; draft=null;
+  if(d[0]===d[2]&&d[1]===d[3]){ redraw(); toast("Drag from one corner to another"); return; }
+  const nl=[d[0],d[1],d[2],d[3],P.cur+1,0], next=copyLines(P.lines).filter(l=>!sameLine(l,nl)); next.push(nl); setLines(next); }
+cv.addEventListener("pointerup",up); cv.addEventListener("pointercancel",e=>{ if(draft){ draft=null; redraw(); } up(e); });
 cv.addEventListener("wheel",e=>{ e.preventDefault();
   if(ov&&ov.moving){ const q=pos(e), cx=(q.x-view.x)/view.s, cy=(q.y-view.y)/view.s, nw=Math.max(3,Math.min(3000,ov.w*(e.deltaY<0?1.08:1/1.08))), k=nw/ov.w;
     ov.x=cx-(cx-ov.x)*k; ov.y=cy-(cy-ov.y)*k; ov.w=nw; ov.h*=k; redraw(); saveOverlay(); return; }
@@ -1295,7 +1342,7 @@ function showCount(){ if(mode!=="stitch") return; const g=progress(P); $("stCoun
 const VIEWS=["Done: faded","Done: full colour","Done only"];
 function modeUI(){ const s=mode==="stitch"; $("stTools").hidden=!s; $("dsTools").hidden=s; $("paletteRow").hidden=s; $("stBar").hidden=!s; $("stView").textContent=VIEWS[doneView];
   document.querySelectorAll("#stTools [data-st]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.st===stTool?"true":"false")); ovUI(); showCount(); resize(); redraw(); }
-function enterStitch(){ if(counts(P)[0]===P.cells.length){ toast("Add some stitches to the design first"); return; } closeSheet(); cancelStroke(); mode="stitch"; modeUI(); toast("Tap stitches to tick them off"); }
+function enterStitch(){ if(counts(P)[0]===P.cells.length&&!P.lines.length){ toast("Add some stitches to the design first"); return; } closeSheet(); cancelStroke(); draft=null; mode="stitch"; modeUI(); toast(P.lines.length?"Tap stitches and lines to tick them off":"Tap stitches to tick them off"); }
 function exitStitch(){ cancelTick(); mode="design"; modeUI(); }
 document.querySelectorAll("#stTools [data-st]").forEach(b=>b.onclick=()=>{ stTool=b.dataset.st; modeUI(); });
 $("mStitch").onclick=enterStitch; $("stExit").onclick=exitStitch;
@@ -1321,7 +1368,7 @@ function twoTap(btn,fn){ if(btn.dataset.armed){ delete btn.dataset.armed; btn.te
   btn.dataset.armed="1"; btn.dataset.label=btn.textContent; btn.textContent="Tap again to confirm";
   setTimeout(()=>{ if(btn.dataset.armed){ delete btn.dataset.armed; btn.textContent=btn.dataset.label; } },3000); }
 
-document.querySelectorAll(".tools [data-tool]").forEach(b=>b.onclick=()=>setTool(b.dataset.tool));
+document.querySelectorAll(".tools [data-tool]").forEach(b=>b.onclick=()=>{ setTool(b.dataset.tool); redraw(); if(b.dataset.tool==="line") toast("Drag from one corner to another"); });
 $("symBtn").onclick=$("symBtn2").onclick=()=>{ sym=!sym; $("symBtn").setAttribute("aria-pressed",sym?"true":"false"); $("symBtn2").setAttribute("aria-pressed",sym?"true":"false"); if(sym&&view.s*dpr<12) toast("Zoom in to see the symbols"); redraw(); };
 $("undo").onclick=doUndo; $("redo").onclick=doRedo;
 $("menuBtn").onclick=()=>{ renderSaved(); openSheet("sheet-menu"); };
@@ -1368,7 +1415,7 @@ $("phUse").onclick=function(){ if(!phRes){ toast("Choose a photo first"); return
   guard(go); };
 
 /* ask before replacing a design that has stitches */
-function guard(fn){ if(counts(P)[0]===P.cells.length){ fn(); return; } pending=fn; openSheet("sheet-guard"); }
+function guard(fn){ if(counts(P)[0]===P.cells.length&&!P.lines.length){ fn(); return; } pending=fn; openSheet("sheet-guard"); }
 $("gSkip").onclick=()=>{ const f=pending; pending=null; closeSheet(); if(f) f(); };
 $("gSave").onclick=async()=>{ const r=await offer(fileBase()+"-backup.json",JSON.stringify(pack(P)));
   if(r==="saved"){ const f=pending; pending=null; closeSheet(); if(f) f(); }
@@ -1407,7 +1454,7 @@ $("ovDel").onclick=function(){ twoTap(this,()=>{ clearOverlay(); toast("Picture 
 (function(){ const g=$("threadGrid"); DMC.forEach(d=>{ const b=document.createElement("button"); b.type="button"; b.className="th"; b.dataset.q=(d.n+" "+d.name).toLowerCase();
     const sw=document.createElement("i"); sw.style.background=d.hex; const t=document.createElement("span"); const n=document.createElement("b"); n.textContent="DMC "+d.n; const s=document.createElement("small"); s.textContent=d.name; t.append(n,s);
     b.append(sw,t); b.onclick=()=>{ let i=P.palette.indexOf(d.n); if(i<0){ if(P.palette.length>=250){ toast("This design already has 250 threads"); return; } P.palette.push(d.n); i=P.palette.length-1; }
-      P.cur=i; if(tool!=="fill") setTool("draw"); refreshPalette(); autosave(); closeSheet(); }; g.append(b); }); })();
+      P.cur=i; if(tool!=="fill"&&tool!=="line") setTool("draw"); refreshPalette(); autosave(); closeSheet(); }; g.append(b); }); })();
 function filterThreads(){ const q=$("thSearch").value.trim().toLowerCase(); let n=0; document.querySelectorAll("#threadGrid .th").forEach(b=>{ const ok=!q||b.dataset.q.includes(q); b.hidden=!ok; if(ok) n++; });
   $("thCount").textContent=n+" of "+DMC.length+" threads. Tap one to add it to your design."; }
 $("thSearch").oninput=filterThreads;
@@ -1419,11 +1466,17 @@ function renderKey(){ const n=counts(P), body=$("keyBody"); body.textContent="";
     const cell=(txt,cls)=>{ const td=document.createElement("td"); if(cls) td.className=cls; td.textContent=txt; tr.append(td); return td; };
     cell(SYM[i%SYM.length]); const sw=cell(""); const s=document.createElement("i"); s.style.background=PHEX[i]; sw.append(s);
     cell(num); cell((BY[num]||{name:""}).name); cell(String(c),"n"); body.append(tr); });
-  $("keyTotal").textContent=used? total+" stitches in "+used+(used===1?" thread.":" threads.") : "No stitches yet."; }
+  const ll=lineLengths(P);
+  P.palette.forEach((num,i)=>{ if(!ll[i+1]) return; const tr=document.createElement("tr");
+    const cell=(txt,cls)=>{ const td=document.createElement("td"); if(cls) td.className=cls; td.textContent=txt; tr.append(td); return td; };
+    cell("Line"); const sw=cell(""); const s=document.createElement("i"); s.style.background=PHEX[i]; sw.append(s);
+    cell(num); cell((BY[num]||{name:""}).name); cell(lengthText(ll[i+1],P.count),"n"); body.append(tr); });
+  const nl=P.lines.length, lt=nl?(nl===1?"1 backstitch line.":nl+" backstitch lines."):"";
+  $("keyTotal").textContent=used? total+" stitches in "+used+(used===1?" thread. ":" threads. ")+lt : (lt||"No stitches yet."); }
 $("mKey").onclick=()=>{ renderKey(); openSheet("sheet-key"); };
-$("keyClean").onclick=()=>{ const n=counts(P), map=[0], pal=[]; P.palette.forEach((num,i)=>{ if(n[i+1]){ pal.push(num); map[i+1]=pal.length; } else map[i+1]=0; });
+$("keyClean").onclick=()=>{ const n=counts(P), ll=lineLengths(P), map=[0], pal=[]; P.palette.forEach((num,i)=>{ if(n[i+1]||ll[i+1]){ pal.push(num); map[i+1]=pal.length; } else map[i+1]=0; });
   if(pal.length===P.palette.length){ toast("Every thread is in use"); return; } if(!pal.length) pal.push("310");
-  for(let i=0;i<P.cells.length;i++) P.cells[i]=map[P.cells[i]]; P.palette=pal; P.cur=0; undo=[]; redo=[]; refreshPalette(); refreshInfo(); renderKey(); autosave(); redraw(); toast("Unused threads removed"); };
+  for(let i=0;i<P.cells.length;i++) P.cells[i]=map[P.cells[i]]; P.lines.forEach(l=>{ l[4]=map[l[4]]; }); P.palette=pal; P.cur=0; undo=[]; redo=[]; refreshPalette(); refreshInfo(); renderKey(); autosave(); redraw(); toast("Unused threads removed"); };
 
 /* setup */
 COUNTS.forEach(c=>{ const o=document.createElement("option"); o.value=c; o.textContent=c+" count Aida ("+c+" stitches per inch)"; $("fCount").append(o); });
@@ -1432,12 +1485,12 @@ function formVals(){ const cl=v=>Math.max(5,Math.min(300,Math.round(Number(v)||0
 function formSize(){ const f=formVals(); $("fSize").textContent="Finished size: "+sizeText(f.w,f.h,f.count)+". Sizes run from 5 to 300 stitches."; }
 ["fW","fH","fCount"].forEach(id=>$(id).addEventListener("input",formSize));
 function openSetup(isNew){ setupNew=isNew; $("fTitle").textContent=isNew?"New blank design":"Fabric and size"; $("fApply").textContent=isNew?"Start the design":"Apply to this design";
-  $("fHint").textContent=isNew?"This opens an empty grid in the size you chose.":"Applying keeps your stitches. A smaller size trims from the right and bottom edges.";
+  $("fHint").textContent=isNew?"This opens an empty grid in the size you chose.":"Applying keeps your stitches. A smaller size trims from the right and bottom edges, and removes any line that reaches past the new edge.";
   $("fName").value=isNew?"My design":P.name; $("fW").value=isNew?60:P.w; $("fH").value=isNew?60:P.h; $("fCount").value=P.count; $("fFabric").value=P.fabric; formSize(); openSheet("sheet-setup"); }
 $("mSetup").onclick=()=>openSetup(false); $("mNew").onclick=()=>openSetup(true);
 $("fApply").onclick=()=>{ const f=formVals();
   if(setupNew){ guard(()=>{ setProject(newProject(f.name,f.w,f.h,f.count,f.fabric)); closeSheet(); toast("Blank design ready"); }); return; }
-  if(f.w!==P.w||f.h!==P.h){ const nd=resized(P,f.w,f.h,P.done); P.cells=resized(P,f.w,f.h); P.done=nd; P.w=f.w; P.h=f.h; undo=[]; redo=[]; needFit=true; }
+  if(f.w!==P.w||f.h!==P.h){ const nd=resized(P,f.w,f.h,P.done); P.cells=resized(P,f.w,f.h); P.done=nd; P.w=f.w; P.h=f.h; P.lines=cleanLines(P.lines,P.w,P.h,P.palette.length); undo=[]; redo=[]; needFit=true; }
   P.name=f.name; P.count=f.count; P.fabric=f.fabric; refreshInfo(); autosave(); closeSheet(); if(needFit) fit(); else redraw(); };
 
 
@@ -1471,29 +1524,37 @@ function imageCanvas(grid){ const px=Math.max(grid?6:4,Math.min(40,Math.floor(24
   if(grid){ const dark=lum(fab)<0.45, thin=dark?"rgba(255,255,255,.22)":"rgba(0,0,0,.18)", bold=dark?"rgba(255,255,255,.7)":"rgba(0,0,0,.6)", bw=px>=12?2:1;
     for(let x=0;x<=P.w;x++){ const b=x%10===0||x===P.w; g.fillStyle=b?bold:thin; g.fillRect(Math.min(c.width-(b?bw:1),x*px),0,b?bw:1,c.height); }
     for(let r=0;r<=P.h;r++){ const b=r%10===0||r===P.h; g.fillStyle=b?bold:thin; g.fillRect(0,Math.min(c.height-(b?bw:1),r*px),c.width,b?bw:1); } }
+  if(P.lines.length){ g.lineCap="round"; g.lineWidth=Math.max(2,px*0.16);
+    for(const l of P.lines){ g.strokeStyle=PHEX[l[4]-1]||"#888888"; g.beginPath(); g.moveTo(l[0]*px,l[1]*px); g.lineTo(l[2]*px,l[3]*px); g.stroke(); } }
   return c; }
 async function saveImage(grid){ closeSheet(); toast("Preparing the image"); const c=imageCanvas(grid), blob=await canvasBlob(c,"image/png");
   if(blob&&!report(await offer(fileBase()+(grid?"-grid":"")+".png",blob))) return; showPics([c]); }
 $("mImage").onclick=()=>openSheet("sheet-image"); $("iPlain").onclick=()=>saveImage(false); $("iGrid").onclick=()=>saveImage(true);
 
-function patternPages(){ const PW=1654, PHt=2339, M=110, pages=[], n=counts(P);
-  const used=[]; P.palette.forEach((num,i)=>{ if(n[i+1]) used.push(i); });
+function patternPages(){ const PW=1654, PHt=2339, M=110, pages=[], n=counts(P), ll=lineLengths(P);
+  const used=[], lused=[]; let cols=0; P.palette.forEach((num,i)=>{ if(n[i+1]) used.push(i); if(ll[i+1]) lused.push(i); if(n[i+1]||ll[i+1]) cols++; });
   const page=()=>{ const c=document.createElement("canvas"); c.width=PW; c.height=PHt; const g=c.getContext("2d"); g.fillStyle="#fff"; g.fillRect(0,0,PW,PHt); g.fillStyle="#000"; g.textBaseline="alphabetic"; pages.push(c); return g; };
   const foot=g=>{ g.font="26px sans-serif"; g.fillStyle="#666"; g.textAlign="center"; g.fillText("Page "+pages.length,PW/2,PHt-60); g.textAlign="left"; g.fillStyle="#000"; };
   /* key pages */
   let g=page(), y=M+50; g.font="bold 64px sans-serif"; g.fillText(P.name,M,y); y+=70; g.font="32px sans-serif";
-  ["Fabric: "+P.count+" count Aida, "+P.fabric.toLowerCase(),"Design size: "+P.w+" × "+P.h+" stitches","Finished size: "+sizeText(P.w,P.h,P.count),"Threads: DMC stranded cotton, "+used.length+(used.length===1?" colour, ":" colours, ")+(P.cells.length-n[0])+" stitches"]
+  ["Fabric: "+P.count+" count Aida, "+P.fabric.toLowerCase(),"Design size: "+P.w+" × "+P.h+" stitches","Finished size: "+sizeText(P.w,P.h,P.count),"Threads: DMC stranded cotton, "+cols+(cols===1?" colour, ":" colours, ")+(P.cells.length-n[0])+" stitches"+(P.lines.length?", "+P.lines.length+(P.lines.length===1?" backstitch line":" backstitch lines"):"")]
     .forEach(t=>{ g.fillText(t,M,y); y+=46; });
   /* first page: the finished design as a picture */
   y+=20; { const pic=imageCanvas(false), aw=PW-2*M, ah=PHt-y-150, k=Math.min(aw/pic.width,ah/pic.height), dw=Math.round(pic.width*k), dh=Math.round(pic.height*k), dx=Math.round((PW-dw)/2);
     g.imageSmoothingEnabled=false; g.drawImage(pic,dx,y,dw,dh); g.imageSmoothingEnabled=true; g.strokeStyle="#000"; g.lineWidth=2; g.strokeRect(dx+1,y+1,dw-2,dh-2); }
   foot(g); g=page(); y=M+30; g.font="bold 44px sans-serif"; g.fillText("Thread key",M,y); y+=80;
-  const head=()=>{ g.font="bold 28px sans-serif"; g.fillText("Symbol",M,y); g.fillText("Colour",M+150,y); g.fillText("DMC",M+310,y); g.fillText("Name",M+470,y); g.textAlign="right"; g.fillText("Stitches",PW-M,y); g.textAlign="left"; y+=16; g.fillRect(M,y,PW-2*M,2); y+=44; };
+  const head=()=>{ g.font="bold 28px sans-serif"; g.fillText("Symbol",M,y); g.fillText("Colour",M+150,y); g.fillText("DMC",M+310,y); g.fillText("Name",M+470,y); g.textAlign="right"; g.fillText("Amount",PW-M,y); g.textAlign="left"; y+=16; g.fillRect(M,y,PW-2*M,2); y+=44; };
   head();
   used.forEach(i=>{ if(y>PHt-140){ foot(g); g=page(); y=M+40; head(); }
     g.font="34px sans-serif"; g.textAlign="center"; g.fillText(SYM[i%SYM.length],M+45,y); g.textAlign="left";
     g.fillStyle=PHEX[i]; g.fillRect(M+150,y-32,90,40); g.strokeStyle="#000"; g.lineWidth=1; g.strokeRect(M+150.5,y-31.5,90,40); g.fillStyle="#000";
-    g.font="30px sans-serif"; g.fillText(P.palette[i],M+310,y); g.fillText((BY[P.palette[i]]||{name:""}).name,M+470,y); g.textAlign="right"; g.fillText(String(n[i+1]),PW-M,y); g.textAlign="left"; y+=52; });
+    g.font="30px sans-serif"; g.fillText(P.palette[i],M+310,y); g.fillText((BY[P.palette[i]]||{name:""}).name,M+470,y); g.textAlign="right"; g.fillText(n[i+1]+(n[i+1]===1?" stitch":" stitches"),PW-M,y); g.textAlign="left"; y+=52; });
+  /* backstitch threads: a line mark in place of a symbol, and the length of line on the fabric */
+  lused.forEach(i=>{ if(y>PHt-140){ foot(g); g=page(); y=M+40; head(); }
+    g.lineCap="round"; g.strokeStyle="#000"; g.lineWidth=9; g.beginPath(); g.moveTo(M+8,y-12); g.lineTo(M+82,y-12); g.stroke(); g.strokeStyle=PHEX[i]; g.lineWidth=5; g.beginPath(); g.moveTo(M+8,y-12); g.lineTo(M+82,y-12); g.stroke(); g.lineCap="butt";
+    g.fillStyle=PHEX[i]; g.fillRect(M+150,y-32,90,40); g.strokeStyle="#000"; g.lineWidth=1; g.strokeRect(M+150.5,y-31.5,90,40); g.fillStyle="#000";
+    g.font="30px sans-serif"; g.fillText(P.palette[i],M+310,y); g.fillText((BY[P.palette[i]]||{name:""}).name,M+470,y); g.textAlign="right"; g.fillText("Backstitch, "+lengthText(ll[i+1],P.count)+" of line",PW-M,y); g.textAlign="left"; y+=52; });
+  if(lused.length){ if(y>PHt-140){ foot(g); g=page(); y=M+40; } y+=10; g.font="26px sans-serif"; g.fillStyle="#333"; g.fillText("Bold lines on the chart are backstitch. Work them after the cross stitches are finished.",M,y); g.fillStyle="#000"; }
   foot(g);
   /* chart pages: 50 stitches wide, 70 high */
   const TW=50, TH=70, cs=28, X0=M+40, Y0=M+110;
@@ -1504,6 +1565,10 @@ function patternPages(){ const PW=1654, PHt=2339, M=110, pages=[], n=counts(P);
       g.fillStyle=lum(hex)<0.5?"#fff":"#000"; g.font="20px sans-serif"; g.fillText(SYM[(v-1)%SYM.length],X0+c*cs+cs/2,Y0+r*cs+cs/2+1); }
     for(let c=0;c<=cw;c++){ const b=(tc+c)%10===0||c===0||c===cw; g.fillStyle=b?"#000":"#9a9a9a"; g.fillRect(X0+c*cs-(b?1:0),Y0,b?3:1,ch*cs); }
     for(let r=0;r<=ch;r++){ const b=(tr+r)%10===0||r===0||r===ch; g.fillStyle=b?"#000":"#9a9a9a"; g.fillRect(X0,Y0+r*cs-(b?1:0),cw*cs,b?3:1); }
+    /* backstitch: a black line with the thread colour inside it, so pale threads still show; cut off at the edge of this page's part of the chart */
+    if(P.lines.length){ g.save(); g.beginPath(); g.rect(X0-4,Y0-4,cw*cs+8,ch*cs+8); g.clip(); g.lineCap="round";
+      for(const pass of [0,1]) for(const l of P.lines){ g.strokeStyle=pass?PHEX[l[4]-1]||"#888888":"#000"; g.lineWidth=pass?4:8; g.beginPath(); g.moveTo(X0+(l[0]-tc)*cs,Y0+(l[1]-tr)*cs); g.lineTo(X0+(l[2]-tc)*cs,Y0+(l[3]-tr)*cs); g.stroke(); }
+      g.restore(); }
     g.fillStyle="#000"; g.font="20px sans-serif";
     for(let c=0;c<=cw;c++) if((tc+c)%10===0&&tc+c>0) g.fillText(String(tc+c),X0+c*cs,Y0-16);
     g.textAlign="right"; for(let r=0;r<=ch;r++) if((tr+r)%10===0&&tr+r>0) g.fillText(String(tr+r),X0-10,Y0+r*cs);
