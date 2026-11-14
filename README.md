@@ -2,6 +2,10 @@
 
 A cross stitch pattern designer that runs in the browser and installs on Android phones and tablets.
 
+**Open the app: https://arte100.github.io/Cross-Stitch-Studio/**
+
+No account and no download are needed. It works on phones, tablets and computers.
+
 - Aida fabric in 11, 14, 16, 18, 20 and 22 count
 - 489 DMC stranded cotton shades (screen colours are approximations)
 - 54 example designs
@@ -16,7 +20,7 @@ A cross stitch pattern designer that runs in the browser and installs on Android
 
 ## Install on Android
 
-Open the site in Chrome, open the menu and choose "Add to Home screen".
+Open https://arte100.github.io/Cross-Stitch-Studio/ in Chrome, open the Chrome menu and choose "Add to Home screen" or "Install app". On some tablets the option is under "Save and share".
 
 ## Contributing
 
