@@ -198,7 +198,7 @@ input[type=text],input[type=number],input[type=search],select{border:1px solid v
       <button class="mrow" id="mImage" type="button"><span class="chip mint"><svg aria-hidden="true" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="9" cy="10" r="1.6"></circle><path d="M21 16l-5-5-8 8"></path></svg></span><span><b>Save as image</b><small>A picture of the design</small></span></button>
       <button class="mrow" id="mBackup" type="button"><span class="chip mint"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"></path><path d="M14 3v5h5M12 11v6M9.5 14.5L12 17l2.5-2.5"></path></svg></span><span><b>Save as backup</b><small>A file you can keep or send</small></span></button>
       <button class="mrow" id="mRestore" type="button"><span class="chip mint"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><path d="M12 16v-5M9.5 13.5L12 11l2.5 2.5"></path></svg></span><span><b>Open the backup</b><small>Bring a saved design back</small></span></button>
-      <button class="mrow" id="mPrint" type="button"><span class="chip mint"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M7 9V4h10v5"></path><rect x="4" y="9" width="16" height="8" rx="2"></rect><path d="M7 14h10v6H7z"></path></svg></span><span><b>Print the pattern</b><small>Chart and thread key as a file to print</small></span></button>
+      <button class="mrow" id="mPrint" type="button"><span class="chip mint"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M7 9V4h10v5"></path><rect x="4" y="9" width="16" height="8" rx="2"></rect><path d="M7 14h10v6H7z"></path></svg></span><span><b>Print the pattern</b><small>Picture, thread key and chart to print</small></span></button>
     </div>
     <p>The design you are working on is kept automatically on this device.</p>
     <div class="stack" id="savedWrap" hidden>
@@ -231,6 +231,15 @@ input[type=text],input[type=number],input[type=search],select{border:1px solid v
     <p id="phInfo">The photo stays on your phone. Simple pictures with clear shapes and few colours convert best.</p>
     <canvas id="phPrev" hidden></canvas>
     <button class="btn primary" id="phUse" type="button" hidden>Use this pattern</button>
+  </div>
+</section>
+
+<section class="sheet" id="sheet-image" hidden aria-label="Save as image">
+  <header><h2>Save as image</h2><button class="btn" data-close type="button">Close</button></header>
+  <div class="body">
+    <p>Choose how the picture should look.</p>
+    <button class="btn primary" id="iPlain" type="button">Without the grid</button>
+    <button class="btn" id="iGrid" type="button">With the grid</button>
   </div>
 </section>
 
@@ -1217,11 +1226,16 @@ async function showPics(canvases){ const box=$("pics"); box.querySelectorAll("im
   for(const c of canvases){ const b=await canvasBlob(c,"image/png"); if(!b) continue; const img=document.createElement("img"); img.alt="Design picture"; img.src=URL.createObjectURL(b); box.append(img); }
   openSheet("sheet-pics"); }
 
-function imageCanvas(){ const px=Math.max(4,Math.min(40,Math.floor(2400/Math.max(P.w,P.h)))), c=document.createElement("canvas"); c.width=P.w*px; c.height=P.h*px; const g=c.getContext("2d");
-  g.fillStyle=fabricHex(P.fabric); g.fillRect(0,0,c.width,c.height);
-  for(let r=0;r<P.h;r++) for(let x=0;x<P.w;x++){ const v=P.cells[r*P.w+x]; if(v){ g.fillStyle=PHEX[v-1]; g.fillRect(x*px,r*px,px,px); } } return c; }
-$("mImage").onclick=async()=>{ closeSheet(); toast("Preparing the image"); const c=imageCanvas(), blob=await canvasBlob(c,"image/png");
-  if(blob&&!report(await offer(fileBase()+".png",blob))) return; showPics([c]); };
+function imageCanvas(grid){ const px=Math.max(grid?6:4,Math.min(40,Math.floor(2400/Math.max(P.w,P.h)))), c=document.createElement("canvas"); c.width=P.w*px; c.height=P.h*px; const g=c.getContext("2d");
+  const fab=fabricHex(P.fabric); g.fillStyle=fab; g.fillRect(0,0,c.width,c.height);
+  for(let r=0;r<P.h;r++) for(let x=0;x<P.w;x++){ const v=P.cells[r*P.w+x]; if(v){ g.fillStyle=PHEX[v-1]; g.fillRect(x*px,r*px,px,px); } }
+  if(grid){ const dark=lum(fab)<0.45, thin=dark?"rgba(255,255,255,.22)":"rgba(0,0,0,.18)", bold=dark?"rgba(255,255,255,.7)":"rgba(0,0,0,.6)", bw=px>=12?2:1;
+    for(let x=0;x<=P.w;x++){ const b=x%10===0||x===P.w; g.fillStyle=b?bold:thin; g.fillRect(Math.min(c.width-(b?bw:1),x*px),0,b?bw:1,c.height); }
+    for(let r=0;r<=P.h;r++){ const b=r%10===0||r===P.h; g.fillStyle=b?bold:thin; g.fillRect(0,Math.min(c.height-(b?bw:1),r*px),c.width,b?bw:1); } }
+  return c; }
+async function saveImage(grid){ closeSheet(); toast("Preparing the image"); const c=imageCanvas(grid), blob=await canvasBlob(c,"image/png");
+  if(blob&&!report(await offer(fileBase()+(grid?"-grid":"")+".png",blob))) return; showPics([c]); }
+$("mImage").onclick=()=>openSheet("sheet-image"); $("iPlain").onclick=()=>saveImage(false); $("iGrid").onclick=()=>saveImage(true);
 
 function patternPages(){ const PW=1654, PHt=2339, M=110, pages=[], n=counts(P);
   const used=[]; P.palette.forEach((num,i)=>{ if(n[i+1]) used.push(i); });
@@ -1231,7 +1245,11 @@ function patternPages(){ const PW=1654, PHt=2339, M=110, pages=[], n=counts(P);
   let g=page(), y=M+50; g.font="bold 64px sans-serif"; g.fillText(P.name,M,y); y+=70; g.font="32px sans-serif";
   ["Fabric: "+P.count+" count Aida, "+P.fabric.toLowerCase(),"Design size: "+P.w+" × "+P.h+" stitches","Finished size: "+sizeText(P.w,P.h,P.count),"Threads: DMC stranded cotton, "+used.length+(used.length===1?" colour, ":" colours, ")+(P.cells.length-n[0])+" stitches"]
     .forEach(t=>{ g.fillText(t,M,y); y+=46; });
-  y+=30; const head=()=>{ g.font="bold 28px sans-serif"; g.fillText("Symbol",M,y); g.fillText("Colour",M+150,y); g.fillText("DMC",M+310,y); g.fillText("Name",M+470,y); g.textAlign="right"; g.fillText("Stitches",PW-M,y); g.textAlign="left"; y+=16; g.fillRect(M,y,PW-2*M,2); y+=44; };
+  /* first page: the finished design as a picture */
+  y+=20; { const pic=imageCanvas(false), aw=PW-2*M, ah=PHt-y-150, k=Math.min(aw/pic.width,ah/pic.height), dw=Math.round(pic.width*k), dh=Math.round(pic.height*k), dx=Math.round((PW-dw)/2);
+    g.imageSmoothingEnabled=false; g.drawImage(pic,dx,y,dw,dh); g.imageSmoothingEnabled=true; g.strokeStyle="#000"; g.lineWidth=2; g.strokeRect(dx+1,y+1,dw-2,dh-2); }
+  foot(g); g=page(); y=M+30; g.font="bold 44px sans-serif"; g.fillText("Thread key",M,y); y+=80;
+  const head=()=>{ g.font="bold 28px sans-serif"; g.fillText("Symbol",M,y); g.fillText("Colour",M+150,y); g.fillText("DMC",M+310,y); g.fillText("Name",M+470,y); g.textAlign="right"; g.fillText("Stitches",PW-M,y); g.textAlign="left"; y+=16; g.fillRect(M,y,PW-2*M,2); y+=44; };
   head();
   used.forEach(i=>{ if(y>PHt-140){ foot(g); g=page(); y=M+40; head(); }
     g.font="34px sans-serif"; g.textAlign="center"; g.fillText(SYM[i%SYM.length],M+45,y); g.textAlign="left";
