@@ -32,7 +32,7 @@
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html,body{height:100%;margin:0}
-body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.4;
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.4;height:var(--app-h,100%);
   display:flex;flex-direction:column;overflow:hidden;-webkit-tap-highlight-color:transparent}
 button,input,select{font:inherit;color:inherit}
 button{cursor:pointer}
@@ -896,7 +896,7 @@ function refreshPalette(){ PHEX=P.palette.map(n=>(BY[n]||{hex:"#888888"}).hex);
   P.palette.forEach((n,i)=>{ const b=document.createElement("button"); b.type="button"; b.className="sw"; b.setAttribute("aria-pressed",i===P.cur?"true":"false");
     b.title="DMC "+n+" "+((BY[n]||{}).name||""); const sw=document.createElement("i"); sw.style.background=PHEX[i]; const s=document.createElement("span"); s.textContent=n;
     b.append(sw,s); b.onclick=()=>{ P.cur=i; if(tool!=="draw"&&tool!=="fill") setTool("draw"); refreshPalette(); autosave(); }; box.append(b); });
-  const act=box.children[P.cur]; if(act&&act.scrollIntoView) act.scrollIntoView({block:"nearest",inline:"nearest"});
+  const act=box.children[P.cur]; if(act){ const l=act.offsetLeft-box.offsetLeft, r=l+act.offsetWidth; if(l<box.scrollLeft) box.scrollLeft=l; else if(r>box.scrollLeft+box.clientWidth) box.scrollLeft=r-box.clientWidth; }
 }
 function setTool(t){ tool=t; document.querySelectorAll(".tools [data-tool]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.tool===t?"true":"false")); }
 function setProject(p){ P=p; undo=[]; redo=[]; refreshPalette(); refreshInfo(); fit(); autosave(); }
@@ -926,6 +926,11 @@ function draw(){
   lines(10,bold,Math.max(1,dpr));
   ctx.strokeStyle=bold; ctx.lineWidth=Math.max(1,dpr); ctx.strokeRect(Math.round(ox)+0.5,Math.round(oy)+0.5,Math.round(w*s),Math.round(h*s));
 }
+/* Keep the whole app inside the visible screen, and never let the page itself scroll the top bar away. */
+function fitScreen(){ const hh=window.innerHeight; if(hh) document.documentElement.style.setProperty("--app-h",hh+"px"); if(window.scrollX||window.scrollY) window.scrollTo(0,0); }
+window.addEventListener("resize",fitScreen); window.addEventListener("orientationchange",fitScreen); window.addEventListener("scroll",()=>{ if(window.scrollY||window.scrollX) window.scrollTo(0,0); });
+if(window.visualViewport) window.visualViewport.addEventListener("resize",fitScreen);
+fitScreen();
 function resize(){ dpr=window.devicePixelRatio||1; const cw=stage.clientWidth, ch=stage.clientHeight; if(!cw||!ch) return;
   cv.width=Math.round(cw*dpr); cv.height=Math.round(ch*dpr); if(needFit) fit(); else redraw(); }
 if(window.ResizeObserver) new ResizeObserver(resize).observe(stage); window.addEventListener("resize",resize);
@@ -966,7 +971,7 @@ cv.addEventListener("wheel",e=>{ e.preventDefault(); const p=pos(e), s=Math.max(
 
 /* sheets */
 function openSheet(id){ document.querySelectorAll(".sheet").forEach(s=>s.hidden=true); $("shade").hidden=false; $(id).hidden=false; }
-function closeSheet(){ document.querySelectorAll(".sheet").forEach(s=>s.hidden=true); $("shade").hidden=true; }
+function closeSheet(){ document.querySelectorAll(".sheet").forEach(s=>s.hidden=true); $("shade").hidden=true; if(document.activeElement&&document.activeElement.blur) document.activeElement.blur(); fitScreen(); }
 $("shade").onclick=closeSheet; document.querySelectorAll("[data-close]").forEach(b=>b.onclick=closeSheet);
 function twoTap(btn,fn){ if(btn.dataset.armed){ delete btn.dataset.armed; btn.textContent=btn.dataset.label; fn(); return; }
   btn.dataset.armed="1"; btn.dataset.label=btn.textContent; btn.textContent="Tap again to confirm";
