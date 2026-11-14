@@ -1,5 +1,7 @@
 # Cross Stitch Studio
 
+<img src="logo.png" alt="Cross Stitch Studio logo: an embroidery hoop with stitched roses, a needle and a heart of thread" width="160">
+
 A cross stitch pattern designer that runs in the browser and installs on Android phones and tablets.
 
 **Open the app: https://arte100.github.io/Cross-Stitch-Studio/**
