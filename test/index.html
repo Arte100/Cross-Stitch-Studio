@@ -50,6 +50,9 @@ button{cursor:pointer}
 .tfield{display:flex;flex-direction:column;gap:4px;font-size:13px;font-weight:600}
 .pickbtn{text-align:left;font-size:15px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;gap:8px}
 .pickbtn::after{content:"Change";font-size:12px;color:var(--muted);font-weight:600}
+.fxsw{display:flex;gap:6px;flex-wrap:wrap;align-items:stretch}
+.fxsw .sw[aria-pressed="true"]{border-color:var(--accent)}
+#fxPrev{display:block;max-width:100%;height:auto;image-rendering:pixelated;border:1px solid var(--line);border-radius:8px;align-self:center}
 .stepper{display:flex;gap:8px;align-items:stretch}
 .stepper .btn{flex:none;width:48px;font-size:20px;padding:0}
 .stepper input{text-align:center;font-size:16px}
@@ -174,6 +177,7 @@ input[type=text],input[type=number],input[type=search],select{border:1px solid v
     <button class="btn" id="txMirror" type="button" hidden>Mirror</button>
     <button class="btn" id="txFlip" type="button" hidden>Flip</button>
     <button class="btn" id="txTurn" type="button" hidden>Turn</button>
+    <button class="btn" id="txFx" type="button">Effects</button>
     <button class="btn primary" id="txPlace" type="button">Place</button>
     <button class="btn" id="txCancel" type="button">Cancel</button>
   </div>
@@ -181,6 +185,7 @@ input[type=text],input[type=number],input[type=search],select{border:1px solid v
     <b id="selLabel"></b>
     <button class="btn primary" id="selCopy" type="button" hidden>Copy</button>
     <button class="btn" id="selMove" type="button" hidden>Move</button>
+    <button class="btn primary" id="selFx" type="button" hidden>Choose effects</button>
     <button class="btn" id="selCancel" type="button">Cancel</button>
   </div>
   <div id="toast" hidden></div>
@@ -227,6 +232,7 @@ input[type=text],input[type=number],input[type=search],select{border:1px solid v
       <button class="mrow" id="mKey" type="button"><span class="chip lav"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"></path><circle cx="4.5" cy="6" r="1.2"></circle><circle cx="4.5" cy="12" r="1.2"></circle><circle cx="4.5" cy="18" r="1.2"></circle></svg></span><span><b>Threads used</b><small>Thread key, stitch counts, replace a colour</small></span></button>
       <button class="mrow" id="mText" type="button"><span class="chip lav"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 7V4h14v3M12 4v16M9 20h6"></path></svg></span><span><b>Add lettering</b><small>A name, a date or a short message</small></span></button>
       <button class="mrow" id="mSelect" type="button"><span class="chip lav"><svg aria-hidden="true" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"></rect><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"></path></svg></span><span><b>Copy or move a part</b><small>Repeat, mirror or turn part of the design</small></span></button>
+      <button class="mrow" id="mFx" type="button"><span class="chip lav"><svg aria-hidden="true" viewBox="0 0 24 24"><rect x="4" y="4" width="12" height="12" rx="1"></rect><path d="M8 20h12V8"></path></svg></span><span><b>Outline or shadow</b><small>Add one around part of the design</small></span></button>
       <button class="mrow" id="mTidy" type="button"><span class="chip lav"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 19l9-9M14 10l2-6 4 4-6 2z"></path><path d="M5 5v2M4 6h2M9 3v2M8 4h2M19 15v2M18 16h2"></path></svg></span><span><b>Tidy stray stitches</b><small>Clean up single stitches, useful after a photo</small></span></button>
       <button class="mrow" id="mFit" type="button"><span class="chip lav"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"></path></svg></span><span><b>Fit to screen</b><small>See the whole design</small></span></button>
     </div>
@@ -368,7 +374,22 @@ input[type=text],input[type=number],input[type=search],select{border:1px solid v
     <canvas id="tPrev" width="10" height="10" role="img" aria-label="How the text will look in stitches" hidden></canvas>
     <p id="tSize"></p>
     <button class="btn primary" id="tShow" type="button">Show it on the fabric</button>
-    <p>The text is stitched in the thread you have selected.</p>
+    <p>The text is stitched in the thread you have selected. Once it is on the fabric, tap Effects to add an outline or a shadow.</p>
+  </div>
+</section>
+
+<section class="sheet" id="sheet-fx" hidden aria-label="Outline and shadow">
+  <header><h2>Outline and shadow</h2><button class="btn primary" id="fxDone" type="button">Done</button></header>
+  <div class="body">
+    <canvas id="fxPrev" width="10" height="10" role="img" aria-label="How it will look"></canvas>
+    <label for="fxOutline">Outline<select id="fxOutline"><option value="none">No outline</option><option value="thin">Thin, in stitches</option><option value="thick">Thick, in stitches</option><option value="line">Backstitch line</option></select></label>
+    <div class="tfield" id="fxOTwrap"><span>Outline thread</span><div class="fxsw" id="fxOT"></div></div>
+    <div class="row">
+      <label for="fxShadow">Shadow<select id="fxShadow"><option value="0">No shadow</option><option value="1">1 stitch deep</option><option value="2">2 stitches deep</option><option value="3">3 stitches deep</option></select></label>
+      <label for="fxDir">Shadow falls<select id="fxDir"><option value="dr">Down and right</option><option value="dl">Down and left</option><option value="ur">Up and right</option><option value="ul">Up and left</option><option value="d">Straight down</option><option value="r">Straight right</option></select></label>
+    </div>
+    <div class="tfield" id="fxSTwrap"><span>Shadow thread</span><div class="fxsw" id="fxST"></div></div>
+    <p>Tap Done to go back to the fabric, then drag it into place and tap Place. Nothing on the design changes until you tap Place.</p>
   </div>
 </section>
 
@@ -1011,6 +1032,23 @@ function flipPiece(m){ const cells=new Uint8Array(m.w*m.h); for(let y=0;y<m.h;y+
 /* a quarter turn to the right */
 function turnPiece(m){ const w=m.h, h=m.w, cells=new Uint8Array(w*h); for(let y=0;y<m.h;y++) for(let x=0;x<m.w;x++) cells[x*w+(m.h-1-y)]=m.cells[y*m.w+x];
   return {w,h,cells,lines:m.lines.map(l=>[m.h-l[1],l[0],m.h-l[3],l[2],l[4],0])}; }
+/* Outline and shadow. base is a piece {w,h,cells,lines}; fx is {outline:"none"|"thin"|"thick"|"line", ot, shadow:0..3, dir, st} with ot and st as threads
+   (1 is the first in the palette). textThread, when given, is the thread for every stitch of the base, which is how lettering is coloured.
+   The result is a bigger piece, with ox and oy saying how far it reaches left of and above the base. Order: the shape, then its outline, then the
+   shadow of both, so the shadow never covers the shape or the outline. */
+const FXDIR={dr:[1,1],dl:[-1,1],ur:[1,-1],ul:[-1,-1],d:[0,1],r:[1,0]};
+function withEffects(base,fx,textThread){ fx=fx||{}; const ring=fx.outline==="thin"||fx.outline==="thick"?1:0, d=Math.max(0,Math.min(3,fx.shadow|0)), dir=FXDIR[fx.dir]||FXDIR.dr, sx=d?dir[0]:0, sy=d?dir[1]:0;
+  const L=ring+(sx<0?d:0), T=ring+(sy<0?d:0), R=ring+(sx>0?d:0), B=ring+(sy>0?d:0), W=base.w+L+R, H=base.h+T+B, G=new Uint8Array(W*H), shape=new Uint8Array(W*H);
+  for(let y=0;y<base.h;y++) for(let x=0;x<base.w;x++){ const v=base.cells[y*base.w+x]; if(v){ const k=(y+T)*W+x+L; G[k]=textThread||v; shape[k]=1; } }
+  const is=(x,y)=>x>=0&&y>=0&&x<W&&y<H&&shape[y*W+x]===1;
+  if(ring){ const thick=fx.outline==="thick"; for(let y=0;y<H;y++) for(let x=0;x<W;x++){ if(shape[y*W+x]) continue;
+      if(is(x-1,y)||is(x+1,y)||is(x,y-1)||is(x,y+1)||(thick&&(is(x-1,y-1)||is(x+1,y-1)||is(x-1,y+1)||is(x+1,y+1)))) G[y*W+x]=fx.ot; } }
+  if(d){ const solid=G.slice(); for(let k=1;k<=d;k++) for(let y=0;y<H;y++) for(let x=0;x<W;x++){ if(!solid[y*W+x]) continue; const tx=x+k*sx, ty=y+k*sy; if(tx>=0&&ty>=0&&tx<W&&ty<H&&!G[ty*W+tx]) G[ty*W+tx]=fx.st; } }
+  const lines=(base.lines||[]).map(l=>[l[0]+L,l[1]+T,l[2]+L,l[3]+T,l[4],0]);
+  if(fx.outline==="line"){ /* every edge between the shape and not the shape, with straight runs joined into one line */
+    for(let y=0;y<=H;y++){ let s=-1; for(let x=0;x<=W;x++){ const e=x<W&&is(x,y-1)!==is(x,y); if(e&&s<0) s=x; if(!e&&s>=0){ lines.push([s,y,x,y,fx.ot,0]); s=-1; } } }
+    for(let x=0;x<=W;x++){ let s=-1; for(let y=0;y<=H;y++){ const e=y<H&&is(x-1,y)!==is(x,y); if(e&&s<0) s=y; if(!e&&s>=0){ lines.push([x,s,x,y,fx.ot,0]); s=-1; } } } }
+  return {w:W,h:H,cells:G,lines,ox:-L,oy:-T}; }
 /* Outline fonts: the letters are drawn large, ss dots to each stitch, and a stitch is kept when at least half of its square is covered. data is the picture as RGBA bytes. */
 function coverCells(data,cw,ch,ss){ const w=Math.floor(cw/ss), h=Math.floor(ch/ss), cells=new Uint8Array(w*h), need=ss*ss*255*0.5;
   for(let r=0;r<h;r++) for(let c=0;c<w;c++){ let s=0; for(let y=0;y<ss;y++){ let k=((r*ss+y)*cw+c*ss)*4+3; for(let x=0;x<ss;x++,k+=4) s+=data[k]; } if(s>=need) cells[r*w+c]=1; }
@@ -1343,11 +1381,11 @@ function photoToPattern(px,w,h,n,skipWhite){
   for(const i of idx) cells[i]=map[tmp[i]];
   return {palette,cells};
 }
-if(typeof module!=="undefined"){ module.exports={optOf,shopping,strays,pieceFrom,mirrorPiece,flipPiece,turnPiece,coverCells,cropMask,ALPHA,textMask,cleanLines,sameLine,lineDist,nearestLine,lineLengths,lengthText,paint,FONT,photoToPattern,progress,tickGroup,DMC,BY,pack,unpack,newProject,resized,lineCells,floodCells,counts,EXAMPLES,sizeText,SYM}; }
+if(typeof module!=="undefined"){ module.exports={withEffects,optOf,shopping,strays,pieceFrom,mirrorPiece,flipPiece,turnPiece,coverCells,cropMask,ALPHA,textMask,cleanLines,sameLine,lineDist,nearestLine,lineLengths,lengthText,paint,FONT,photoToPattern,progress,tickGroup,DMC,BY,pack,unpack,newProject,resized,lineCells,floodCells,counts,EXAMPLES,sizeText,SYM}; }
 
 /* ---------- app ---------- */
 if(typeof document!=="undefined"){ (function(){
-let P, undo=[], redo=[], tool="draw", sym=false, PHEX=[], ov=null, ovDrag=null, ovPinch=null, pending=null, setupNew=false, mode="design", stTool="one", doneView=0, tk=null, draft=null, txt=null, txDrag=null, sel=null, replaceIdx=null;
+let P, undo=[], redo=[], tool="draw", sym=false, PHEX=[], ov=null, ovDrag=null, ovPinch=null, pending=null, setupNew=false, mode="design", stTool="one", doneView=0, tk=null, draft=null, txt=null, txDrag=null, sel=null, replaceIdx=null, fxPick=null;
 const TEST=/\/test\//.test(location.pathname), KEY=TEST?"xs-test.":"xs.";
 const view={s:10,x:0,y:0};
 const cv=$("cv"), ctx=cv.getContext("2d"), stage=$("stage");
@@ -1410,14 +1448,14 @@ function draw(){
       ctx.fillStyle=acc; ctx.strokeStyle="#ffffff"; ctx.lineWidth=2*dpr;
       [[ax,ay],[bx,by]].forEach(q=>{ ctx.beginPath(); ctx.arc(q[0],q[1],Math.max(5*dpr,s*0.2),0,6.2832); ctx.fill(); ctx.stroke(); }); }
     ctx.lineCap="butt"; }
-  /* lettering waiting to be placed: shown a little see-through, inside a dashed box */
-  if(txt){ ctx.globalAlpha=0.8; ctx.fillStyle=PHEX[P.cur]||"#888888";
-    for(let y=0;y<txt.h;y++) for(let x=0;x<txt.w;x++) if(txt.cells[y*txt.w+x]){ if(txt.piece) ctx.fillStyle=PHEX[txt.cells[y*txt.w+x]-1]||"#888888"; const x0=Math.round(ox+(txt.x+x)*s), y0=Math.round(oy+(txt.y+y)*s); ctx.fillRect(x0,y0,Math.round(ox+(txt.x+x+1)*s)-x0,Math.round(oy+(txt.y+y+1)*s)-y0); }
+  /* lettering or a lifted part waiting to be placed, with any outline and shadow: shown a little see-through, inside a dashed box */
+  if(txt){ const c=composed(), bx=txt.x+c.ox, by=txt.y+c.oy; ctx.globalAlpha=0.8;
+    for(let y=0;y<c.h;y++) for(let x=0;x<c.w;x++){ const v=c.cells[y*c.w+x]; if(!v) continue; ctx.fillStyle=PHEX[v-1]||"#888888"; const x0=Math.round(ox+(bx+x)*s), y0=Math.round(oy+(by+y)*s); ctx.fillRect(x0,y0,Math.round(ox+(bx+x+1)*s)-x0,Math.round(oy+(by+y+1)*s)-y0); }
+    if(c.lines.length){ ctx.lineCap="round"; ctx.lineWidth=Math.max(2*dpr,s*0.16);
+      for(const l of c.lines){ ctx.strokeStyle=PHEX[l[4]-1]||"#888888"; ctx.beginPath(); ctx.moveTo(ox+(bx+l[0])*s,oy+(by+l[1])*s); ctx.lineTo(ox+(bx+l[2])*s,oy+(by+l[3])*s); ctx.stroke(); }
+      ctx.lineCap="butt"; }
     ctx.globalAlpha=1; ctx.strokeStyle=getComputedStyle(document.documentElement).getPropertyValue("--accent").trim()||"#8F1A2E"; ctx.lineWidth=2*dpr; ctx.setLineDash([6*dpr,4*dpr]);
-    ctx.strokeRect(ox+txt.x*s-3*dpr,oy+txt.y*s-3*dpr,txt.w*s+6*dpr,txt.h*s+6*dpr); ctx.setLineDash([]);
-    if(txt.piece&&txt.lines.length){ ctx.lineCap="round"; ctx.lineWidth=Math.max(2*dpr,s*0.16); ctx.globalAlpha=0.8;
-      for(const l of txt.lines){ ctx.strokeStyle=PHEX[l[4]-1]||"#888888"; ctx.beginPath(); ctx.moveTo(ox+(txt.x+l[0])*s,oy+(txt.y+l[1])*s); ctx.lineTo(ox+(txt.x+l[2])*s,oy+(txt.y+l[3])*s); ctx.stroke(); }
-      ctx.globalAlpha=1; ctx.lineCap="butt"; } }
+    ctx.strokeRect(ox+bx*s-3*dpr,oy+by*s-3*dpr,c.w*s+6*dpr,c.h*s+6*dpr); ctx.setLineDash([]); }
   /* the box being dragged around a part to copy or move */
   if(sel&&sel.a){ const r=selRect(), acc=getComputedStyle(document.documentElement).getPropertyValue("--accent").trim()||"#8F1A2E";
     const x=ox+r.x0*s, y=oy+r.y0*s, bw=(r.x1-r.x0+1)*s, bh=(r.y1-r.y0+1)*s; ctx.globalAlpha=0.14; ctx.fillStyle=acc; ctx.fillRect(x,y,bw,bh); ctx.globalAlpha=1;
@@ -1450,7 +1488,9 @@ function lineAt(p){ if(!P.lines.length) return -1; return nearestLine(P.lines,(p
 /* bigger changes (placing a copied part, replacing a colour, tidying) keep the whole design before and after as one step */
 function snap(){ return JSON.stringify(pack(P)); }
 function pushSnap(before){ undo.push({snap:true,before,after:snap()}); if(undo.length>100) undo.shift(); redo=[]; autosave(); refreshInfo(); }
-function restoreSnap(s){ const q=unpack(JSON.parse(s)); P.cells=q.cells; P.done=q.done; P.lines=q.lines; P.palette=q.palette; P.cur=Math.min(P.cur,P.palette.length-1); refreshPalette(); }
+function restoreSnap(s){ const q=unpack(JSON.parse(s)); P.cells=q.cells; P.done=q.done; P.lines=q.lines;
+  /* a thread added since that step stays in the row of threads, so nothing that still points at it loses its colour */
+  if(!(P.palette.length>q.palette.length&&q.palette.every((n,i)=>P.palette[i]===n))) P.palette=q.palette; P.cur=Math.min(P.cur,P.palette.length-1); refreshPalette(); }
 function doUndo(){ const u=undo.pop(); if(!u) return; if(u.snap){ restoreSnap(u.before); redo.push(u); autosave(); refreshInfo(); showCount(); redraw(); return; } if(u.ln){ P.lines=copyLines(u.before); redo.push(u); autosave(); refreshInfo(); showCount(); redraw(); return; } const a=u.done?P.done:P.cells; for(let k=0;k<u.idx.length;k++) a[u.idx[k]]=u.before[k]; redo.push(u); autosave(); refreshInfo(); showCount(); redraw(); }
 function doRedo(){ const u=redo.pop(); if(!u) return; if(u.snap){ restoreSnap(u.after); undo.push(u); autosave(); refreshInfo(); showCount(); redraw(); return; } if(u.ln){ P.lines=copyLines(u.after); undo.push(u); autosave(); refreshInfo(); showCount(); redraw(); return; } const a=u.done?P.done:P.cells; for(let k=0;k<u.idx.length;k++) a[u.idx[k]]=u.after; undo.push(u); autosave(); refreshInfo(); showCount(); redraw(); }
 
@@ -1632,12 +1672,15 @@ $("ovDel").onclick=function(){ twoTap(this,()=>{ clearOverlay(); toast("Picture 
 /* threads */
 (function(){ const g=$("threadGrid"); DMC.forEach(d=>{ const b=document.createElement("button"); b.type="button"; b.className="th"; b.dataset.q=(d.n+" "+d.name).toLowerCase();
     const sw=document.createElement("i"); sw.style.background=d.hex; const t=document.createElement("span"); const n=document.createElement("b"); n.textContent="DMC "+d.n; const s=document.createElement("small"); s.textContent=d.name; t.append(n,s);
-    b.append(sw,t); b.onclick=()=>{ if(replaceIdx!==null){ const from=replaceIdx; replaceIdx=null; replaceThread(from,d.n); return; } let i=P.palette.indexOf(d.n); if(i<0){ if(P.palette.length>=250){ toast("This design already has 250 threads"); return; } P.palette.push(d.n); i=P.palette.length-1; }
+    b.append(sw,t); b.onclick=()=>{ if(fxPick){ const key=fxPick; fxPick=null; let i=P.palette.indexOf(d.n);
+        if(i<0){ if(P.palette.length>=250){ toast("This design already has 250 threads"); openFx(); return; } P.palette.push(d.n); i=P.palette.length-1; refreshPalette(); autosave(); }
+        if(txt){ txt.fx[key]=i+1; } openFx(); return; }
+      if(replaceIdx!==null){ const from=replaceIdx; replaceIdx=null; replaceThread(from,d.n); return; } let i=P.palette.indexOf(d.n); if(i<0){ if(P.palette.length>=250){ toast("This design already has 250 threads"); return; } P.palette.push(d.n); i=P.palette.length-1; }
       P.cur=i; if(tool!=="fill"&&tool!=="line") setTool("draw"); refreshPalette(); autosave(); closeSheet(); }; g.append(b); }); })();
 function filterThreads(){ const q=$("thSearch").value.trim().toLowerCase(); let n=0; document.querySelectorAll("#threadGrid .th").forEach(b=>{ const ok=!q||b.dataset.q.includes(q); b.hidden=!ok; if(ok) n++; });
-  $("thCount").textContent=n+" of "+DMC.length+" threads. "+(replaceIdx!==null?"Tap the thread to use instead.":"Tap one to add it to your design."); }
+  $("thCount").textContent=n+" of "+DMC.length+" threads. "+(fxPick?"Tap the thread to use.":replaceIdx!==null?"Tap the thread to use instead.":"Tap one to add it to your design."); }
 $("thSearch").oninput=filterThreads;
-$("addThread").onclick=()=>{ replaceIdx=null; $("thTitle").textContent="DMC threads"; $("thSearch").value=""; filterThreads(); openSheet("sheet-threads"); };
+$("addThread").onclick=()=>{ replaceIdx=null; fxPick=null; $("thTitle").textContent="DMC threads"; $("thSearch").value=""; filterThreads(); openSheet("sheet-threads"); };
 
 /* lettering: type text, pick a font and a height, see it on the fabric, drag it into place, then place it as stitches */
 const FONTS=[
@@ -1704,15 +1747,12 @@ $("tShow").onclick=async()=>{ let m=null; try{ m=await makeText(); }catch(e){ to
   /* start in the middle of what is on screen, kept on the fabric where it fits */
   const cx=(stage.clientWidth/2-view.x)/view.s, cy=(stage.clientHeight/2-view.y)/view.s;
   m.x=Math.max(0,Math.min(Math.max(0,P.w-m.w),Math.round(cx-m.w/2))); m.y=Math.max(0,Math.min(Math.max(0,P.h-m.h),Math.round(cy-m.h/2)));
-  txt=m; closeSheet(); txUI(); ovUI(); redraw(); toast("Drag the text, then tap Place"); };
+  m.lines=[]; m.fx=fxDefault(); m.ver=0; txt=m; closeSheet(); txUI(); ovUI(); redraw(); toast("Drag the text, then tap Place"); };
 $("txCancel").onclick=endText;
-$("txPlace").onclick=()=>{ if(!txt) return; if(txt.piece){ stampPiece(); return; } let n=0; stroke={map:new Map(),val:P.cur+1};
-  for(let y=0;y<txt.h;y++) for(let x=0;x<txt.w;x++) if(txt.cells[y*txt.w+x]){ const c=txt.x+x, r=txt.y+y; if(c>=0&&r>=0&&c<P.w&&r<P.h){ put(r*P.w+c,stroke.val); n++; } }
-  if(!n){ stroke=null; toast("The text is off the fabric. Drag it onto the fabric first."); return; }
-  commit(); endText(); toast("Lettering placed"); };
+$("txPlace").onclick=()=>{ if(txt) stampPiece(); };
 
 /* replace a colour: every stitch and line in one thread changes to another */
-function rowPick(tr,i){ tr.tabIndex=0; tr.setAttribute("role","button"); tr.setAttribute("aria-label","Replace DMC "+P.palette[i]); const go=()=>{ replaceIdx=i; $("thTitle").textContent="Replace DMC "+P.palette[i]; $("thSearch").value=""; filterThreads(); openSheet("sheet-threads"); };
+function rowPick(tr,i){ tr.tabIndex=0; tr.setAttribute("role","button"); tr.setAttribute("aria-label","Replace DMC "+P.palette[i]); const go=()=>{ fxPick=null; replaceIdx=i; $("thTitle").textContent="Replace DMC "+P.palette[i]; $("thSearch").value=""; filterThreads(); openSheet("sheet-threads"); };
   tr.onclick=go; tr.onkeydown=e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); go(); } }; }
 function replaceThread(i,num){ const old=P.palette[i]; if(old===undefined){ closeSheet(); return; }
   if(old===num){ toast("That is the same thread"); renderKey(); openSheet("sheet-key"); return; }
@@ -1747,31 +1787,55 @@ $("tdGo").onclick=()=>{ const s=strays(P); if(!s.length){ closeSheet(); return; 
 /* copy or move a part: drag a box, then the part floats like lettering and can be mirrored, flipped, turned and placed as often as wanted */
 function cellClamp(p){ return [Math.max(0,Math.min(P.w-1,Math.floor((p.x-view.x)/view.s))),Math.max(0,Math.min(P.h-1,Math.floor((p.y-view.y)/view.s)))]; }
 function selRect(){ if(!sel||!sel.a) return null; return {x0:Math.min(sel.a[0],sel.b[0]),y0:Math.min(sel.a[1],sel.b[1]),x1:Math.max(sel.a[0],sel.b[0]),y1:Math.max(sel.a[1],sel.b[1])}; }
-function selUI(){ $("selBar").hidden=!sel; if(!sel) return; const r=selRect(); let label="Drag a box around the part to copy", ok=false;
-  if(r&&sel.picked){ const m=pieceFrom(P,r.x0,r.y0,r.x1,r.y1); let n=0; for(let k=0;k<m.cells.length;k++) if(m.cells[k]) n++; const ln=m.lines.length; ok=n>0||ln>0;
+function selUI(){ $("selBar").hidden=!sel; if(!sel) return; const r=selRect(); let label=sel.fx?"Drag a box around the part to outline or shadow":"Drag a box around the part to copy", ok=false;
+  if(r&&sel.picked){ const m=pieceFrom(P,r.x0,r.y0,r.x1,r.y1); let n=0; for(let k=0;k<m.cells.length;k++) if(m.cells[k]) n++; const ln=m.lines.length; ok=sel.fx?n>0:n>0||ln>0;
     label=ok? n+(n===1?" stitch":" stitches")+(ln?" and "+ln+(ln===1?" line":" lines"):"")+" in the box" : "Nothing is stitched there. Drag another box."; }
-  $("selLabel").textContent=label; $("selCopy").hidden=!ok; $("selMove").hidden=!ok; }
+  $("selLabel").textContent=label; $("selCopy").hidden=!ok||!!sel.fx; $("selMove").hidden=!ok||!!sel.fx; $("selFx").hidden=!ok||!sel.fx; }
 function endSel(){ sel=null; selUI(); ovUI(); redraw(); }
-$("mSelect").onclick=()=>{ closeSheet(); if(mode==="stitch") exitStitch(); if(ov) ov.moving=false; cancelStroke(); draft=null; sel={a:null,b:null,drag:false,picked:false}; selUI(); ovUI(); redraw(); toast("Drag a box around the part to copy"); };
+function startSel(fx){ closeSheet(); if(mode==="stitch") exitStitch(); if(ov) ov.moving=false; cancelStroke(); draft=null; sel={a:null,b:null,drag:false,picked:false,fx}; selUI(); ovUI(); redraw(); toast(fx?"Drag a box around the part to outline or shadow":"Drag a box around the part to copy"); }
+$("mSelect").onclick=()=>startSel(false); $("mFx").onclick=()=>startSel(true);
+$("selFx").onclick=()=>{ lift(true); if(txt) openFx(); };
 $("selCancel").onclick=endSel;
-function lift(move){ const r=selRect(); if(!r) return; const m=pieceFrom(P,r.x0,r.y0,r.x1,r.y1); m.x=r.x0; m.y=r.y0; m.piece=true; m.skipped="";
+function lift(move){ const r=selRect(); if(!r) return; const m=pieceFrom(P,r.x0,r.y0,r.x1,r.y1); m.x=r.x0; m.y=r.y0; m.piece=true; m.skipped=""; m.fx=fxDefault(); m.ver=0;
   if(move) m.cut={x0:r.x0,y0:r.y0,w:m.w,cells:m.cells.slice(),lines:m.lines.map(l=>[l[0]+r.x0,l[1]+r.y0,l[2]+r.x0,l[3]+r.y0,l[4],0])};
   sel=null; selUI(); txt=m; txUI(); ovUI(); redraw(); toast("Drag it into place, then tap Place"); }
 $("selCopy").onclick=()=>lift(false); $("selMove").onclick=()=>lift(true);
 function txUI(){ $("txBar").hidden=!txt; if(!txt) return; const pc=!!txt.piece; $("txLabel").textContent=pc?"Drag it into place":"Drag the text into place";
   $("txMirror").hidden=!pc; $("txFlip").hidden=!pc; $("txTurn").hidden=!pc; $("txCancel").textContent=pc&&txt.placed?"Done":"Cancel"; }
-function txChange(fn){ if(!txt||!txt.piece) return; const cx=txt.x+txt.w/2, cy=txt.y+txt.h/2, q=fn(txt); txt.w=q.w; txt.h=q.h; txt.cells=q.cells; txt.lines=q.lines; txt.x=Math.round(cx-q.w/2); txt.y=Math.round(cy-q.h/2); redraw(); }
+function txChange(fn){ if(!txt||!txt.piece) return; const cx=txt.x+txt.w/2, cy=txt.y+txt.h/2, q=fn(txt); txt.ver++; txt.w=q.w; txt.h=q.h; txt.cells=q.cells; txt.lines=q.lines; txt.x=Math.round(cx-q.w/2); txt.y=Math.round(cy-q.h/2); redraw(); }
 $("txMirror").onclick=()=>txChange(mirrorPiece); $("txFlip").onclick=()=>txChange(flipPiece); $("txTurn").onclick=()=>txChange(turnPiece);
-function stampPiece(){ const t=txt; let n=0; for(let y=0;y<t.h;y++) for(let x=0;x<t.w;x++) if(t.cells[y*t.w+x]){ const c=t.x+x, r=t.y+y; if(c>=0&&r>=0&&c<P.w&&r<P.h) n++; }
-  const ln=t.lines.map(l=>[l[0]+t.x,l[1]+t.y,l[2]+t.x,l[3]+t.y,l[4],0]).filter(l=>l[0]>=0&&l[2]>=0&&l[1]>=0&&l[3]>=0&&l[0]<=P.w&&l[2]<=P.w&&l[1]<=P.h&&l[3]<=P.h);
-  if(!n&&!ln.length){ toast("It is off the fabric. Drag it onto the fabric first."); return; }
+/* outline and shadow: choices kept on the floating piece and applied afresh whenever it is drawn or placed */
+function fxDefault(){ const find=list=>{ for(const n of list){ const i=P.palette.indexOf(n); if(i>=0) return i+1; } return 0; };
+  return {outline:"none",ot:find(["310"])||1,shadow:0,dir:"dr",st:find(["414","318","415","317","413","310"])||1}; }
+function composed(){ const key=P.cur+"|"+txt.ver+"|"+JSON.stringify(txt.fx); if(!txt.memo||txt.memo.key!==key) txt.memo={key,val:withEffects(txt,txt.fx,txt.piece?0:P.cur+1)}; return txt.memo.val; }
+function fxSwatches(box,key){ box.textContent=""; P.palette.forEach((n,i)=>{ const b=document.createElement("button"); b.type="button"; b.className="sw"; b.setAttribute("aria-pressed",txt.fx[key]===i+1?"true":"false"); b.title="DMC "+n;
+    const sw=document.createElement("i"); sw.style.background=PHEX[i]; const t=document.createElement("span"); t.textContent=n; b.append(sw,t); b.onclick=()=>{ txt.fx[key]=i+1; fxRender(); }; box.append(b); });
+  const more=document.createElement("button"); more.type="button"; more.className="btn"; more.textContent="+ Another"; more.onclick=()=>{ fxPick=key; replaceIdx=null; $("thTitle").textContent="Choose a thread"; $("thSearch").value=""; filterThreads(); openSheet("sheet-threads"); }; box.append(more); }
+function fxRender(){ if(!txt) return; const f=txt.fx; $("fxOutline").value=f.outline; $("fxShadow").value=String(f.shadow); $("fxDir").value=f.dir; $("fxOTwrap").hidden=f.outline==="none"; $("fxSTwrap").hidden=!f.shadow; $("fxDir").disabled=!f.shadow;
+  fxSwatches($("fxOT"),"ot"); fxSwatches($("fxST"),"st");
+  const c=composed(), pv=$("fxPrev"), S=Math.max(1,Math.min(8,Math.floor(Math.max(120,$("fxOutline").clientWidth)/Math.max(1,c.w+2)))); pv.width=(c.w+2)*S; pv.height=(c.h+2)*S; const g=pv.getContext("2d");
+  g.fillStyle=fabricHex(P.fabric); g.fillRect(0,0,pv.width,pv.height);
+  for(let y=0;y<c.h;y++) for(let x=0;x<c.w;x++){ const v=c.cells[y*c.w+x]; if(v){ g.fillStyle=PHEX[v-1]||"#888888"; g.fillRect((x+1)*S,(y+1)*S,S,S); } }
+  if(c.lines.length){ g.lineCap="round"; g.lineWidth=Math.max(1.5,S*0.2); for(const l of c.lines){ g.strokeStyle=PHEX[l[4]-1]||"#888888"; g.beginPath(); g.moveTo((l[0]+1)*S,(l[1]+1)*S); g.lineTo((l[2]+1)*S,(l[3]+1)*S); g.stroke(); } }
+  redraw(); }
+function openFx(){ if(!txt){ closeSheet(); return; } openSheet("sheet-fx"); fxRender(); }
+$("txFx").onclick=openFx; $("fxDone").onclick=closeSheet;
+$("fxOutline").addEventListener("change",()=>{ if(txt){ txt.fx.outline=$("fxOutline").value; fxRender(); } });
+$("fxShadow").addEventListener("change",()=>{ if(txt){ txt.fx.shadow=Number($("fxShadow").value); fxRender(); } });
+$("fxDir").addEventListener("change",()=>{ if(txt){ txt.fx.dir=$("fxDir").value; fxRender(); } });
+/* placing: lettering and lifted parts are stamped the same way, effects included; blank squares never erase what is under them */
+function stampPiece(){ const t=txt, c=composed(), bx=t.x+c.ox, by=t.y+c.oy; let n=0; for(let y=0;y<c.h;y++) for(let x=0;x<c.w;x++) if(c.cells[y*c.w+x]){ const q=bx+x, r=by+y; if(q>=0&&r>=0&&q<P.w&&r<P.h) n++; }
+  const ln=c.lines.map(l=>[l[0]+bx,l[1]+by,l[2]+bx,l[3]+by,l[4],0]).filter(l=>l[0]>=0&&l[2]>=0&&l[1]>=0&&l[3]>=0&&l[0]<=P.w&&l[2]<=P.w&&l[1]<=P.h&&l[3]<=P.h);
+  if(!n&&!ln.length){ toast((t.piece?"It is":"The text is")+" off the fabric. Drag it onto the fabric first."); return; }
   const before=snap();
   /* a moved part leaves its old place the first time it is placed */
-  if(t.cut){ const c=t.cut, ch=c.cells.length/c.w; for(let y=0;y<ch;y++) for(let x=0;x<c.w;x++) if(c.cells[y*c.w+x]){ const i=(c.y0+y)*P.w+c.x0+x; P.cells[i]=0; P.done[i]=0; }
-    P.lines=P.lines.filter(l=>!c.lines.some(k=>sameLine(k,l)&&k[4]===l[4])); t.cut=null; }
-  for(let y=0;y<t.h;y++) for(let x=0;x<t.w;x++){ const v=t.cells[y*t.w+x]; if(!v) continue; const c=t.x+x, r=t.y+y; if(c>=0&&r>=0&&c<P.w&&r<P.h){ P.cells[r*P.w+c]=v; P.done[r*P.w+c]=0; } }
+  if(t.cut){ const k=t.cut, ch=k.cells.length/k.w; for(let y=0;y<ch;y++) for(let x=0;x<k.w;x++) if(k.cells[y*k.w+x]){ const i=(k.y0+y)*P.w+k.x0+x; P.cells[i]=0; P.done[i]=0; }
+    P.lines=P.lines.filter(l=>!k.lines.some(m=>sameLine(m,l)&&m[4]===l[4])); t.cut=null; }
+  for(let y=0;y<c.h;y++) for(let x=0;x<c.w;x++){ const v=c.cells[y*c.w+x]; if(!v) continue; const q=bx+x, r=by+y; if(q>=0&&r>=0&&q<P.w&&r<P.h){ P.cells[r*P.w+q]=v; P.done[r*P.w+q]=0; } }
   if(ln.length) P.lines=P.lines.filter(l=>!ln.some(k=>sameLine(k,l))).concat(ln);
-  pushSnap(before); t.placed=true; txUI(); showCount(); redraw(); toast("Placed. Drag and tap Place again to repeat, or tap Done."); }
+  pushSnap(before); showCount();
+  if(!t.piece){ endText(); toast("Lettering placed"); return; }
+  t.placed=true; txUI(); redraw(); toast("Placed. Drag and tap Place again to repeat, or tap Done."); }
 
 /* key */
 function renderKey(){ const n=counts(P), body=$("keyBody"); body.textContent=""; let total=0, used=0;
