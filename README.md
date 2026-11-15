@@ -12,6 +12,7 @@ No account and no download are needed. It works on phones, tablets and computers
 - 489 DMC stranded cotton shades (screen colours are approximations)
 - 237 example designs in ten groups
 - Backstitch lines, drawn from corner to corner, for outlines and details
+- Lettering: type a name, a date or a message, choose a font and a height, and place it as stitches
 - Photo to pattern converter, and Trace a photo for stitching over a picture by hand
 - Cross Stitch it: tick stitches off as you sew, with a count of what is done and what is left
 - Save as an image with or without the grid, and save a printable pattern with the finished picture, a thread key and charts

@@ -41,6 +41,19 @@ button{cursor:pointer}
 .btn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 10px;font-weight:600;font-size:13px;min-height:38px}
 .btn:disabled{opacity:.4}
 .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.tfield{display:flex;flex-direction:column;gap:4px;font-size:13px;font-weight:600}
+.pickbtn{text-align:left;font-size:15px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.pickbtn::after{content:"Change";font-size:12px;color:var(--muted);font-weight:600}
+.stepper{display:flex;gap:8px;align-items:stretch}
+.stepper .btn{flex:none;width:48px;font-size:20px;padding:0}
+.stepper input{text-align:center;font-size:16px}
+#tPrev{display:block;max-width:100%;height:auto;image-rendering:pixelated;border:1px solid var(--line);border-radius:8px;align-self:flex-start}
+#fontList{display:flex;flex-direction:column;gap:8px}
+.frow{display:flex;flex-direction:column;gap:6px;align-items:flex-start;border:2px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 12px;text-align:left;width:100%;min-width:0;overflow:hidden}
+.frow[aria-pressed="true"]{border-color:var(--accent)}
+.frow canvas{display:block;max-width:100%;height:auto;image-rendering:pixelated}
+.frow b{font-size:14px;font-weight:600}
+.frow small{font-size:12px;color:var(--muted);font-weight:400}
 .btn.icon{width:38px;padding:0;display:flex;align-items:center;justify-content:center;flex:none}
 .btn.icon[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
 
@@ -93,9 +106,9 @@ input[type=text],input[type=number],input[type=search],select{border:1px solid v
 .saved div{flex:1;min-width:0}
 .saved b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .saved small{color:var(--muted)}
-#ovBar,#stBar{position:absolute;top:8px;left:8px;right:8px;z-index:2;display:flex;flex-wrap:wrap;gap:6px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:6px;box-shadow:0 2px 8px rgba(0,0,0,.15)}
-#ovBar .btn,#stBar .btn{padding:6px 10px;min-height:36px}
-#stBar b{flex:1;min-width:150px;font-size:14px;font-variant-numeric:tabular-nums;padding-left:4px}
+#ovBar,#stBar,#txBar{position:absolute;top:8px;left:8px;right:8px;z-index:2;display:flex;flex-wrap:wrap;gap:6px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:6px;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+#ovBar .btn,#stBar .btn,#txBar .btn{padding:6px 10px;min-height:36px}
+#stBar b,#txBar b{flex:1;min-width:150px;font-size:14px;font-variant-numeric:tabular-nums;padding-left:4px}
 #ovBar .btn[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 #ovBar input{flex:1;min-width:90px;accent-color:var(--accent)}
 /* The menu follows the chosen theme. */
@@ -150,6 +163,11 @@ input[type=text],input[type=number],input[type=search],select{border:1px solid v
     <input type="range" id="ovAlpha" min="10" max="90" value="45" aria-label="How strong the picture looks">
     <button class="btn" id="ovDel" type="button">Remove</button>
   </div>
+  <div id="txBar" hidden>
+    <b>Drag the text into place</b>
+    <button class="btn primary" id="txPlace" type="button">Place</button>
+    <button class="btn" id="txCancel" type="button">Cancel</button>
+  </div>
   <div id="toast" hidden></div>
 </main>
 
@@ -192,6 +210,7 @@ input[type=text],input[type=number],input[type=search],select{border:1px solid v
     <div class="mcard">
       <button class="mrow" id="mSetup" type="button"><span class="chip lav"><svg aria-hidden="true" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="1"></rect><path d="M4 9.3h16M4 14.7h16M9.3 4v16M14.7 4v16"></path></svg></span><span><b>Fabric and size</b><small>Aida count, colour, size and name</small></span></button>
       <button class="mrow" id="mKey" type="button"><span class="chip lav"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"></path><circle cx="4.5" cy="6" r="1.2"></circle><circle cx="4.5" cy="12" r="1.2"></circle><circle cx="4.5" cy="18" r="1.2"></circle></svg></span><span><b>Threads used</b><small>Thread key and stitch counts</small></span></button>
+      <button class="mrow" id="mText" type="button"><span class="chip lav"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 7V4h14v3M12 4v16M9 20h6"></path></svg></span><span><b>Add lettering</b><small>A name, a date or a short message</small></span></button>
       <button class="mrow" id="mFit" type="button"><span class="chip lav"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"></path></svg></span><span><b>Fit to screen</b><small>See the whole design</small></span></button>
     </div>
     <h3>Look</h3>
@@ -283,6 +302,29 @@ input[type=text],input[type=number],input[type=search],select{border:1px solid v
     <p id="fSize"></p>
     <button class="btn primary" id="fApply" type="button">Apply to this design</button>
     <p id="fHint">Applying keeps your stitches. A smaller size trims from the right and bottom edges.</p>
+  </div>
+</section>
+
+<section class="sheet" id="sheet-text" hidden aria-label="Add lettering">
+  <header><h2>Add lettering</h2><button class="btn" data-close type="button">Close</button></header>
+  <div class="body">
+    <label for="tText">Your text<input type="text" id="tText" maxlength="60" autocomplete="off"></label>
+    <div class="tfield"><span id="tFontLabel">Font</span><button class="btn pickbtn" id="tFont" type="button" aria-labelledby="tFontLabel tFont"></button></div>
+    <div class="tfield"><label for="tH" id="tHLabel">Height of the capital letters, in stitches</label>
+      <div class="stepper"><button class="btn" id="tMinus" type="button" aria-label="Smaller">&minus;</button><input type="number" id="tH" inputmode="numeric" min="5" max="80"><button class="btn" id="tPlus" type="button" aria-label="Bigger">+</button></div></div>
+    <canvas id="tPrev" width="10" height="10" role="img" aria-label="How the text will look in stitches" hidden></canvas>
+    <p id="tSize"></p>
+    <button class="btn primary" id="tShow" type="button">Show it on the fabric</button>
+    <p>The text is stitched in the thread you have selected.</p>
+  </div>
+</section>
+
+<section class="sheet" id="sheet-fonts" hidden aria-label="Choose a font">
+  <header><h2>Choose a font</h2><button class="btn" id="fnBack" type="button">Back</button></header>
+  <div class="body">
+    <p id="fnHint"></p>
+    <div id="fontList"></div>
+    <p>Classic stitch was drawn for this app. The other fonts are free, open-licence fonts. Their licence is in the fonts folder of the project.</p>
   </div>
 </section>
 
@@ -869,6 +911,27 @@ function inEll(c,r,cx,cy,rx,ry){ if(rx<=0||ry<=0) return false; const x=(c-cx)/r
 function inPoly(x,y,p){ let k=false; for(let i=0,j=p.length-2;i<p.length;j=i,i+=2){ const xi=p[i],yi=p[i+1],xj=p[j],yj=p[j+1]; if((yi>y)!==(yj>y)&&x<(xj-xi)*(y-yi)/(yj-yi)+xi) k=!k; } return k; }
 /* A 5 by 7 stitch alphabet for word designs. "*" is a small heart. */
 const FONT={A:"01110 10001 10001 11111 10001 10001 10001",B:"11110 10001 10001 11110 10001 10001 11110",C:"01110 10001 10000 10000 10000 10001 01110",D:"11110 10001 10001 10001 10001 10001 11110",E:"11111 10000 10000 11110 10000 10000 11111",F:"11111 10000 10000 11110 10000 10000 10000",G:"01110 10001 10000 10111 10001 10001 01111",H:"10001 10001 10001 11111 10001 10001 10001",I:"11111 00100 00100 00100 00100 00100 11111",J:"00111 00010 00010 00010 00010 10010 01100",K:"10001 10010 10100 11000 10100 10010 10001",L:"10000 10000 10000 10000 10000 10000 11111",M:"10001 11011 10101 10101 10001 10001 10001",N:"10001 11001 10101 10011 10001 10001 10001",O:"01110 10001 10001 10001 10001 10001 01110",P:"11110 10001 10001 11110 10000 10000 10000",Q:"01110 10001 10001 10001 10101 10010 01101",R:"11110 10001 10001 11110 10100 10010 10001",S:"01111 10000 10000 01110 00001 00001 11110",T:"11111 00100 00100 00100 00100 00100 00100",U:"10001 10001 10001 10001 10001 10001 01110",V:"10001 10001 10001 10001 10001 01010 00100",W:"10001 10001 10001 10101 10101 11011 10001",X:"10001 10001 01010 00100 01010 10001 10001",Y:"10001 10001 01010 00100 00100 00100 00100",Z:"11111 00001 00010 00100 01000 10000 11111","0":"01110 10001 10011 10101 11001 10001 01110","1":"00100 01100 00100 00100 00100 00100 01110","2":"01110 10001 00001 00010 00100 01000 11111","3":"11110 00001 00001 01110 00001 00001 11110","4":"00010 00110 01010 10010 11111 00010 00010","5":"11111 10000 11110 00001 00001 10001 01110","6":"00110 01000 10000 11110 10001 10001 01110","7":"11111 00001 00010 00100 01000 01000 01000","8":"01110 10001 10001 01110 10001 10001 01110","9":"01110 10001 10001 01111 00001 00010 01100","*":"01010 11111 11111 11111 01110 00100 00000","!":"00100 00100 00100 00100 00100 00000 00100"};
+/* Lettering alphabets, drawn for this project. Each letter is its rows from top to bottom; "#" or "1" is a stitch. "*" is a small heart. */
+const ALPHA={
+small:{label:"Small, 5 stitches high",h:5,space:2,g:{"A":".#. #.# ### #.# #.#","B":"##. #.# ##. #.# ##.","C":".## #.. #.. #.. .##","D":"##. #.# #.# #.# ##.","E":"### #.. ##. #.. ###","F":"### #.. ##. #.. #..","G":".## #.. #.# #.# .##","H":"#.# #.# ### #.# #.#","I":"### .#. .#. .#. ###","J":"..# ..# ..# #.# .#.","K":"#.# #.# ##. #.# #.#","L":"#.. #.. #.. #.. ###","M":"#...# ##.## #.#.# #...# #...#","N":"#..# ##.# #.## #..# #..#","O":".#. #.# #.# #.# .#.","P":"##. #.# ##. #.. #..","Q":".##. #..# #..# #.#. .#.#","R":"##. #.# ##. #.# #.#","S":".## #.. .#. ..# ##.","T":"### .#. .#. .#. .#.","U":"#.# #.# #.# #.# ###","V":"#.# #.# #.# #.# .#.","W":"#...# #...# #.#.# ##.## #...#","X":"#.# #.# .#. #.# #.#","Y":"#.# #.# .#. .#. .#.","Z":"### ..# .#. #.. ###","0":"### #.# #.# #.# ###","1":".#. ##. .#. .#. ###","2":"##. ..# .#. #.. ###","3":"##. ..# .#. ..# ##.","4":"#.# #.# ### ..# ..#","5":"### #.. ##. ..# ##.","6":".## #.. ### #.# ###","7":"### ..# .#. .#. .#.","8":"### #.# ### #.# ###","9":"### #.# ### ..# ##.",".":". . . . #",",":".. .. .. .# #.","!":"# # # . #","?":"##. ..# .#. ... .#.","-":"... ... ### ... ...","'":"# # . . .",":":". # . # .","/":"..# ..# .#. #.. #..","&":".#.. #.#. .#.# #.#. .#.#","+":"... .#. ### .#. ...","*":".#.#. ##### ##### .###. ..#.."}},
+medium:{label:"Medium, 7 stitches high",h:7,space:3,g:Object.assign({},FONT,{".":". . . . . . #",",":".. .. .. .. .. .# #.","-":".... .... .... #### .... .... ....","'":"# # . . . . .",":":". . # . . # .","/":"....# ....# ...#. ..#.. .#... #.... #....","?":".###. #...# ....# ...#. ..#.. ..... ..#..","&":".##.. #..#. .##.. #.#.# #..#. #..#. .##.#","+":"..... ..#.. ..#.. ##### ..#.. ..#.. ....."})},
+large:{label:"Large, 9 stitches high",h:9,space:4,g:{"0":".#####. ##...## ##..### ##.#.## ##.#.## ###..## ##...## ##...## .#####.","1":"..##.. .###.. ####.. ..##.. ..##.. ..##.. ..##.. ..##.. ######","2":".#####. ##...## .....## .....## ....##. ...##.. ..##... .##.... #######","3":".#####. ##...## .....## .....## ..####. .....## .....## ##...## .#####.","4":"....##. ...###. ..####. .##.##. ##..##. ####### ....##. ....##. ....##.","5":"####### ##..... ##..... ######. .....## .....## .....## ##...## .#####.","6":".#####. ##...## ##..... ##..... ######. ##...## ##...## ##...## .#####.","7":"####### .....## .....## ....##. ...##.. ..##... ..##... ..##... ..##...","8":".#####. ##...## ##...## ##...## .#####. ##...## ##...## ##...## .#####.","9":".#####. ##...## ##...## ##...## .###### .....## .....## ##...## .#####.","A":"..###.. ##...## ##...## ##...## ####### ##...## ##...## ##...## ##...##","B":"#####.. ##...## ##...## ##...## #####.. ##...## ##...## ##...## #####..","C":"..###.. ##...## ##...## ##..... ##..... ##..... ##...## ##...## ..###..","D":"#####.. ##...## ##...## ##...## ##...## ##...## ##...## ##...## #####..","E":"####### ##..... ##..... ##..... #####.. ##..... ##..... ##..... #######","F":"####### ##..... ##..... ##..... #####.. ##..... ##..... ##..... ##.....","G":"..###.. ##...## ##...## ##..... ##.#### ##...## ##...## ##...## ..#####","H":"##...## ##...## ##...## ##...## ####### ##...## ##...## ##...## ##...##","I":"###### ..##.. ..##.. ..##.. ..##.. ..##.. ..##.. ..##.. ######","J":"..##### .....## .....## .....## .....## .....## ##...## ##...## .#####.","K":"##...## ##..##. ##.##.. ####... ###.... ####... ##.##.. ##..##. ##...##","L":"##..... ##..... ##..... ##..... ##..... ##..... ##..... ##..... #######","M":"##.....## ###...### ####.#### ##.###.## ##..#..## ##.....## ##.....## ##.....## ##.....##","N":"##....## ###...## ####..## ##.##.## ##.##.## ##..#### ##...### ##....## ##....##","O":"..###.. ##...## ##...## ##...## ##...## ##...## ##...## ##...## ..###..","P":"#####.. ##...## ##...## ##...## #####.. ##..... ##..... ##..... ##.....","Q":".#####. ##...## ##...## ##...## ##...## ##...## ##.#.## ##..##. .###.##","R":"######. ##...## ##...## ##...## ######. ##.##.. ##..##. ##...## ##...##","S":".#####. ##...## ##..... ##..... .#####. .....## .....## ##...## .#####.","T":"###### ..##.. ..##.. ..##.. ..##.. ..##.. ..##.. ..##.. ..##..","U":"##...## ##...## ##...## ##...## ##...## ##...## ##...## ##...## ..###..","V":"##...## ##...## ##...## ##...## ##...## ##...## .##.##. .##.##. ..###..","W":"##.....## ##.....## ##.....## ##.....## ##..#..## ##.###.## ####.#### ###...### ##.....##","X":"##...## ##...## .##.##. .##.##. ..###.. .##.##. .##.##. ##...## ##...##","Y":"##..## ##..## ##..## .####. ..##.. ..##.. ..##.. ..##.. ..##..","Z":"####### .....## ....##. ...##.. ..##... .##.... ##..... ##..... #######","*":".##...##. ####.#### ######### ######### ######### .#######. ..#####.. ...###... ....#....","!":"## ## ## ## ## ## .. ## ##",".":".. .. .. .. .. .. .. ## ##",",":"... ... ... ... ... ... .## .## ##.","-":"..... ..... ..... ..... ##### ..... ..... ..... .....","'":"## ## ## .. .. .. .. .. ..",":":".. .. ## ## .. .. ## ## ..","/":"....## ....## ...##. ...##. ..##.. .##... .##... ##.... ##....","?":".#####. ##...## .....## ....##. ...##.. ..##... ....... ..##... ..##...","&":"..###... .##.##.. .##.##.. ..###... .###..## ##.##.#. ##..##.. ##.####. .###..##","+":"...... ..##.. ..##.. ###### ###### ..##.. ..##.. ...... ......"}}};
+/* Outline fonts: the letters are drawn large, ss dots to each stitch, and a stitch is kept when at least half of its square is covered. data is the picture as RGBA bytes. */
+function coverCells(data,cw,ch,ss){ const w=Math.floor(cw/ss), h=Math.floor(ch/ss), cells=new Uint8Array(w*h), need=ss*ss*255*0.5;
+  for(let r=0;r<h;r++) for(let c=0;c<w;c++){ let s=0; for(let y=0;y<ss;y++){ let k=((r*ss+y)*cw+c*ss)*4+3; for(let x=0;x<ss;x++,k+=4) s+=data[k]; } if(s>=need) cells[r*w+c]=1; }
+  return {w,h,cells}; }
+/* trims empty rows and columns from the edges */
+function cropMask(m){ let x0=m.w,x1=-1,y0=m.h,y1=-1; for(let y=0;y<m.h;y++) for(let x=0;x<m.w;x++) if(m.cells[y*m.w+x]){ if(x<x0)x0=x; if(x>x1)x1=x; if(y<y0)y0=y; if(y>y1)y1=y; }
+  if(x1<0) return {w:0,h:0,cells:new Uint8Array(0)}; const w=x1-x0+1, h=y1-y0+1, cells=new Uint8Array(w*h); for(let y=0;y<h;y++) for(let x=0;x<w;x++) cells[y*w+x]=m.cells[(y0+y)*m.w+x0+x]; return {w,h,cells}; }
+/* Turns text into stitches: one stitch of space between letters. Letters the alphabet does not have are left out and listed in skipped. */
+function textMask(str,id){ const a=ALPHA[id]||ALPHA.medium, rows=[]; for(let i=0;i<a.h;i++) rows.push([]); let skipped="", any=false;
+  for(const raw of String(str)){ const ch=raw.toUpperCase(); let g=null, w=0;
+    if(ch===" ") w=a.space; else if(Object.prototype.hasOwnProperty.call(a.g,ch)){ g=a.g[ch].split(" "); w=g[0].length; } else { if(!skipped.includes(raw)) skipped+=raw; continue; }
+    if(any) for(let y=0;y<a.h;y++) rows[y].push(0);
+    for(let y=0;y<a.h;y++) for(let x=0;x<w;x++) rows[y].push(g&&(g[y][x]==="#"||g[y][x]==="1")?1:0); any=true; }
+  const w=rows[0].length, cells=new Uint8Array(w*a.h); for(let y=0;y<a.h;y++) for(let x=0;x<w;x++) cells[y*w+x]=rows[y][x];
+  return {w,h:a.h,cells,skipped}; }
+
 /* Examples are drawn from simple shapes. Each step is [kind, thread, numbers]. */
 function paint(w,h,ops){
   const g=new Uint8Array(w*h);
@@ -1185,11 +1248,11 @@ function photoToPattern(px,w,h,n,skipWhite){
   for(const i of idx) cells[i]=map[tmp[i]];
   return {palette,cells};
 }
-if(typeof module!=="undefined"){ module.exports={cleanLines,sameLine,lineDist,nearestLine,lineLengths,lengthText,paint,FONT,photoToPattern,progress,tickGroup,DMC,BY,pack,unpack,newProject,resized,lineCells,floodCells,counts,EXAMPLES,sizeText,SYM}; }
+if(typeof module!=="undefined"){ module.exports={coverCells,cropMask,ALPHA,textMask,cleanLines,sameLine,lineDist,nearestLine,lineLengths,lengthText,paint,FONT,photoToPattern,progress,tickGroup,DMC,BY,pack,unpack,newProject,resized,lineCells,floodCells,counts,EXAMPLES,sizeText,SYM}; }
 
 /* ---------- app ---------- */
 if(typeof document!=="undefined"){ (function(){
-let P, undo=[], redo=[], tool="draw", sym=false, PHEX=[], ov=null, ovDrag=null, ovPinch=null, pending=null, setupNew=false, mode="design", stTool="one", doneView=0, tk=null, draft=null;
+let P, undo=[], redo=[], tool="draw", sym=false, PHEX=[], ov=null, ovDrag=null, ovPinch=null, pending=null, setupNew=false, mode="design", stTool="one", doneView=0, tk=null, draft=null, txt=null, txDrag=null;
 const TEST=/\/test\//.test(location.pathname), KEY=TEST?"xs-test.":"xs.";
 const view={s:10,x:0,y:0};
 const cv=$("cv"), ctx=cv.getContext("2d"), stage=$("stage");
@@ -1212,7 +1275,7 @@ function refreshPalette(){ PHEX=P.palette.map(n=>(BY[n]||{hex:"#888888"}).hex);
   const act=box.children[P.cur]; if(act){ const l=act.offsetLeft-box.offsetLeft, r=l+act.offsetWidth; if(l<box.scrollLeft) box.scrollLeft=l; else if(r>box.scrollLeft+box.clientWidth) box.scrollLeft=r-box.clientWidth; }
 }
 function setTool(t){ tool=t; draft=null; document.querySelectorAll(".tools [data-tool]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.tool===t?"true":"false")); }
-function setProject(p,keepPicture){ P=p; undo=[]; redo=[]; if(!P.done||P.done.length!==P.cells.length) P.done=new Uint8Array(P.cells.length); P.lines=cleanLines(P.lines,P.w,P.h,P.palette.length); draft=null; if(mode==="stitch") exitStitch(); if(!keepPicture) clearOverlay(); refreshPalette(); refreshInfo(); fit(); autosave(); }
+function setProject(p,keepPicture){ P=p; undo=[]; redo=[]; if(!P.done||P.done.length!==P.cells.length) P.done=new Uint8Array(P.cells.length); P.lines=cleanLines(P.lines,P.w,P.h,P.palette.length); draft=null; txt=null; txDrag=null; $("txBar").hidden=true; if(mode==="stitch") exitStitch(); if(!keepPicture) clearOverlay(); refreshPalette(); refreshInfo(); fit(); autosave(); }
 
 /* drawing the canvas */
 function fit(){ const cw=stage.clientWidth, ch=stage.clientHeight; if(!cw||!ch){ needFit=true; return; } needFit=false;
@@ -1252,6 +1315,11 @@ function draw(){
       ctx.fillStyle=acc; ctx.strokeStyle="#ffffff"; ctx.lineWidth=2*dpr;
       [[ax,ay],[bx,by]].forEach(q=>{ ctx.beginPath(); ctx.arc(q[0],q[1],Math.max(5*dpr,s*0.2),0,6.2832); ctx.fill(); ctx.stroke(); }); }
     ctx.lineCap="butt"; }
+  /* lettering waiting to be placed: shown a little see-through, inside a dashed box */
+  if(txt){ ctx.globalAlpha=0.8; ctx.fillStyle=PHEX[P.cur]||"#888888";
+    for(let y=0;y<txt.h;y++) for(let x=0;x<txt.w;x++) if(txt.cells[y*txt.w+x]){ const x0=Math.round(ox+(txt.x+x)*s), y0=Math.round(oy+(txt.y+y)*s); ctx.fillRect(x0,y0,Math.round(ox+(txt.x+x+1)*s)-x0,Math.round(oy+(txt.y+y+1)*s)-y0); }
+    ctx.globalAlpha=1; ctx.strokeStyle=getComputedStyle(document.documentElement).getPropertyValue("--accent").trim()||"#8F1A2E"; ctx.lineWidth=2*dpr; ctx.setLineDash([6*dpr,4*dpr]);
+    ctx.strokeRect(ox+txt.x*s-3*dpr,oy+txt.y*s-3*dpr,txt.w*s+6*dpr,txt.h*s+6*dpr); ctx.setLineDash([]); }
 }
 /* Keep the whole app inside the visible screen, and never let the page itself scroll the top bar away. */
 function fitScreen(){ const hh=window.innerHeight; if(hh) document.documentElement.style.setProperty("--app-h",hh+"px"); if(window.scrollX||window.scrollY) window.scrollTo(0,0); }
@@ -1287,9 +1355,10 @@ cv.addEventListener("pointerdown",e=>{ e.preventDefault(); try{ cv.setPointerCap
     else if(pts.size===2){ ovDrag=null; const mx=(a[0].x+a[1].x)/2, my=(a[0].y+a[1].y)/2;
       ovPinch={d:Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y)||1,fx:((mx-view.x)/view.s-ov.x)/ov.w,fy:((my-view.y)/view.s-ov.y)/ov.h,w:ov.w,h:ov.h}; }
     return; }
-  if(pts.size===2){ cancelStroke(); cancelTick(); if(draft){ draft=null; redraw(); } pan=null; blocked=true; const a=[...pts.values()];
+  if(pts.size===2){ cancelStroke(); cancelTick(); if(draft){ draft=null; redraw(); } txDrag=null; pan=null; blocked=true; const a=[...pts.values()];
     pinch={d:Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y)||1,mx:(a[0].x+a[1].x)/2,my:(a[0].y+a[1].y)/2,s:view.s,x:view.x,y:view.y}; return; }
   if(pts.size>2||blocked) return;
+  if(txt){ txDrag={px:p.x,py:p.y,x:txt.x,y:txt.y}; return; }
   if(mode==="stitch"){ if(stTool==="move"){ pan={px:p.x,py:p.y,x:view.x,y:view.y}; return; }
     if(stTool==="one"){ const li=lineAt(p); if(li>=0){ const next=copyLines(P.lines); next[li][5]=next[li][5]?0:1; setLines(next); return; } }
     const sc=cellAt(p); if(!sc) return; const g=tickGroup(P,sc[0],sc[1],stTool); if(!g.length){ if(stTool==="one") toast("No stitch there"); return; }
@@ -1314,6 +1383,8 @@ cv.addEventListener("pointermove",e=>{ if(!pts.has(e.pointerId)) return; const p
     return; }
   if(pinch&&pts.size>=2){ const a=[...pts.values()], d=Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y)||1, mx=(a[0].x+a[1].x)/2, my=(a[0].y+a[1].y)/2;
     const s=Math.max(2,Math.min(60,pinch.s*d/pinch.d)); view.x=mx-(pinch.mx-pinch.x)/pinch.s*s; view.y=my-(pinch.my-pinch.y)/pinch.s*s; view.s=s; redraw(); return; }
+  if(txt){ if(txDrag){ const nx=Math.max(1-txt.w,Math.min(P.w-1,Math.round(txDrag.x+(p.x-txDrag.px)/view.s))), ny=Math.max(1-txt.h,Math.min(P.h-1,Math.round(txDrag.y+(p.y-txDrag.py)/view.s)));
+      if(nx!==txt.x||ny!==txt.y){ txt.x=nx; txt.y=ny; redraw(); } } return; }
   if(pan){ view.x=pan.x+p.x-pan.px; view.y=pan.y+p.y-pan.py; redraw(); return; }
   if(draft){ const k=cornerAt(p)||[Math.max(0,Math.min(P.w,Math.round((p.x-view.x)/view.s))),Math.max(0,Math.min(P.h,Math.round((p.y-view.y)/view.s)))];
     if(k[0]!==draft[2]||k[1]!==draft[3]){ draft[2]=k[0]; draft[3]=k[1]; redraw(); } return; }
@@ -1321,7 +1392,7 @@ cv.addEventListener("pointermove",e=>{ if(!pts.has(e.pointerId)) return; const p
     lineCells(last[0],last[1],cell[0],cell[1]).forEach(q=>tickPut(q[1]*P.w+q[0])); last=cell; showCount(); redraw(); return; }
   if(stroke&&last){ const cell=cellAt(p); if(!cell) return; if(cell[0]===last[0]&&cell[1]===last[1]) return;
     lineCells(last[0],last[1],cell[0],cell[1]).forEach(q=>put(q[1]*P.w+q[0],stroke.val)); last=cell; redraw(); } });
-function up(e){ if(!pts.has(e.pointerId)) return; pts.delete(e.pointerId); if(pts.size<2){ pinch=null; ovPinch=null; } if(pts.size===0){ commit(); commitTick(); commitDraft(); pan=null; blocked=false; if(ovDrag||(ov&&ov.moving)){ ovDrag=null; saveOverlay(); } } }
+function up(e){ if(!pts.has(e.pointerId)) return; pts.delete(e.pointerId); if(pts.size<2){ pinch=null; ovPinch=null; } if(pts.size===0){ commit(); commitTick(); commitDraft(); txDrag=null; pan=null; blocked=false; if(ovDrag||(ov&&ov.moving)){ ovDrag=null; saveOverlay(); } } }
 /* finishing a line: a line drawn over an existing one replaces it, so its colour can be changed */
 function commitDraft(){ if(!draft) return; const d=draft; draft=null;
   if(d[0]===d[2]&&d[1]===d[3]){ redraw(); toast("Drag from one corner to another"); return; }
@@ -1342,7 +1413,7 @@ function showCount(){ if(mode!=="stitch") return; const g=progress(P); $("stCoun
 const VIEWS=["Done: faded","Done: full colour","Done only"];
 function modeUI(){ const s=mode==="stitch"; $("stTools").hidden=!s; $("dsTools").hidden=s; $("paletteRow").hidden=s; $("stBar").hidden=!s; $("stView").textContent=VIEWS[doneView];
   document.querySelectorAll("#stTools [data-st]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.st===stTool?"true":"false")); ovUI(); showCount(); resize(); redraw(); }
-function enterStitch(){ if(counts(P)[0]===P.cells.length&&!P.lines.length){ toast("Add some stitches to the design first"); return; } closeSheet(); cancelStroke(); draft=null; mode="stitch"; modeUI(); toast(P.lines.length?"Tap stitches and lines to tick them off":"Tap stitches to tick them off"); }
+function enterStitch(){ if(txt) endText(); if(counts(P)[0]===P.cells.length&&!P.lines.length){ toast("Add some stitches to the design first"); return; } closeSheet(); cancelStroke(); draft=null; mode="stitch"; modeUI(); toast(P.lines.length?"Tap stitches and lines to tick them off":"Tap stitches to tick them off"); }
 function exitStitch(){ cancelTick(); mode="design"; modeUI(); }
 document.querySelectorAll("#stTools [data-st]").forEach(b=>b.onclick=()=>{ stTool=b.dataset.st; modeUI(); });
 $("mStitch").onclick=enterStitch; $("stExit").onclick=exitStitch;
@@ -1423,7 +1494,7 @@ $("gSave").onclick=async()=>{ const r=await offer(fileBase()+"-backup.json",JSON
 
 /* trace a photo: a picture shown under the grid as a guide */
 let ovT=0;
-function ovUI(){ $("ovBar").hidden=!ov||mode!=="design"; if(!ov) return; $("ovMove").textContent=ov.moving?"Done":"Move picture"; $("ovMove").setAttribute("aria-pressed",ov.moving?"true":"false");
+function ovUI(){ $("ovBar").hidden=!ov||mode!=="design"||!!txt; if(!ov) return; $("ovMove").textContent=ov.moving?"Done":"Move picture"; $("ovMove").setAttribute("aria-pressed",ov.moving?"true":"false");
   $("ovShow").textContent=ov.vis?"Hide":"Show"; $("ovAlpha").value=Math.round(ov.a*100); }
 function saveOverlay(){ clearTimeout(ovT); ovT=setTimeout(()=>{ if(!ov){ try{ localStorage.removeItem(KEY+"overlay"); }catch(e){} return; }
     if(ov.d) store(KEY+"overlay",JSON.stringify({d:ov.d,x:ov.x,y:ov.y,w:ov.w,h:ov.h,a:ov.a,v:ov.vis})); },400); }
@@ -1459,6 +1530,78 @@ function filterThreads(){ const q=$("thSearch").value.trim().toLowerCase(); let 
   $("thCount").textContent=n+" of "+DMC.length+" threads. Tap one to add it to your design."; }
 $("thSearch").oninput=filterThreads;
 $("addThread").onclick=()=>{ $("thSearch").value=""; filterThreads(); openSheet("sheet-threads"); };
+
+/* lettering: type text, pick a font and a height, see it on the fabric, drag it into place, then place it as stitches */
+const FONTS=[
+  {id:"classic",name:"Classic stitch",note:"Drawn stitch by stitch. Capital letters only. Heights 5, 7 and 9."},
+  {id:"inter",name:"Inter",note:"Plain and clear",file:"Inter-SemiBold.otf",pre:""},
+  {id:"poppins",name:"Poppins",note:"Round and friendly",file:"Poppins-Medium.ttf",pre:""},
+  {id:"poppinsb",name:"Poppins Bold",note:"Thick and strong",file:"Poppins-Bold.ttf",pre:""},
+  {id:"lora",name:"Lora",note:"Traditional, with serifs",file:"Lora-Variable.ttf",desc:{weight:"400 700"},pre:"600 "},
+  {id:"lorai",name:"Lora Italic",note:"Slanted and elegant",file:"Lora-Italic-Variable.ttf",desc:{weight:"400 700"},pre:"600 "}];
+const CLASSIC=[[5,"small"],[7,"medium"],[9,"large"]], HMIN=8, HMAX=80;
+let tFont=FONTS[0], tHeight=7, tSeq=0, tTimer=0; const fontReady={};
+/* a font file is fetched the first time its font is used */
+function loadFont(f){ if(!fontReady[f.id]) fontReady[f.id]=(async()=>{ const ff=new FontFace("XS "+f.name,"url("+(TEST?"../":"")+"fonts/"+f.file+")",f.desc||{}); await ff.load(); document.fonts.add(ff); })();
+  return fontReady[f.id].catch(e=>{ delete fontReady[f.id]; throw e; }); }
+function outlineMask(text,f,H){ if(!text) return {w:0,h:0,cells:new Uint8Array(0),skipped:""};
+  const c=document.createElement("canvas"), g=c.getContext("2d",{willReadFrequently:true}), fam="px 'XS "+f.name+"'";
+  g.font=f.pre+"200"+fam; const cap=g.measureText("H").actualBoundingBoxAscent||140;
+  let ss=H>40?4:8, m, px;
+  for(;;){ px=H*ss*200/cap; g.font=f.pre+px+fam; m=g.measureText(text); if(ss<=2||m.actualBoundingBoxLeft+m.actualBoundingBoxRight<=12000) break; ss/=2; }
+  /* the line the letters stand on sits exactly on a row of the grid, so flat tops and bottoms come out clean */
+  const pad=2*ss, asc=Math.ceil(m.actualBoundingBoxAscent/ss)*ss, desc=Math.ceil(m.actualBoundingBoxDescent/ss)*ss;
+  c.width=Math.ceil((m.actualBoundingBoxLeft+m.actualBoundingBoxRight)/ss)*ss+2*pad; c.height=asc+desc+2*pad;
+  g.font=f.pre+px+fam; g.fillStyle="#000"; g.textBaseline="alphabetic"; g.fillText(text,pad+m.actualBoundingBoxLeft,pad+asc);
+  const out=cropMask(coverCells(g.getImageData(0,0,c.width,c.height).data,c.width,c.height,ss)); out.skipped=""; return out; }
+async function makeText(){ const text=$("tText").value.trim(); if(tFont.id==="classic") return textMask(text,(CLASSIC.find(x=>x[0]===tHeight)||CLASSIC[1])[1]);
+  await loadFont(tFont); return outlineMask(text,tFont,tHeight); }
+/* the stitched text as a small picture, in the selected thread on the fabric colour */
+function drawMask(cv2,m,maxW,maxS){ const S=Math.max(1,Math.min(maxS,Math.floor(maxW/Math.max(1,m.w)))); cv2.width=Math.max(1,m.w*S+2*S); cv2.height=Math.max(1,m.h*S+2*S); const g=cv2.getContext("2d");
+  g.fillStyle=fabricHex(P.fabric); g.fillRect(0,0,cv2.width,cv2.height); g.fillStyle=PHEX[P.cur]||"#888888";
+  for(let y=0;y<m.h;y++) for(let x=0;x<m.w;x++) if(m.cells[y*m.w+x]) g.fillRect(S+x*S,S+y*S,S,S); }
+function fixHeight(){ if(tFont.id==="classic"){ let best=CLASSIC[0][0]; CLASSIC.forEach(x=>{ if(Math.abs(x[0]-tHeight)<Math.abs(best-tHeight)) best=x[0]; }); tHeight=best; }
+  else tHeight=Math.max(HMIN,Math.min(HMAX,Math.round(tHeight)||12)); }
+function textUI(){ fixHeight(); $("tFont").textContent=tFont.name; $("tH").value=tHeight;
+  $("tHLabel").textContent=tFont.id==="classic"?"Height in stitches: 5, 7 or 9":"Height of the capital letters, in stitches, from "+HMIN+" to "+HMAX;
+  clearTimeout(tTimer); tTimer=setTimeout(textPreview,120); }
+async function textPreview(){ const seq=++tSeq; let m=null; try{ m=await makeText(); }catch(e){} if(seq!==tSeq) return; const pv=$("tPrev"); let s;
+  if(!m){ pv.hidden=true; $("tSize").textContent="That font could not be loaded. Check your connection, then try again."; return; }
+  if(!m.w){ pv.hidden=true; s="Type your text to see how it will look."; }
+  else { pv.hidden=false; drawMask(pv,m,Math.max(120,$("tText").clientWidth-2),6);
+    s="This text is "+m.w+" stitches wide and "+m.h+" high. Your fabric is "+P.w+" wide and "+P.h+" high.";
+    if(m.w>P.w||m.h>P.h) s+=" It is too big for the fabric, so the part that does not fit will be left off. Try a smaller height or a wider fabric."; }
+  if(m.skipped) s+=" Left out, because this font does not have them: "+m.skipped.split("").join(" ");
+  $("tSize").textContent=s; }
+$("tText").addEventListener("input",textUI);
+$("tH").addEventListener("change",()=>{ tHeight=Number($("tH").value)||tHeight; textUI(); });
+function stepH(d){ if(tFont.id==="classic"){ const i=CLASSIC.findIndex(x=>x[0]===tHeight); tHeight=CLASSIC[Math.max(0,Math.min(CLASSIC.length-1,i+d))][0]; } else tHeight+=d; textUI(); }
+$("tMinus").onclick=()=>stepH(-1); $("tPlus").onclick=()=>stepH(1);
+$("mText").onclick=()=>{ textUI(); openSheet("sheet-text"); };
+/* the font picker: every font shown in stitches, using the text typed so far */
+function setFont(f){ const was=tFont.id; tFont=f; if(f.id!=="classic"&&was==="classic") tHeight=12; }
+async function openFonts(){ const sample=$("tText").value.trim()||"Abc 123", list=$("fontList"); list.textContent="";
+  $("fnHint").textContent="Each font is shown with "+($("tText").value.trim()?"your text":"a sample")+". Tap the one you want.";
+  openSheet("sheet-fonts"); const keepF=tFont, keepH=tHeight, keepT=$("tText").value;
+  for(const f of FONTS){ const b=document.createElement("button"); b.type="button"; b.className="frow"; b.setAttribute("aria-pressed",f===keepF?"true":"false");
+    const cvs=document.createElement("canvas"); cvs.width=10; cvs.height=10; cvs.setAttribute("aria-hidden","true"); const nm=document.createElement("b"); nm.textContent=f.name; const nt=document.createElement("small"); nt.textContent=f.note;
+    b.append(cvs,nm,nt); b.onclick=()=>{ setFont(f); openSheet("sheet-text"); textUI(); }; list.append(b);
+    try{ let m; if(f.id==="classic") m=textMask(sample,"medium"); else { await loadFont(f); m=outlineMask(sample,f,12); } drawMask(cvs,m,Math.max(120,list.clientWidth-30),4); }
+    catch(e){ nt.textContent=f.note+". This font could not be loaded just now."; cvs.hidden=true; } } }
+$("tFont").onclick=openFonts; $("fnBack").onclick=()=>{ openSheet("sheet-text"); textUI(); };
+function endText(){ txt=null; txDrag=null; $("txBar").hidden=true; ovUI(); redraw(); }
+$("tShow").onclick=async()=>{ let m=null; try{ m=await makeText(); }catch(e){ toast("That font could not be loaded. Check your connection."); return; }
+  if(!m.w||!m.cells.some(v=>v)){ toast("Type some text first"); return; }
+  if(mode==="stitch") exitStitch(); if(ov) ov.moving=false; cancelStroke(); draft=null;
+  /* start in the middle of what is on screen, kept on the fabric where it fits */
+  const cx=(stage.clientWidth/2-view.x)/view.s, cy=(stage.clientHeight/2-view.y)/view.s;
+  m.x=Math.max(0,Math.min(Math.max(0,P.w-m.w),Math.round(cx-m.w/2))); m.y=Math.max(0,Math.min(Math.max(0,P.h-m.h),Math.round(cy-m.h/2)));
+  txt=m; closeSheet(); $("txBar").hidden=false; ovUI(); redraw(); toast("Drag the text, then tap Place"); };
+$("txCancel").onclick=endText;
+$("txPlace").onclick=()=>{ if(!txt) return; let n=0; stroke={map:new Map(),val:P.cur+1};
+  for(let y=0;y<txt.h;y++) for(let x=0;x<txt.w;x++) if(txt.cells[y*txt.w+x]){ const c=txt.x+x, r=txt.y+y; if(c>=0&&r>=0&&c<P.w&&r<P.h){ put(r*P.w+c,stroke.val); n++; } }
+  if(!n){ stroke=null; toast("The text is off the fabric. Drag it onto the fabric first."); return; }
+  commit(); endText(); toast("Lettering placed"); };
 
 /* key */
 function renderKey(){ const n=counts(P), body=$("keyBody"); body.textContent=""; let total=0, used=0;
