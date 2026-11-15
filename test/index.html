@@ -39,6 +39,8 @@ button{cursor:pointer}
 .btn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 10px;font-weight:600;font-size:13px;min-height:38px}
 .btn:disabled{opacity:.4}
 .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.key tbody tr{cursor:pointer}
+.key tbody tr:active{background:var(--bg)}
 .tfield{display:flex;flex-direction:column;gap:4px;font-size:13px;font-weight:600}
 .pickbtn{text-align:left;font-size:15px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;gap:8px}
 .pickbtn::after{content:"Change";font-size:12px;color:var(--muted);font-weight:600}
@@ -104,9 +106,9 @@ input[type=text],input[type=number],input[type=search],select{border:1px solid v
 .saved div{flex:1;min-width:0}
 .saved b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .saved small{color:var(--muted)}
-#ovBar,#stBar,#txBar{position:absolute;top:8px;left:8px;right:8px;z-index:2;display:flex;flex-wrap:wrap;gap:6px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:6px;box-shadow:0 2px 8px rgba(0,0,0,.15)}
-#ovBar .btn,#stBar .btn,#txBar .btn{padding:6px 10px;min-height:36px}
-#stBar b,#txBar b{flex:1;min-width:150px;font-size:14px;font-variant-numeric:tabular-nums;padding-left:4px}
+#ovBar,#stBar,#txBar,#selBar{position:absolute;top:8px;left:8px;right:8px;z-index:2;display:flex;flex-wrap:wrap;gap:6px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:6px;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+#ovBar .btn,#stBar .btn,#txBar .btn,#selBar .btn{padding:6px 10px;min-height:36px}
+#stBar b,#txBar b,#selBar b{flex:1;min-width:150px;font-size:14px;font-variant-numeric:tabular-nums;padding-left:4px}
 #ovBar .btn[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 #ovBar input{flex:1;min-width:90px;accent-color:var(--accent)}
 /* The menu follows the chosen theme. */
@@ -162,9 +164,18 @@ input[type=text],input[type=number],input[type=search],select{border:1px solid v
     <button class="btn" id="ovDel" type="button">Remove</button>
   </div>
   <div id="txBar" hidden>
-    <b>Drag the text into place</b>
+    <b id="txLabel">Drag the text into place</b>
+    <button class="btn" id="txMirror" type="button" hidden>Mirror</button>
+    <button class="btn" id="txFlip" type="button" hidden>Flip</button>
+    <button class="btn" id="txTurn" type="button" hidden>Turn</button>
     <button class="btn primary" id="txPlace" type="button">Place</button>
     <button class="btn" id="txCancel" type="button">Cancel</button>
+  </div>
+  <div id="selBar" hidden>
+    <b id="selLabel"></b>
+    <button class="btn primary" id="selCopy" type="button" hidden>Copy</button>
+    <button class="btn" id="selMove" type="button" hidden>Move</button>
+    <button class="btn" id="selCancel" type="button">Cancel</button>
   </div>
   <div id="toast" hidden></div>
 </main>
@@ -207,8 +218,10 @@ input[type=text],input[type=number],input[type=search],select{border:1px solid v
     <h3>Edit</h3>
     <div class="mcard">
       <button class="mrow" id="mSetup" type="button"><span class="chip lav"><svg aria-hidden="true" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="1"></rect><path d="M4 9.3h16M4 14.7h16M9.3 4v16M14.7 4v16"></path></svg></span><span><b>Fabric and size</b><small>Aida count, colour, size and name</small></span></button>
-      <button class="mrow" id="mKey" type="button"><span class="chip lav"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"></path><circle cx="4.5" cy="6" r="1.2"></circle><circle cx="4.5" cy="12" r="1.2"></circle><circle cx="4.5" cy="18" r="1.2"></circle></svg></span><span><b>Threads used</b><small>Thread key and stitch counts</small></span></button>
+      <button class="mrow" id="mKey" type="button"><span class="chip lav"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"></path><circle cx="4.5" cy="6" r="1.2"></circle><circle cx="4.5" cy="12" r="1.2"></circle><circle cx="4.5" cy="18" r="1.2"></circle></svg></span><span><b>Threads used</b><small>Thread key, stitch counts, replace a colour</small></span></button>
       <button class="mrow" id="mText" type="button"><span class="chip lav"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 7V4h14v3M12 4v16M9 20h6"></path></svg></span><span><b>Add lettering</b><small>A name, a date or a short message</small></span></button>
+      <button class="mrow" id="mSelect" type="button"><span class="chip lav"><svg aria-hidden="true" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"></rect><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"></path></svg></span><span><b>Copy or move a part</b><small>Repeat, mirror or turn part of the design</small></span></button>
+      <button class="mrow" id="mTidy" type="button"><span class="chip lav"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 19l9-9M14 10l2-6 4 4-6 2z"></path><path d="M5 5v2M4 6h2M9 3v2M8 4h2M19 15v2M18 16h2"></path></svg></span><span><b>Tidy stray stitches</b><small>Clean up single stitches, useful after a photo</small></span></button>
       <button class="mrow" id="mFit" type="button"><span class="chip lav"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"></path></svg></span><span><b>Fit to screen</b><small>See the whole design</small></span></button>
     </div>
     <h3>Look</h3>
@@ -317,6 +330,16 @@ input[type=text],input[type=number],input[type=search],select{border:1px solid v
   </div>
 </section>
 
+<section class="sheet" id="sheet-tidy" hidden aria-label="Tidy stray stitches">
+  <header><h2>Tidy stray stitches</h2><button class="btn" data-close type="button">Close</button></header>
+  <div class="body">
+    <p id="tdText"></p>
+    <button class="btn primary" id="tdGo" type="button">Tidy them</button>
+    <p>A stray stitch is a single stitch with no stitch of the same colour beside it. Tidying changes it to the colour most common around it. Single stitches on bare fabric are left alone.</p>
+    <p>A small detail made of one stitch, such as an eye, counts as stray too. Look over the design afterwards. Undo brings everything back.</p>
+  </div>
+</section>
+
 <section class="sheet" id="sheet-fonts" hidden aria-label="Choose a font">
   <header><h2>Choose a font</h2><button class="btn" id="fnBack" type="button">Back</button></header>
   <div class="body">
@@ -327,7 +350,7 @@ input[type=text],input[type=number],input[type=search],select{border:1px solid v
 </section>
 
 <section class="sheet" id="sheet-threads" hidden aria-label="Choose a thread">
-  <header><h2>DMC threads</h2><button class="btn" data-close type="button">Close</button></header>
+  <header><h2 id="thTitle">DMC threads</h2><button class="btn" data-close type="button">Close</button></header>
   <div class="body">
     <input type="search" id="thSearch" placeholder="Search by number or name, such as 321 or rose" aria-label="Search threads">
     <p id="thCount"></p>
@@ -339,6 +362,7 @@ input[type=text],input[type=number],input[type=search],select{border:1px solid v
   <header><h2>Threads used</h2><button class="btn" data-close type="button">Close</button></header>
   <div class="body">
     <p id="keyTotal"></p>
+    <p id="keyHint">To replace a colour, tap its row and choose the thread to use instead.</p>
     <table class="key"><thead><tr><th>Symbol</th><th>Colour</th><th>DMC</th><th>Name</th><th style="text-align:right">Amount</th></tr></thead><tbody id="keyBody"></tbody></table>
     <button class="btn" id="keyClean" type="button">Remove threads that are not used</button>
     <p>Screen colours are close approximations of the real thread. Buy by the DMC number.</p>
@@ -914,6 +938,23 @@ const ALPHA={
 small:{label:"Small, 5 stitches high",h:5,space:2,g:{"A":".#. #.# ### #.# #.#","B":"##. #.# ##. #.# ##.","C":".## #.. #.. #.. .##","D":"##. #.# #.# #.# ##.","E":"### #.. ##. #.. ###","F":"### #.. ##. #.. #..","G":".## #.. #.# #.# .##","H":"#.# #.# ### #.# #.#","I":"### .#. .#. .#. ###","J":"..# ..# ..# #.# .#.","K":"#.# #.# ##. #.# #.#","L":"#.. #.. #.. #.. ###","M":"#...# ##.## #.#.# #...# #...#","N":"#..# ##.# #.## #..# #..#","O":".#. #.# #.# #.# .#.","P":"##. #.# ##. #.. #..","Q":".##. #..# #..# #.#. .#.#","R":"##. #.# ##. #.# #.#","S":".## #.. .#. ..# ##.","T":"### .#. .#. .#. .#.","U":"#.# #.# #.# #.# ###","V":"#.# #.# #.# #.# .#.","W":"#...# #...# #.#.# ##.## #...#","X":"#.# #.# .#. #.# #.#","Y":"#.# #.# .#. .#. .#.","Z":"### ..# .#. #.. ###","0":"### #.# #.# #.# ###","1":".#. ##. .#. .#. ###","2":"##. ..# .#. #.. ###","3":"##. ..# .#. ..# ##.","4":"#.# #.# ### ..# ..#","5":"### #.. ##. ..# ##.","6":".## #.. ### #.# ###","7":"### ..# .#. .#. .#.","8":"### #.# ### #.# ###","9":"### #.# ### ..# ##.",".":". . . . #",",":".. .. .. .# #.","!":"# # # . #","?":"##. ..# .#. ... .#.","-":"... ... ### ... ...","'":"# # . . .",":":". # . # .","/":"..# ..# .#. #.. #..","&":".#.. #.#. .#.# #.#. .#.#","+":"... .#. ### .#. ...","*":".#.#. ##### ##### .###. ..#.."}},
 medium:{label:"Medium, 7 stitches high",h:7,space:3,g:Object.assign({},FONT,{".":". . . . . . #",",":".. .. .. .. .. .# #.","-":".... .... .... #### .... .... ....","'":"# # . . . . .",":":". . # . . # .","/":"....# ....# ...#. ..#.. .#... #.... #....","?":".###. #...# ....# ...#. ..#.. ..... ..#..","&":".##.. #..#. .##.. #.#.# #..#. #..#. .##.#","+":"..... ..#.. ..#.. ##### ..#.. ..#.. ....."})},
 large:{label:"Large, 9 stitches high",h:9,space:4,g:{"0":".#####. ##...## ##..### ##.#.## ##.#.## ###..## ##...## ##...## .#####.","1":"..##.. .###.. ####.. ..##.. ..##.. ..##.. ..##.. ..##.. ######","2":".#####. ##...## .....## .....## ....##. ...##.. ..##... .##.... #######","3":".#####. ##...## .....## .....## ..####. .....## .....## ##...## .#####.","4":"....##. ...###. ..####. .##.##. ##..##. ####### ....##. ....##. ....##.","5":"####### ##..... ##..... ######. .....## .....## .....## ##...## .#####.","6":".#####. ##...## ##..... ##..... ######. ##...## ##...## ##...## .#####.","7":"####### .....## .....## ....##. ...##.. ..##... ..##... ..##... ..##...","8":".#####. ##...## ##...## ##...## .#####. ##...## ##...## ##...## .#####.","9":".#####. ##...## ##...## ##...## .###### .....## .....## ##...## .#####.","A":"..###.. ##...## ##...## ##...## ####### ##...## ##...## ##...## ##...##","B":"#####.. ##...## ##...## ##...## #####.. ##...## ##...## ##...## #####..","C":"..###.. ##...## ##...## ##..... ##..... ##..... ##...## ##...## ..###..","D":"#####.. ##...## ##...## ##...## ##...## ##...## ##...## ##...## #####..","E":"####### ##..... ##..... ##..... #####.. ##..... ##..... ##..... #######","F":"####### ##..... ##..... ##..... #####.. ##..... ##..... ##..... ##.....","G":"..###.. ##...## ##...## ##..... ##.#### ##...## ##...## ##...## ..#####","H":"##...## ##...## ##...## ##...## ####### ##...## ##...## ##...## ##...##","I":"###### ..##.. ..##.. ..##.. ..##.. ..##.. ..##.. ..##.. ######","J":"..##### .....## .....## .....## .....## .....## ##...## ##...## .#####.","K":"##...## ##..##. ##.##.. ####... ###.... ####... ##.##.. ##..##. ##...##","L":"##..... ##..... ##..... ##..... ##..... ##..... ##..... ##..... #######","M":"##.....## ###...### ####.#### ##.###.## ##..#..## ##.....## ##.....## ##.....## ##.....##","N":"##....## ###...## ####..## ##.##.## ##.##.## ##..#### ##...### ##....## ##....##","O":"..###.. ##...## ##...## ##...## ##...## ##...## ##...## ##...## ..###..","P":"#####.. ##...## ##...## ##...## #####.. ##..... ##..... ##..... ##.....","Q":".#####. ##...## ##...## ##...## ##...## ##...## ##.#.## ##..##. .###.##","R":"######. ##...## ##...## ##...## ######. ##.##.. ##..##. ##...## ##...##","S":".#####. ##...## ##..... ##..... .#####. .....## .....## ##...## .#####.","T":"###### ..##.. ..##.. ..##.. ..##.. ..##.. ..##.. ..##.. ..##..","U":"##...## ##...## ##...## ##...## ##...## ##...## ##...## ##...## ..###..","V":"##...## ##...## ##...## ##...## ##...## ##...## .##.##. .##.##. ..###..","W":"##.....## ##.....## ##.....## ##.....## ##..#..## ##.###.## ####.#### ###...### ##.....##","X":"##...## ##...## .##.##. .##.##. ..###.. .##.##. .##.##. ##...## ##...##","Y":"##..## ##..## ##..## .####. ..##.. ..##.. ..##.. ..##.. ..##..","Z":"####### .....## ....##. ...##.. ..##... .##.... ##..... ##..... #######","*":".##...##. ####.#### ######### ######### ######### .#######. ..#####.. ...###... ....#....","!":"## ## ## ## ## ## .. ## ##",".":".. .. .. .. .. .. .. ## ##",",":"... ... ... ... ... ... .## .## ##.","-":"..... ..... ..... ..... ##### ..... ..... ..... .....","'":"## ## ## .. .. .. .. .. ..",":":".. .. ## ## .. .. ## ## ..","/":"....## ....## ...##. ...##. ..##.. .##... .##... ##.... ##....","?":".#####. ##...## .....## ....##. ...##.. ..##... ....... ..##... ..##...","&":"..###... .##.##.. .##.##.. ..###... .###..## ##.##.#. ##..##.. ##.####. .###..##","+":"...... ..##.. ..##.. ###### ###### ..##.. ..##.. ...... ......"}}};
+/* Single stitches with no stitch of the same thread beside them, each paired with the thread most common around it. Ones on bare fabric are skipped. */
+function strays(p){ const out=[], w=p.w, h=p.h, cnt=new Uint16Array(p.palette.length+1);
+  for(let r=0;r<h;r++) for(let c=0;c<w;c++){ const v=p.cells[r*w+c]; if(!v) continue; cnt.fill(0); let same=false, any=false;
+    for(let dy=-1;dy<=1&&!same;dy++) for(let dx=-1;dx<=1;dx++){ if(!dx&&!dy) continue; const x=c+dx, y=r+dy; if(x<0||y<0||x>=w||y>=h) continue; const n=p.cells[y*w+x]; if(n===v){ same=true; break; } if(n){ cnt[n]++; any=true; } }
+    if(same||!any) continue; let best=0; for(let k=1;k<cnt.length;k++) if(cnt[k]>cnt[best]||!best&&cnt[k]) best=k; out.push([r*w+c,best]); }
+  return out; }
+/* A part of the design lifted out as a piece: its stitches, and the backstitch lines that lie wholly inside the box. Lines are kept relative to the piece. */
+function pieceFrom(p,x0,y0,x1,y1){ const w=x1-x0+1, h=y1-y0+1, cells=new Uint8Array(w*h); for(let y=0;y<h;y++) for(let x=0;x<w;x++) cells[y*w+x]=p.cells[(y0+y)*p.w+x0+x];
+  const lines=(p.lines||[]).filter(l=>l[0]>=x0&&l[2]>=x0&&l[0]<=x1+1&&l[2]<=x1+1&&l[1]>=y0&&l[3]>=y0&&l[1]<=y1+1&&l[3]<=y1+1).map(l=>[l[0]-x0,l[1]-y0,l[2]-x0,l[3]-y0,l[4],0]);
+  return {w,h,cells,lines}; }
+function mirrorPiece(m){ const cells=new Uint8Array(m.w*m.h); for(let y=0;y<m.h;y++) for(let x=0;x<m.w;x++) cells[y*m.w+(m.w-1-x)]=m.cells[y*m.w+x];
+  return {w:m.w,h:m.h,cells,lines:m.lines.map(l=>[m.w-l[0],l[1],m.w-l[2],l[3],l[4],0])}; }
+function flipPiece(m){ const cells=new Uint8Array(m.w*m.h); for(let y=0;y<m.h;y++) for(let x=0;x<m.w;x++) cells[(m.h-1-y)*m.w+x]=m.cells[y*m.w+x];
+  return {w:m.w,h:m.h,cells,lines:m.lines.map(l=>[l[0],m.h-l[1],l[2],m.h-l[3],l[4],0])}; }
+/* a quarter turn to the right */
+function turnPiece(m){ const w=m.h, h=m.w, cells=new Uint8Array(w*h); for(let y=0;y<m.h;y++) for(let x=0;x<m.w;x++) cells[x*w+(m.h-1-y)]=m.cells[y*m.w+x];
+  return {w,h,cells,lines:m.lines.map(l=>[m.h-l[1],l[0],m.h-l[3],l[2],l[4],0])}; }
 /* Outline fonts: the letters are drawn large, ss dots to each stitch, and a stitch is kept when at least half of its square is covered. data is the picture as RGBA bytes. */
 function coverCells(data,cw,ch,ss){ const w=Math.floor(cw/ss), h=Math.floor(ch/ss), cells=new Uint8Array(w*h), need=ss*ss*255*0.5;
   for(let r=0;r<h;r++) for(let c=0;c<w;c++){ let s=0; for(let y=0;y<ss;y++){ let k=((r*ss+y)*cw+c*ss)*4+3; for(let x=0;x<ss;x++,k+=4) s+=data[k]; } if(s>=need) cells[r*w+c]=1; }
@@ -1246,11 +1287,11 @@ function photoToPattern(px,w,h,n,skipWhite){
   for(const i of idx) cells[i]=map[tmp[i]];
   return {palette,cells};
 }
-if(typeof module!=="undefined"){ module.exports={coverCells,cropMask,ALPHA,textMask,cleanLines,sameLine,lineDist,nearestLine,lineLengths,lengthText,paint,FONT,photoToPattern,progress,tickGroup,DMC,BY,pack,unpack,newProject,resized,lineCells,floodCells,counts,EXAMPLES,sizeText,SYM}; }
+if(typeof module!=="undefined"){ module.exports={strays,pieceFrom,mirrorPiece,flipPiece,turnPiece,coverCells,cropMask,ALPHA,textMask,cleanLines,sameLine,lineDist,nearestLine,lineLengths,lengthText,paint,FONT,photoToPattern,progress,tickGroup,DMC,BY,pack,unpack,newProject,resized,lineCells,floodCells,counts,EXAMPLES,sizeText,SYM}; }
 
 /* ---------- app ---------- */
 if(typeof document!=="undefined"){ (function(){
-let P, undo=[], redo=[], tool="draw", sym=false, PHEX=[], ov=null, ovDrag=null, ovPinch=null, pending=null, setupNew=false, mode="design", stTool="one", doneView=0, tk=null, draft=null, txt=null, txDrag=null;
+let P, undo=[], redo=[], tool="draw", sym=false, PHEX=[], ov=null, ovDrag=null, ovPinch=null, pending=null, setupNew=false, mode="design", stTool="one", doneView=0, tk=null, draft=null, txt=null, txDrag=null, sel=null, replaceIdx=null;
 const TEST=/\/test\//.test(location.pathname), KEY=TEST?"xs-test.":"xs.";
 const view={s:10,x:0,y:0};
 const cv=$("cv"), ctx=cv.getContext("2d"), stage=$("stage");
@@ -1273,7 +1314,7 @@ function refreshPalette(){ PHEX=P.palette.map(n=>(BY[n]||{hex:"#888888"}).hex);
   const act=box.children[P.cur]; if(act){ const l=act.offsetLeft-box.offsetLeft, r=l+act.offsetWidth; if(l<box.scrollLeft) box.scrollLeft=l; else if(r>box.scrollLeft+box.clientWidth) box.scrollLeft=r-box.clientWidth; }
 }
 function setTool(t){ tool=t; draft=null; document.querySelectorAll(".tools [data-tool]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.tool===t?"true":"false")); }
-function setProject(p,keepPicture){ P=p; undo=[]; redo=[]; if(!P.done||P.done.length!==P.cells.length) P.done=new Uint8Array(P.cells.length); P.lines=cleanLines(P.lines,P.w,P.h,P.palette.length); draft=null; txt=null; txDrag=null; $("txBar").hidden=true; if(mode==="stitch") exitStitch(); if(!keepPicture) clearOverlay(); refreshPalette(); refreshInfo(); fit(); autosave(); }
+function setProject(p,keepPicture){ P=p; undo=[]; redo=[]; if(!P.done||P.done.length!==P.cells.length) P.done=new Uint8Array(P.cells.length); P.lines=cleanLines(P.lines,P.w,P.h,P.palette.length); draft=null; txt=null; txDrag=null; sel=null; $("txBar").hidden=true; $("selBar").hidden=true; if(mode==="stitch") exitStitch(); if(!keepPicture) clearOverlay(); refreshPalette(); refreshInfo(); fit(); autosave(); }
 
 /* drawing the canvas */
 function fit(){ const cw=stage.clientWidth, ch=stage.clientHeight; if(!cw||!ch){ needFit=true; return; } needFit=false;
@@ -1315,9 +1356,16 @@ function draw(){
     ctx.lineCap="butt"; }
   /* lettering waiting to be placed: shown a little see-through, inside a dashed box */
   if(txt){ ctx.globalAlpha=0.8; ctx.fillStyle=PHEX[P.cur]||"#888888";
-    for(let y=0;y<txt.h;y++) for(let x=0;x<txt.w;x++) if(txt.cells[y*txt.w+x]){ const x0=Math.round(ox+(txt.x+x)*s), y0=Math.round(oy+(txt.y+y)*s); ctx.fillRect(x0,y0,Math.round(ox+(txt.x+x+1)*s)-x0,Math.round(oy+(txt.y+y+1)*s)-y0); }
+    for(let y=0;y<txt.h;y++) for(let x=0;x<txt.w;x++) if(txt.cells[y*txt.w+x]){ if(txt.piece) ctx.fillStyle=PHEX[txt.cells[y*txt.w+x]-1]||"#888888"; const x0=Math.round(ox+(txt.x+x)*s), y0=Math.round(oy+(txt.y+y)*s); ctx.fillRect(x0,y0,Math.round(ox+(txt.x+x+1)*s)-x0,Math.round(oy+(txt.y+y+1)*s)-y0); }
     ctx.globalAlpha=1; ctx.strokeStyle=getComputedStyle(document.documentElement).getPropertyValue("--accent").trim()||"#8F1A2E"; ctx.lineWidth=2*dpr; ctx.setLineDash([6*dpr,4*dpr]);
-    ctx.strokeRect(ox+txt.x*s-3*dpr,oy+txt.y*s-3*dpr,txt.w*s+6*dpr,txt.h*s+6*dpr); ctx.setLineDash([]); }
+    ctx.strokeRect(ox+txt.x*s-3*dpr,oy+txt.y*s-3*dpr,txt.w*s+6*dpr,txt.h*s+6*dpr); ctx.setLineDash([]);
+    if(txt.piece&&txt.lines.length){ ctx.lineCap="round"; ctx.lineWidth=Math.max(2*dpr,s*0.16); ctx.globalAlpha=0.8;
+      for(const l of txt.lines){ ctx.strokeStyle=PHEX[l[4]-1]||"#888888"; ctx.beginPath(); ctx.moveTo(ox+(txt.x+l[0])*s,oy+(txt.y+l[1])*s); ctx.lineTo(ox+(txt.x+l[2])*s,oy+(txt.y+l[3])*s); ctx.stroke(); }
+      ctx.globalAlpha=1; ctx.lineCap="butt"; } }
+  /* the box being dragged around a part to copy or move */
+  if(sel&&sel.a){ const r=selRect(), acc=getComputedStyle(document.documentElement).getPropertyValue("--accent").trim()||"#8F1A2E";
+    const x=ox+r.x0*s, y=oy+r.y0*s, bw=(r.x1-r.x0+1)*s, bh=(r.y1-r.y0+1)*s; ctx.globalAlpha=0.14; ctx.fillStyle=acc; ctx.fillRect(x,y,bw,bh); ctx.globalAlpha=1;
+    ctx.strokeStyle=acc; ctx.lineWidth=2*dpr; ctx.setLineDash([6*dpr,4*dpr]); ctx.strokeRect(x,y,bw,bh); ctx.setLineDash([]); }
 }
 /* Keep the whole app inside the visible screen, and never let the page itself scroll the top bar away. */
 function fitScreen(){ const hh=window.innerHeight; if(hh) document.documentElement.style.setProperty("--app-h",hh+"px"); if(window.scrollX||window.scrollY) window.scrollTo(0,0); }
@@ -1343,8 +1391,12 @@ function setLines(next){ undo.push({ln:true,before:copyLines(P.lines),after:copy
 function cornerAt(p){ const x=(p.x-view.x)/view.s, y=(p.y-view.y)/view.s; if(x<-1||y<-1||x>P.w+1||y>P.h+1) return null; return [Math.max(0,Math.min(P.w,Math.round(x))),Math.max(0,Math.min(P.h,Math.round(y)))]; }
 /* the line under a touch, if one is close enough: about a fingertip, and never more than a third of a stitch */
 function lineAt(p){ if(!P.lines.length) return -1; return nearestLine(P.lines,(p.x-view.x)/view.s,(p.y-view.y)/view.s,Math.max(0.18,Math.min(0.35,10/view.s))); }
-function doUndo(){ const u=undo.pop(); if(!u) return; if(u.ln){ P.lines=copyLines(u.before); redo.push(u); autosave(); refreshInfo(); showCount(); redraw(); return; } const a=u.done?P.done:P.cells; for(let k=0;k<u.idx.length;k++) a[u.idx[k]]=u.before[k]; redo.push(u); autosave(); refreshInfo(); showCount(); redraw(); }
-function doRedo(){ const u=redo.pop(); if(!u) return; if(u.ln){ P.lines=copyLines(u.after); undo.push(u); autosave(); refreshInfo(); showCount(); redraw(); return; } const a=u.done?P.done:P.cells; for(let k=0;k<u.idx.length;k++) a[u.idx[k]]=u.after; undo.push(u); autosave(); refreshInfo(); showCount(); redraw(); }
+/* bigger changes (placing a copied part, replacing a colour, tidying) keep the whole design before and after as one step */
+function snap(){ return JSON.stringify(pack(P)); }
+function pushSnap(before){ undo.push({snap:true,before,after:snap()}); if(undo.length>100) undo.shift(); redo=[]; autosave(); refreshInfo(); }
+function restoreSnap(s){ const q=unpack(JSON.parse(s)); P.cells=q.cells; P.done=q.done; P.lines=q.lines; P.palette=q.palette; P.cur=Math.min(P.cur,P.palette.length-1); refreshPalette(); }
+function doUndo(){ const u=undo.pop(); if(!u) return; if(u.snap){ restoreSnap(u.before); redo.push(u); autosave(); refreshInfo(); showCount(); redraw(); return; } if(u.ln){ P.lines=copyLines(u.before); redo.push(u); autosave(); refreshInfo(); showCount(); redraw(); return; } const a=u.done?P.done:P.cells; for(let k=0;k<u.idx.length;k++) a[u.idx[k]]=u.before[k]; redo.push(u); autosave(); refreshInfo(); showCount(); redraw(); }
+function doRedo(){ const u=redo.pop(); if(!u) return; if(u.snap){ restoreSnap(u.after); undo.push(u); autosave(); refreshInfo(); showCount(); redraw(); return; } if(u.ln){ P.lines=copyLines(u.after); undo.push(u); autosave(); refreshInfo(); showCount(); redraw(); return; } const a=u.done?P.done:P.cells; for(let k=0;k<u.idx.length;k++) a[u.idx[k]]=u.after; undo.push(u); autosave(); refreshInfo(); showCount(); redraw(); }
 
 cv.addEventListener("pointerdown",e=>{ e.preventDefault(); try{ cv.setPointerCapture(e.pointerId); }catch(_){}
   const p=pos(e); pts.set(e.pointerId,p);
@@ -1353,10 +1405,11 @@ cv.addEventListener("pointerdown",e=>{ e.preventDefault(); try{ cv.setPointerCap
     else if(pts.size===2){ ovDrag=null; const mx=(a[0].x+a[1].x)/2, my=(a[0].y+a[1].y)/2;
       ovPinch={d:Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y)||1,fx:((mx-view.x)/view.s-ov.x)/ov.w,fy:((my-view.y)/view.s-ov.y)/ov.h,w:ov.w,h:ov.h}; }
     return; }
-  if(pts.size===2){ cancelStroke(); cancelTick(); if(draft){ draft=null; redraw(); } txDrag=null; pan=null; blocked=true; const a=[...pts.values()];
+  if(pts.size===2){ cancelStroke(); cancelTick(); if(draft){ draft=null; redraw(); } txDrag=null; if(sel&&sel.drag){ sel.drag=false; sel.a=null; sel.picked=false; selUI(); redraw(); } pan=null; blocked=true; const a=[...pts.values()];
     pinch={d:Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y)||1,mx:(a[0].x+a[1].x)/2,my:(a[0].y+a[1].y)/2,s:view.s,x:view.x,y:view.y}; return; }
   if(pts.size>2||blocked) return;
   if(txt){ txDrag={px:p.x,py:p.y,x:txt.x,y:txt.y}; return; }
+  if(sel){ const c=cellClamp(p); sel.a=c; sel.b=c; sel.drag=true; sel.picked=false; selUI(); redraw(); return; }
   if(mode==="stitch"){ if(stTool==="move"){ pan={px:p.x,py:p.y,x:view.x,y:view.y}; return; }
     if(stTool==="one"){ const li=lineAt(p); if(li>=0){ const next=copyLines(P.lines); next[li][5]=next[li][5]?0:1; setLines(next); return; } }
     const sc=cellAt(p); if(!sc) return; const g=tickGroup(P,sc[0],sc[1],stTool); if(!g.length){ if(stTool==="one") toast("No stitch there"); return; }
@@ -1381,6 +1434,7 @@ cv.addEventListener("pointermove",e=>{ if(!pts.has(e.pointerId)) return; const p
     return; }
   if(pinch&&pts.size>=2){ const a=[...pts.values()], d=Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y)||1, mx=(a[0].x+a[1].x)/2, my=(a[0].y+a[1].y)/2;
     const s=Math.max(2,Math.min(60,pinch.s*d/pinch.d)); view.x=mx-(pinch.mx-pinch.x)/pinch.s*s; view.y=my-(pinch.my-pinch.y)/pinch.s*s; view.s=s; redraw(); return; }
+  if(sel){ if(sel.drag){ const c=cellClamp(p); if(c[0]!==sel.b[0]||c[1]!==sel.b[1]){ sel.b=c; redraw(); } } return; }
   if(txt){ if(txDrag){ const nx=Math.max(1-txt.w,Math.min(P.w-1,Math.round(txDrag.x+(p.x-txDrag.px)/view.s))), ny=Math.max(1-txt.h,Math.min(P.h-1,Math.round(txDrag.y+(p.y-txDrag.py)/view.s)));
       if(nx!==txt.x||ny!==txt.y){ txt.x=nx; txt.y=ny; redraw(); } } return; }
   if(pan){ view.x=pan.x+p.x-pan.px; view.y=pan.y+p.y-pan.py; redraw(); return; }
@@ -1390,7 +1444,7 @@ cv.addEventListener("pointermove",e=>{ if(!pts.has(e.pointerId)) return; const p
     lineCells(last[0],last[1],cell[0],cell[1]).forEach(q=>tickPut(q[1]*P.w+q[0])); last=cell; showCount(); redraw(); return; }
   if(stroke&&last){ const cell=cellAt(p); if(!cell) return; if(cell[0]===last[0]&&cell[1]===last[1]) return;
     lineCells(last[0],last[1],cell[0],cell[1]).forEach(q=>put(q[1]*P.w+q[0],stroke.val)); last=cell; redraw(); } });
-function up(e){ if(!pts.has(e.pointerId)) return; pts.delete(e.pointerId); if(pts.size<2){ pinch=null; ovPinch=null; } if(pts.size===0){ commit(); commitTick(); commitDraft(); txDrag=null; pan=null; blocked=false; if(ovDrag||(ov&&ov.moving)){ ovDrag=null; saveOverlay(); } } }
+function up(e){ if(!pts.has(e.pointerId)) return; pts.delete(e.pointerId); if(pts.size<2){ pinch=null; ovPinch=null; } if(pts.size===0){ commit(); commitTick(); commitDraft(); txDrag=null; if(sel&&sel.drag){ sel.drag=false; sel.picked=true; selUI(); redraw(); } pan=null; blocked=false; if(ovDrag||(ov&&ov.moving)){ ovDrag=null; saveOverlay(); } } }
 /* finishing a line: a line drawn over an existing one replaces it, so its colour can be changed */
 function commitDraft(){ if(!draft) return; const d=draft; draft=null;
   if(d[0]===d[2]&&d[1]===d[3]){ redraw(); toast("Drag from one corner to another"); return; }
@@ -1411,7 +1465,7 @@ function showCount(){ if(mode!=="stitch") return; const g=progress(P); $("stCoun
 const VIEWS=["Done: faded","Done: full colour","Done only"];
 function modeUI(){ const s=mode==="stitch"; $("stTools").hidden=!s; $("dsTools").hidden=s; $("paletteRow").hidden=s; $("stBar").hidden=!s; $("stView").textContent=VIEWS[doneView];
   document.querySelectorAll("#stTools [data-st]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.st===stTool?"true":"false")); ovUI(); showCount(); resize(); redraw(); }
-function enterStitch(){ if(txt) endText(); if(counts(P)[0]===P.cells.length&&!P.lines.length){ toast("Add some stitches to the design first"); return; } closeSheet(); cancelStroke(); draft=null; mode="stitch"; modeUI(); toast(P.lines.length?"Tap stitches and lines to tick them off":"Tap stitches to tick them off"); }
+function enterStitch(){ if(txt) endText(); if(sel) endSel(); if(counts(P)[0]===P.cells.length&&!P.lines.length){ toast("Add some stitches to the design first"); return; } closeSheet(); cancelStroke(); draft=null; mode="stitch"; modeUI(); toast(P.lines.length?"Tap stitches and lines to tick them off":"Tap stitches to tick them off"); }
 function exitStitch(){ cancelTick(); mode="design"; modeUI(); }
 document.querySelectorAll("#stTools [data-st]").forEach(b=>b.onclick=()=>{ stTool=b.dataset.st; modeUI(); });
 $("mStitch").onclick=enterStitch; $("stExit").onclick=exitStitch;
@@ -1440,7 +1494,7 @@ function twoTap(btn,fn){ if(btn.dataset.armed){ delete btn.dataset.armed; btn.te
 document.querySelectorAll(".tools [data-tool]").forEach(b=>b.onclick=()=>{ setTool(b.dataset.tool); redraw(); if(b.dataset.tool==="line") toast("Drag from one corner to another"); });
 $("symBtn").onclick=$("symBtn2").onclick=()=>{ sym=!sym; $("symBtn").setAttribute("aria-pressed",sym?"true":"false"); $("symBtn2").setAttribute("aria-pressed",sym?"true":"false"); if(sym&&view.s*dpr<12) toast("Zoom in to see the symbols"); redraw(); };
 $("undo").onclick=doUndo; $("redo").onclick=doRedo;
-$("menuBtn").onclick=()=>{ renderSaved(); openSheet("sheet-menu"); };
+$("menuBtn").onclick=()=>{ if(txt) endText(); if(sel) endSel(); renderSaved(); openSheet("sheet-menu"); };
 $("mFit").onclick=()=>{ closeSheet(); fit(); };
 
 /* examples */
@@ -1492,7 +1546,7 @@ $("gSave").onclick=async()=>{ const r=await offer(fileBase()+"-backup.json",JSON
 
 /* trace a photo: a picture shown under the grid as a guide */
 let ovT=0;
-function ovUI(){ $("ovBar").hidden=!ov||mode!=="design"||!!txt; if(!ov) return; $("ovMove").textContent=ov.moving?"Done":"Move picture"; $("ovMove").setAttribute("aria-pressed",ov.moving?"true":"false");
+function ovUI(){ $("ovBar").hidden=!ov||mode!=="design"||!!txt||!!sel; if(!ov) return; $("ovMove").textContent=ov.moving?"Done":"Move picture"; $("ovMove").setAttribute("aria-pressed",ov.moving?"true":"false");
   $("ovShow").textContent=ov.vis?"Hide":"Show"; $("ovAlpha").value=Math.round(ov.a*100); }
 function saveOverlay(){ clearTimeout(ovT); ovT=setTimeout(()=>{ if(!ov){ try{ localStorage.removeItem(KEY+"overlay"); }catch(e){} return; }
     if(ov.d) store(KEY+"overlay",JSON.stringify({d:ov.d,x:ov.x,y:ov.y,w:ov.w,h:ov.h,a:ov.a,v:ov.vis})); },400); }
@@ -1522,12 +1576,12 @@ $("ovDel").onclick=function(){ twoTap(this,()=>{ clearOverlay(); toast("Picture 
 /* threads */
 (function(){ const g=$("threadGrid"); DMC.forEach(d=>{ const b=document.createElement("button"); b.type="button"; b.className="th"; b.dataset.q=(d.n+" "+d.name).toLowerCase();
     const sw=document.createElement("i"); sw.style.background=d.hex; const t=document.createElement("span"); const n=document.createElement("b"); n.textContent="DMC "+d.n; const s=document.createElement("small"); s.textContent=d.name; t.append(n,s);
-    b.append(sw,t); b.onclick=()=>{ let i=P.palette.indexOf(d.n); if(i<0){ if(P.palette.length>=250){ toast("This design already has 250 threads"); return; } P.palette.push(d.n); i=P.palette.length-1; }
+    b.append(sw,t); b.onclick=()=>{ if(replaceIdx!==null){ const from=replaceIdx; replaceIdx=null; replaceThread(from,d.n); return; } let i=P.palette.indexOf(d.n); if(i<0){ if(P.palette.length>=250){ toast("This design already has 250 threads"); return; } P.palette.push(d.n); i=P.palette.length-1; }
       P.cur=i; if(tool!=="fill"&&tool!=="line") setTool("draw"); refreshPalette(); autosave(); closeSheet(); }; g.append(b); }); })();
 function filterThreads(){ const q=$("thSearch").value.trim().toLowerCase(); let n=0; document.querySelectorAll("#threadGrid .th").forEach(b=>{ const ok=!q||b.dataset.q.includes(q); b.hidden=!ok; if(ok) n++; });
-  $("thCount").textContent=n+" of "+DMC.length+" threads. Tap one to add it to your design."; }
+  $("thCount").textContent=n+" of "+DMC.length+" threads. "+(replaceIdx!==null?"Tap the thread to use instead.":"Tap one to add it to your design."); }
 $("thSearch").oninput=filterThreads;
-$("addThread").onclick=()=>{ $("thSearch").value=""; filterThreads(); openSheet("sheet-threads"); };
+$("addThread").onclick=()=>{ replaceIdx=null; $("thTitle").textContent="DMC threads"; $("thSearch").value=""; filterThreads(); openSheet("sheet-threads"); };
 
 /* lettering: type text, pick a font and a height, see it on the fabric, drag it into place, then place it as stitches */
 const FONTS=[
@@ -1594,24 +1648,67 @@ $("tShow").onclick=async()=>{ let m=null; try{ m=await makeText(); }catch(e){ to
   /* start in the middle of what is on screen, kept on the fabric where it fits */
   const cx=(stage.clientWidth/2-view.x)/view.s, cy=(stage.clientHeight/2-view.y)/view.s;
   m.x=Math.max(0,Math.min(Math.max(0,P.w-m.w),Math.round(cx-m.w/2))); m.y=Math.max(0,Math.min(Math.max(0,P.h-m.h),Math.round(cy-m.h/2)));
-  txt=m; closeSheet(); $("txBar").hidden=false; ovUI(); redraw(); toast("Drag the text, then tap Place"); };
+  txt=m; closeSheet(); txUI(); ovUI(); redraw(); toast("Drag the text, then tap Place"); };
 $("txCancel").onclick=endText;
-$("txPlace").onclick=()=>{ if(!txt) return; let n=0; stroke={map:new Map(),val:P.cur+1};
+$("txPlace").onclick=()=>{ if(!txt) return; if(txt.piece){ stampPiece(); return; } let n=0; stroke={map:new Map(),val:P.cur+1};
   for(let y=0;y<txt.h;y++) for(let x=0;x<txt.w;x++) if(txt.cells[y*txt.w+x]){ const c=txt.x+x, r=txt.y+y; if(c>=0&&r>=0&&c<P.w&&r<P.h){ put(r*P.w+c,stroke.val); n++; } }
   if(!n){ stroke=null; toast("The text is off the fabric. Drag it onto the fabric first."); return; }
   commit(); endText(); toast("Lettering placed"); };
+
+/* replace a colour: every stitch and line in one thread changes to another */
+function rowPick(tr,i){ tr.tabIndex=0; tr.setAttribute("role","button"); tr.setAttribute("aria-label","Replace DMC "+P.palette[i]); const go=()=>{ replaceIdx=i; $("thTitle").textContent="Replace DMC "+P.palette[i]; $("thSearch").value=""; filterThreads(); openSheet("sheet-threads"); };
+  tr.onclick=go; tr.onkeydown=e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); go(); } }; }
+function replaceThread(i,num){ const old=P.palette[i]; if(old===undefined){ closeSheet(); return; }
+  if(old===num){ toast("That is the same thread"); renderKey(); openSheet("sheet-key"); return; }
+  const before=snap(), j=P.palette.indexOf(num);
+  if(j<0) P.palette[i]=num;
+  else { for(let k=0;k<P.cells.length;k++) if(P.cells[k]===i+1) P.cells[k]=j+1; P.lines.forEach(l=>{ if(l[4]===i+1) l[4]=j+1; }); if(P.cur===i) P.cur=j; }
+  pushSnap(before); refreshPalette(); renderKey(); openSheet("sheet-key"); redraw(); toast("DMC "+old+" replaced with DMC "+num); }
+
+/* tidy stray stitches */
+$("mTidy").onclick=()=>{ const n=strays(P).length; $("tdText").textContent=n?"Found "+n+(n===1?" stray stitch.":" stray stitches."):"No stray stitches found. The design is tidy."; $("tdGo").hidden=!n; $("tdGo").textContent=n===1?"Tidy it":"Tidy all "+n; openSheet("sheet-tidy"); };
+$("tdGo").onclick=()=>{ const s=strays(P); if(!s.length){ closeSheet(); return; } const before=snap(); s.forEach(q=>{ P.cells[q[0]]=q[1]; P.done[q[0]]=0; }); pushSnap(before); closeSheet(); redraw(); toast("Tidied "+s.length+(s.length===1?" stitch":" stitches")+". Undo brings them back."); };
+
+/* copy or move a part: drag a box, then the part floats like lettering and can be mirrored, flipped, turned and placed as often as wanted */
+function cellClamp(p){ return [Math.max(0,Math.min(P.w-1,Math.floor((p.x-view.x)/view.s))),Math.max(0,Math.min(P.h-1,Math.floor((p.y-view.y)/view.s)))]; }
+function selRect(){ if(!sel||!sel.a) return null; return {x0:Math.min(sel.a[0],sel.b[0]),y0:Math.min(sel.a[1],sel.b[1]),x1:Math.max(sel.a[0],sel.b[0]),y1:Math.max(sel.a[1],sel.b[1])}; }
+function selUI(){ $("selBar").hidden=!sel; if(!sel) return; const r=selRect(); let label="Drag a box around the part to copy", ok=false;
+  if(r&&sel.picked){ const m=pieceFrom(P,r.x0,r.y0,r.x1,r.y1); let n=0; for(let k=0;k<m.cells.length;k++) if(m.cells[k]) n++; const ln=m.lines.length; ok=n>0||ln>0;
+    label=ok? n+(n===1?" stitch":" stitches")+(ln?" and "+ln+(ln===1?" line":" lines"):"")+" in the box" : "Nothing is stitched there. Drag another box."; }
+  $("selLabel").textContent=label; $("selCopy").hidden=!ok; $("selMove").hidden=!ok; }
+function endSel(){ sel=null; selUI(); ovUI(); redraw(); }
+$("mSelect").onclick=()=>{ closeSheet(); if(mode==="stitch") exitStitch(); if(ov) ov.moving=false; cancelStroke(); draft=null; sel={a:null,b:null,drag:false,picked:false}; selUI(); ovUI(); redraw(); toast("Drag a box around the part to copy"); };
+$("selCancel").onclick=endSel;
+function lift(move){ const r=selRect(); if(!r) return; const m=pieceFrom(P,r.x0,r.y0,r.x1,r.y1); m.x=r.x0; m.y=r.y0; m.piece=true; m.skipped="";
+  if(move) m.cut={x0:r.x0,y0:r.y0,w:m.w,cells:m.cells.slice(),lines:m.lines.map(l=>[l[0]+r.x0,l[1]+r.y0,l[2]+r.x0,l[3]+r.y0,l[4],0])};
+  sel=null; selUI(); txt=m; txUI(); ovUI(); redraw(); toast("Drag it into place, then tap Place"); }
+$("selCopy").onclick=()=>lift(false); $("selMove").onclick=()=>lift(true);
+function txUI(){ $("txBar").hidden=!txt; if(!txt) return; const pc=!!txt.piece; $("txLabel").textContent=pc?"Drag it into place":"Drag the text into place";
+  $("txMirror").hidden=!pc; $("txFlip").hidden=!pc; $("txTurn").hidden=!pc; $("txCancel").textContent=pc&&txt.placed?"Done":"Cancel"; }
+function txChange(fn){ if(!txt||!txt.piece) return; const cx=txt.x+txt.w/2, cy=txt.y+txt.h/2, q=fn(txt); txt.w=q.w; txt.h=q.h; txt.cells=q.cells; txt.lines=q.lines; txt.x=Math.round(cx-q.w/2); txt.y=Math.round(cy-q.h/2); redraw(); }
+$("txMirror").onclick=()=>txChange(mirrorPiece); $("txFlip").onclick=()=>txChange(flipPiece); $("txTurn").onclick=()=>txChange(turnPiece);
+function stampPiece(){ const t=txt; let n=0; for(let y=0;y<t.h;y++) for(let x=0;x<t.w;x++) if(t.cells[y*t.w+x]){ const c=t.x+x, r=t.y+y; if(c>=0&&r>=0&&c<P.w&&r<P.h) n++; }
+  const ln=t.lines.map(l=>[l[0]+t.x,l[1]+t.y,l[2]+t.x,l[3]+t.y,l[4],0]).filter(l=>l[0]>=0&&l[2]>=0&&l[1]>=0&&l[3]>=0&&l[0]<=P.w&&l[2]<=P.w&&l[1]<=P.h&&l[3]<=P.h);
+  if(!n&&!ln.length){ toast("It is off the fabric. Drag it onto the fabric first."); return; }
+  const before=snap();
+  /* a moved part leaves its old place the first time it is placed */
+  if(t.cut){ const c=t.cut, ch=c.cells.length/c.w; for(let y=0;y<ch;y++) for(let x=0;x<c.w;x++) if(c.cells[y*c.w+x]){ const i=(c.y0+y)*P.w+c.x0+x; P.cells[i]=0; P.done[i]=0; }
+    P.lines=P.lines.filter(l=>!c.lines.some(k=>sameLine(k,l)&&k[4]===l[4])); t.cut=null; }
+  for(let y=0;y<t.h;y++) for(let x=0;x<t.w;x++){ const v=t.cells[y*t.w+x]; if(!v) continue; const c=t.x+x, r=t.y+y; if(c>=0&&r>=0&&c<P.w&&r<P.h){ P.cells[r*P.w+c]=v; P.done[r*P.w+c]=0; } }
+  if(ln.length) P.lines=P.lines.filter(l=>!ln.some(k=>sameLine(k,l))).concat(ln);
+  pushSnap(before); t.placed=true; txUI(); showCount(); redraw(); toast("Placed. Drag and tap Place again to repeat, or tap Done."); }
 
 /* key */
 function renderKey(){ const n=counts(P), body=$("keyBody"); body.textContent=""; let total=0, used=0;
   P.palette.forEach((num,i)=>{ const c=n[i+1]; if(!c) return; total+=c; used++; const tr=document.createElement("tr");
     const cell=(txt,cls)=>{ const td=document.createElement("td"); if(cls) td.className=cls; td.textContent=txt; tr.append(td); return td; };
     cell(SYM[i%SYM.length]); const sw=cell(""); const s=document.createElement("i"); s.style.background=PHEX[i]; sw.append(s);
-    cell(num); cell((BY[num]||{name:""}).name); cell(String(c),"n"); body.append(tr); });
+    cell(num); cell((BY[num]||{name:""}).name); cell(String(c),"n"); rowPick(tr,i); body.append(tr); });
   const ll=lineLengths(P);
   P.palette.forEach((num,i)=>{ if(!ll[i+1]) return; const tr=document.createElement("tr");
     const cell=(txt,cls)=>{ const td=document.createElement("td"); if(cls) td.className=cls; td.textContent=txt; tr.append(td); return td; };
     cell("Line"); const sw=cell(""); const s=document.createElement("i"); s.style.background=PHEX[i]; sw.append(s);
-    cell(num); cell((BY[num]||{name:""}).name); cell(lengthText(ll[i+1],P.count),"n"); body.append(tr); });
+    cell(num); cell((BY[num]||{name:""}).name); cell(lengthText(ll[i+1],P.count),"n"); rowPick(tr,i); body.append(tr); });
   const nl=P.lines.length, lt=nl?(nl===1?"1 backstitch line.":nl+" backstitch lines."):"";
   $("keyTotal").textContent=used? total+" stitches in "+used+(used===1?" thread. ":" threads. ")+lt : (lt||"No stitches yet."); }
 $("mKey").onclick=()=>{ renderKey(); openSheet("sheet-key"); };
