@@ -934,12 +934,14 @@ function pack(p){ const o={v:1,id:p.id||null,name:p.name,w:p.w,h:p.h,count:p.cou
 /* Shopping list settings kept with the design: strands for cross stitch and for backstitch, extra thread in percent, fabric margin in centimetres */
 function optOf(p){ const o=(p&&p.opt)||{}, pick=(v,list,d)=>list.includes(v)?v:d; return {st:pick(o.st,[1,2,3,4,5,6],2),bs:pick(o.bs,[1,2,3,4,5,6],1),extra:pick(o.extra,[0,10,20,30,40,50],30),margin:pick(o.margin,[5,7.5,10,15],7.5)}; }
 /* Thread and fabric to buy. Lengths are metres of working thread, rounded up to the centimetre, so calculated plus extra always equals the total shown.
-   A cross stitch uses two diagonals on the front and two straight runs on the back; backstitch uses about three times the length of its line.
+   Cross stitch follows the long-used rule of thumb from Kathleen Dyer's Needlework FAQ: one skein covers about 255 x fabric count / strands stitches
+   (1,785 on 14 count with 2 strands), which agrees with measured tests of 1,650 to 1,850. That is 48000 / (255 x count) millimetres of working thread
+   for each stitch, about 7.4 times the width of a square. Backstitch is counted as three times the length of its line: once on the front, twice on the back.
    A skein is 8 metres of 6 strands. */
 function shopping(p){ const o=optOf(p), a=25.4/p.count, n=counts(p), ll=lineLengths(p), rows=[], up2=v=>Math.ceil(v*100-1e-9)/100; let totalSkeins=0;
   p.palette.forEach((num,i)=>{ const c=n[i+1], L=ll[i+1]; if(!c&&!L) return; let frac=0; const mine=[];
     const add=(kind,amount,mm,strands)=>{ const calc=up2(mm/1000), extra=up2(calc*o.extra/100), total=Math.round((calc+extra)*100)/100; frac+=total*strands/48; mine.push({i,num,kind,amount,strands,calc,extra,total,skeins:0,first:!mine.length}); };
-    if(c) add("stitches",c,c*(2*Math.SQRT2+2)*a,o.st); if(L) add("lines",L,L*3*a,o.bs);
+    if(c) add("stitches",c,c*48000/(255*p.count),o.st); if(L) add("lines",L,L*3*a,o.bs);
     mine[0].skeins=Math.max(1,Math.ceil(frac-1e-9)); totalSkeins+=mine[0].skeins; mine.forEach(r=>rows.push(r)); });
   const r1=v=>Math.round(v*10)/10, dw=r1(p.w/p.count*2.54), dh=r1(p.h/p.count*2.54);
   return {opt:o,square:a,rows,totalSkeins,fabric:{dw,dh,margin:o.margin,fw:r1(dw+2*o.margin),fh:r1(dh+2*o.margin)}}; }
@@ -1725,8 +1727,8 @@ function replaceThread(i,num){ const old=P.palette[i]; if(old===undefined){ clos
 const mTxt=v=>v.toFixed(2)+" m", numTxt=v=>String(Math.round(v*10)/10);
 function shopLines(s){ const f=s.fabric, per=48/s.opt.st;
   return {fabric:"Design: "+f.dw+" × "+f.dh+" cm\nMargin: "+f.margin+" cm on every side, which adds "+numTxt(2*f.margin)+" cm each way\nFabric to cut: "+f.fw+" × "+f.fh+" cm ("+(f.fw/2.54).toFixed(1)+" × "+(f.fh/2.54).toFixed(1)+" inches)",
-    how:["One square on "+P.count+" count Aida is "+s.square.toFixed(2)+" mm wide.","A cross stitch uses about 4.8 times that width: two diagonals on the front and two straight runs on the back.","Backstitch uses about 3 times the length of its line.",
-      "Calculated is that length for every stitch added together."+(s.opt.extra?" The extra "+s.opt.extra+"% is for starting, finishing and mistakes.":""),"Total is the calculated length plus the extra.",
+    how:["One square on "+P.count+" count Aida is "+s.square.toFixed(2)+" mm wide.","A cross stitch is counted as about 7.4 times that width. This follows a long-used rule of thumb: with "+s.opt.st+(s.opt.st===1?" strand":" strands")+" on "+P.count+" count, one skein covers about "+Math.round(255*P.count/s.opt.st).toLocaleString("en-GB")+" stitches.","Backstitch is counted as 3 times the length of its line: once on the front and twice on the back.",
+      "Calculated is that length for every stitch added together."+(s.opt.extra?" The extra "+s.opt.extra+"% is a safety margin for mistakes and for colours scattered around the design, which use more thread.":""),"Total is the calculated length plus the extra.",
       "One skein holds 8 metres of thread made of 6 strands. Stitching with "+s.opt.st+(s.opt.st===1?" strand":" strands")+", one skein gives "+numTxt(per)+" metres. Skeins are rounded up to whole skeins."]}; }
 function renderShop(){ const s=shopping(P), o=s.opt, body=$("shBody"); $("shSt").value=o.st; $("shBs").value=o.bs; $("shEx").value=o.extra; $("shMg").value=o.margin; body.textContent="";
   $("shExH").textContent=o.extra?"Extra "+o.extra+"%":"Extra";
