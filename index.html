@@ -41,8 +41,14 @@ button{cursor:pointer}
 .btn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 10px;font-weight:600;font-size:13px;min-height:38px}
 .btn:disabled{opacity:.4}
 .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
-.key tbody tr{cursor:pointer}
-.key tbody tr:active{background:var(--bg)}
+#keyBody tr{cursor:pointer}
+#keyBody tr:active{background:var(--bg)}
+.shopwrap{overflow-x:auto}
+.shop td,.shop th{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.shop td:first-child,.shop th:first-child{text-align:left}
+.shop i{margin-right:6px}
+.shop tr.sum td{font-weight:600}
+#shFabric,#shHow{white-space:pre-line}
 .tfield{display:flex;flex-direction:column;gap:4px;font-size:13px;font-weight:600}
 .pickbtn{text-align:left;font-size:15px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;gap:8px}
 .pickbtn::after{content:"Change";font-size:12px;color:var(--muted);font-weight:600}
@@ -233,13 +239,14 @@ input[type=text],input[type=number],input[type=search],select{border:1px solid v
     <h3>Stitch</h3>
     <div class="mcard">
       <button class="mrow" id="mStitch" type="button"><span class="chip sand"><svg aria-hidden="true" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"></rect><path d="M8 12.5l3 3 5-6"></path></svg></span><span><b>Cross Stitch it</b><small>Tick off stitches as you sew</small></span></button>
+      <button class="mrow" id="mShop" type="button"><span class="chip sand"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M6 7h12l-1 13H7z"></path><path d="M9 7a3 3 0 0 1 6 0"></path></svg></span><span><b>Shopping list</b><small>Thread and fabric to buy</small></span></button>
     </div>
     <h3>Save</h3>
     <div class="mcard">
       <button class="mrow" id="mImage" type="button"><span class="chip mint"><svg aria-hidden="true" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="9" cy="10" r="1.6"></circle><path d="M21 16l-5-5-8 8"></path></svg></span><span><b>Save as image</b><small>A picture of the design</small></span></button>
       <button class="mrow" id="mBackup" type="button"><span class="chip mint"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"></path><path d="M14 3v5h5M12 11v6M9.5 14.5L12 17l2.5-2.5"></path></svg></span><span><b>Save as backup</b><small>A file you can keep or send</small></span></button>
       <button class="mrow" id="mRestore" type="button"><span class="chip mint"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><path d="M12 16v-5M9.5 13.5L12 11l2.5 2.5"></path></svg></span><span><b>Open the backup</b><small>Bring a saved design back</small></span></button>
-      <button class="mrow" id="mPrint" type="button"><span class="chip mint"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M7 9V4h10v5"></path><rect x="4" y="9" width="16" height="8" rx="2"></rect><path d="M7 14h10v6H7z"></path></svg></span><span><b>Print the pattern</b><small>Picture, thread key and chart to print</small></span></button>
+      <button class="mrow" id="mPrint" type="button"><span class="chip mint"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M7 9V4h10v5"></path><rect x="4" y="9" width="16" height="8" rx="2"></rect><path d="M7 14h10v6H7z"></path></svg></span><span><b>Print the pattern</b><small>Choose the paper, then save it to print</small></span></button>
     </div>
     <p>The design you are working on is kept automatically on this device.</p>
     <div class="stack" id="savedWrap" hidden>
@@ -290,6 +297,41 @@ input[type=text],input[type=number],input[type=search],select{border:1px solid v
     <p>Choose how the picture should look.</p>
     <button class="btn primary" id="iPlain" type="button">Without the grid</button>
     <button class="btn" id="iGrid" type="button">With the grid</button>
+  </div>
+</section>
+
+<section class="sheet" id="sheet-shop" hidden aria-label="Shopping list">
+  <header><h2>Shopping list</h2><button class="btn" data-close type="button">Close</button></header>
+  <div class="body">
+    <div class="row">
+      <label for="shSt">Strands for cross stitches<select id="shSt"></select></label>
+      <label for="shBs">Strands for backstitch<select id="shBs"></select></label>
+    </div>
+    <div class="row">
+      <label for="shEx">Extra thread to allow<select id="shEx"></select></label>
+      <label for="shMg">Fabric margin on every side<select id="shMg"></select></label>
+    </div>
+    <h3>Thread to buy</h3>
+    <div class="shopwrap"><table class="key shop"><thead><tr><th>DMC</th><th>Calculated</th><th id="shExH">Extra</th><th>Total</th><th>Skeins</th></tr></thead><tbody id="shBody"></tbody></table></div>
+    <p id="shTotal"></p>
+    <h3>Fabric to buy</h3>
+    <p id="shFabric"></p>
+    <h3>How this is worked out</h3>
+    <p id="shHow"></p>
+    <p>These figures are estimates. Thread use varies with how you stitch, so treat the skeins as a guide.</p>
+  </div>
+</section>
+
+<section class="sheet" id="sheet-print" hidden aria-label="Print the pattern">
+  <header><h2>Print the pattern</h2><button class="btn" data-close type="button">Close</button></header>
+  <div class="body">
+    <div class="row">
+      <label for="prSize">Paper size<select id="prSize"></select></label>
+      <label for="prTurn">Direction<select id="prTurn"><option value="p">Portrait (tall)</option><option value="l">Landscape (wide)</option></select></label>
+    </div>
+    <p id="prInfo"></p>
+    <button class="btn primary" id="prGo" type="button">Save the pattern</button>
+    <p>The file has the finished picture, the thread key, the shopping list and the chart. Open it from your downloads and choose Print.</p>
   </div>
 </section>
 
@@ -890,7 +932,21 @@ function sizeText(w,h,count){
 function toB64(u8){ let s=""; for(let i=0;i<u8.length;i+=8192) s+=String.fromCharCode.apply(null,u8.subarray(i,i+8192)); return btoa(s); }
 function fromB64(b){ const s=atob(b), u=new Uint8Array(s.length); for(let i=0;i<s.length;i++) u[i]=s.charCodeAt(i); return u; }
 function pack(p){ const o={v:1,id:p.id||null,name:p.name,w:p.w,h:p.h,count:p.count,fabric:p.fabric,palette:p.palette,cur:p.cur,cells:toB64(p.cells)}; if(p.done&&p.done.some(v=>v)) o.done=toB64(p.done);
-  if(p.lines&&p.lines.length) o.lines=p.lines.map(l=>l.slice(0,6)); return o; }
+  if(p.lines&&p.lines.length) o.lines=p.lines.map(l=>l.slice(0,6)); if(p.opt) o.opt=optOf(p); return o; }
+/* Shopping list settings kept with the design: strands for cross stitch and for backstitch, extra thread in percent, fabric margin in centimetres */
+function optOf(p){ const o=(p&&p.opt)||{}, pick=(v,list,d)=>list.includes(v)?v:d; return {st:pick(o.st,[1,2,3,4,5,6],2),bs:pick(o.bs,[1,2,3,4,5,6],1),extra:pick(o.extra,[0,10,20,30,40,50],30),margin:pick(o.margin,[5,7.5,10,15],7.5)}; }
+/* Thread and fabric to buy. Lengths are metres of working thread, rounded up to the centimetre, so calculated plus extra always equals the total shown.
+   Cross stitch follows the long-used rule of thumb from Kathleen Dyer's Needlework FAQ: one skein covers about 255 x fabric count / strands stitches
+   (1,785 on 14 count with 2 strands), which agrees with measured tests of 1,650 to 1,850. That is 48000 / (255 x count) millimetres of working thread
+   for each stitch, about 7.4 times the width of a square. Backstitch is counted as three times the length of its line: once on the front, twice on the back.
+   A skein is 8 metres of 6 strands. */
+function shopping(p){ const o=optOf(p), a=25.4/p.count, n=counts(p), ll=lineLengths(p), rows=[], up2=v=>Math.ceil(v*100-1e-9)/100; let totalSkeins=0;
+  p.palette.forEach((num,i)=>{ const c=n[i+1], L=ll[i+1]; if(!c&&!L) return; let frac=0; const mine=[];
+    const add=(kind,amount,mm,strands)=>{ const calc=up2(mm/1000), extra=up2(calc*o.extra/100), total=Math.round((calc+extra)*100)/100; frac+=total*strands/48; mine.push({i,num,kind,amount,strands,calc,extra,total,skeins:0,first:!mine.length}); };
+    if(c) add("stitches",c,c*48000/(255*p.count),o.st); if(L) add("lines",L,L*3*a,o.bs);
+    mine[0].skeins=Math.max(1,Math.ceil(frac-1e-9)); totalSkeins+=mine[0].skeins; mine.forEach(r=>rows.push(r)); });
+  const r1=v=>Math.round(v*10)/10, dw=r1(p.w/p.count*2.54), dh=r1(p.h/p.count*2.54);
+  return {opt:o,square:a,rows,totalSkeins,fabric:{dw,dh,margin:o.margin,fw:r1(dw+2*o.margin),fh:r1(dh+2*o.margin)}}; }
 /* Backstitch lines. Each is [x0,y0,x1,y1,thread,done]: two grid corners, a thread (1 is the first in the palette) and 1 once it is sewn. */
 function cleanLines(a,w,h,npal){ const out=[]; if(!Array.isArray(a)) return out;
   for(const l of a){ if(!Array.isArray(l)||l.length<5) continue; const v=l.slice(0,5).map(Number);
@@ -909,7 +965,7 @@ function unpack(o){
   if(!o || !o.w || !o.h || !Array.isArray(o.palette) || typeof o.cells!=="string") throw new Error("not a design");
   const cells = fromB64(o.cells); if(cells.length !== o.w*o.h) throw new Error("size mismatch");
   let done=null; try{ if(typeof o.done==="string"){ const d=fromB64(o.done); if(d.length===o.w*o.h) done=d; } }catch(e){}
-  return {id:o.id||null,name:String(o.name||"Untitled"),w:o.w,h:o.h,count:COUNTS.includes(o.count)?o.count:14,fabric:o.fabric||"White",palette:o.palette.map(String),cur:Math.min(o.cur||0,o.palette.length-1),cells,done:done||new Uint8Array(o.w*o.h),lines:cleanLines(o.lines,o.w,o.h,o.palette.length)};
+  return {id:o.id||null,name:String(o.name||"Untitled"),w:o.w,h:o.h,count:COUNTS.includes(o.count)?o.count:14,fabric:o.fabric||"White",palette:o.palette.map(String),cur:Math.min(o.cur||0,o.palette.length-1),cells,done:done||new Uint8Array(o.w*o.h),lines:cleanLines(o.lines,o.w,o.h,o.palette.length),opt:o.opt?optOf(o):undefined};
 }
 function newProject(name,w,h,count,fabric){ return {id:null,name,w,h,count,fabric,palette:["310","Blanc","321","815","444","702","798","3371"],cur:0,cells:new Uint8Array(w*h),done:new Uint8Array(w*h),lines:[]}; }
 function resized(p,nw,nh,src){ src=src||p.cells; const c=new Uint8Array(nw*nh); for(let r=0;r<Math.min(nh,p.h);r++) for(let x=0;x<Math.min(nw,p.w);x++) c[r*nw+x]=src[r*p.w+x]; return c; }
@@ -1289,7 +1345,7 @@ function photoToPattern(px,w,h,n,skipWhite){
   for(const i of idx) cells[i]=map[tmp[i]];
   return {palette,cells};
 }
-if(typeof module!=="undefined"){ module.exports={strays,pieceFrom,mirrorPiece,flipPiece,turnPiece,coverCells,cropMask,ALPHA,textMask,cleanLines,sameLine,lineDist,nearestLine,lineLengths,lengthText,paint,FONT,photoToPattern,progress,tickGroup,DMC,BY,pack,unpack,newProject,resized,lineCells,floodCells,counts,EXAMPLES,sizeText,SYM}; }
+if(typeof module!=="undefined"){ module.exports={optOf,shopping,strays,pieceFrom,mirrorPiece,flipPiece,turnPiece,coverCells,cropMask,ALPHA,textMask,cleanLines,sameLine,lineDist,nearestLine,lineLengths,lengthText,paint,FONT,photoToPattern,progress,tickGroup,DMC,BY,pack,unpack,newProject,resized,lineCells,floodCells,counts,EXAMPLES,sizeText,SYM}; }
 
 /* ---------- app ---------- */
 if(typeof document!=="undefined"){ (function(){
@@ -1667,6 +1723,25 @@ function replaceThread(i,num){ const old=P.palette[i]; if(old===undefined){ clos
   else { for(let k=0;k<P.cells.length;k++) if(P.cells[k]===i+1) P.cells[k]=j+1; P.lines.forEach(l=>{ if(l[4]===i+1) l[4]=j+1; }); if(P.cur===i) P.cur=j; }
   pushSnap(before); refreshPalette(); renderKey(); openSheet("sheet-key"); redraw(); toast("DMC "+old+" replaced with DMC "+num); }
 
+/* shopping list: thread and fabric to buy, with every step of the sum shown */
+[["shSt",[1,2,3,4,5,6],v=>v+(v===1?" strand":" strands")],["shBs",[1,2,3,4,5,6],v=>v+(v===1?" strand":" strands")],["shEx",[0,10,20,30,40,50],v=>v?v+"% extra":"No extra"],["shMg",[5,7.5,10,15],v=>v+" cm"]]
+  .forEach(d=>d[1].forEach(v=>{ const o=document.createElement("option"); o.value=v; o.textContent=d[2](v); $(d[0]).append(o); }));
+const mTxt=v=>v.toFixed(2)+" m", numTxt=v=>String(Math.round(v*10)/10);
+function shopLines(s){ const f=s.fabric, per=48/s.opt.st;
+  return {fabric:"Design: "+f.dw+" × "+f.dh+" cm\nMargin: "+f.margin+" cm on every side, which adds "+numTxt(2*f.margin)+" cm each way\nFabric to cut: "+f.fw+" × "+f.fh+" cm ("+(f.fw/2.54).toFixed(1)+" × "+(f.fh/2.54).toFixed(1)+" inches)",
+    how:["One square on "+P.count+" count Aida is "+s.square.toFixed(2)+" mm wide.","A cross stitch is counted as about 7.4 times that width. This follows a long-used rule of thumb: with "+s.opt.st+(s.opt.st===1?" strand":" strands")+" on "+P.count+" count, one skein covers about "+Math.round(255*P.count/s.opt.st).toLocaleString("en-GB")+" stitches.","Backstitch is counted as 3 times the length of its line: once on the front and twice on the back.",
+      "Calculated is that length for every stitch added together."+(s.opt.extra?" The extra "+s.opt.extra+"% is a safety margin for mistakes and for colours scattered around the design, which use more thread.":""),"Total is the calculated length plus the extra.",
+      "One skein holds 8 metres of thread made of 6 strands. Stitching with "+s.opt.st+(s.opt.st===1?" strand":" strands")+", one skein gives "+numTxt(per)+" metres. Skeins are rounded up to whole skeins."]}; }
+function renderShop(){ const s=shopping(P), o=s.opt, body=$("shBody"); $("shSt").value=o.st; $("shBs").value=o.bs; $("shEx").value=o.extra; $("shMg").value=o.margin; body.textContent="";
+  $("shExH").textContent=o.extra?"Extra "+o.extra+"%":"Extra";
+  s.rows.forEach(r=>{ const tr=document.createElement("tr"), td=(t)=>{ const d=document.createElement("td"); d.textContent=t; tr.append(d); return d; };
+    const first=td(""), sw=document.createElement("i"); sw.style.background=PHEX[r.i]; first.append(sw,document.createTextNode(r.num+(r.kind==="lines"?" lines":"")));
+    td(mTxt(r.calc)); td("+ "+mTxt(r.extra)); td(mTxt(r.total)); td(r.first?String(r.skeins):""); body.append(tr); });
+  $("shTotal").textContent=s.rows.length?"Skeins to buy: "+s.totalSkeins+" in total. Lengths are measured at the number of strands chosen above.":"Nothing is stitched yet, so there is nothing to buy.";
+  const t=shopLines(s); $("shFabric").textContent=t.fabric; $("shHow").textContent=t.how.join("\n"); }
+["shSt","shBs","shEx","shMg"].forEach(id=>$(id).addEventListener("change",()=>{ P.opt={st:Number($("shSt").value),bs:Number($("shBs").value),extra:Number($("shEx").value),margin:Number($("shMg").value)}; autosave(); renderShop(); }));
+$("mShop").onclick=()=>{ renderShop(); openSheet("sheet-shop"); };
+
 /* tidy stray stitches */
 $("mTidy").onclick=()=>{ const n=strays(P).length; $("tdText").textContent=n?"Found "+n+(n===1?" stray stitch.":" stray stitches."):"No stray stitches found. The design is tidy."; $("tdGo").hidden=!n; $("tdGo").textContent=n===1?"Tidy it":"Tidy all "+n; openSheet("sheet-tidy"); };
 $("tdGo").onclick=()=>{ const s=strays(P); if(!s.length){ closeSheet(); return; } const before=snap(); s.forEach(q=>{ P.cells[q[0]]=q[1]; P.done[q[0]]=0; }); pushSnap(before); closeSheet(); redraw(); toast("Tidied "+s.length+(s.length===1?" stitch":" stitches")+". Undo brings them back."); };
@@ -1771,14 +1846,18 @@ async function saveImage(grid){ closeSheet(); toast("Preparing the image"); cons
   if(blob&&!report(await offer(fileBase()+(grid?"-grid":"")+".png",blob))) return; showPics([c]); }
 $("mImage").onclick=()=>openSheet("sheet-image"); $("iPlain").onclick=()=>saveImage(false); $("iGrid").onclick=()=>saveImage(true);
 
-function patternPages(){ const PW=1654, PHt=2339, M=110, pages=[], n=counts(P), ll=lineLengths(P);
+/* paper sizes in millimetres; pages are drawn at 200 dots to the inch */
+const PAPERS=[["a4","A4",210,297],["a3","A3",297,420],["a5","A5",148,210],["letter","US Letter",215.9,279.4],["legal","US Legal",215.9,355.6]];
+function wrapText(g,text,maxW){ const out=[]; let line=""; text.split(" ").forEach(w=>{ const t=line?line+" "+w:w; if(line&&g.measureText(t).width>maxW){ out.push(line); line=w; } else line=t; }); if(line) out.push(line); return out; }
+function patternPages(PW,PHt){ PW=PW||1654; PHt=PHt||2339; const M=110, U=PW-2*M, pages=[], n=counts(P), ll=lineLengths(P), shop=shopping(P), stx=shopLines(shop);
   const used=[], lused=[]; let cols=0; P.palette.forEach((num,i)=>{ if(n[i+1]) used.push(i); if(ll[i+1]) lused.push(i); if(n[i+1]||ll[i+1]) cols++; });
   const page=()=>{ const c=document.createElement("canvas"); c.width=PW; c.height=PHt; const g=c.getContext("2d"); g.fillStyle="#fff"; g.fillRect(0,0,PW,PHt); g.fillStyle="#000"; g.textBaseline="alphabetic"; pages.push(c); return g; };
   const foot=g=>{ g.font="26px sans-serif"; g.fillStyle="#666"; g.textAlign="center"; g.fillText("Page "+pages.length,PW/2,PHt-60); g.textAlign="left"; g.fillStyle="#000"; };
   /* key pages */
-  let g=page(), y=M+50; g.font="bold 64px sans-serif"; g.fillText(P.name,M,y); y+=70; g.font="32px sans-serif";
-  ["Fabric: "+P.count+" count Aida, "+P.fabric.toLowerCase(),"Design size: "+P.w+" × "+P.h+" stitches","Finished size: "+sizeText(P.w,P.h,P.count),"Threads: DMC stranded cotton, "+cols+(cols===1?" colour, ":" colours, ")+(P.cells.length-n[0])+" stitches"+(P.lines.length?", "+P.lines.length+(P.lines.length===1?" backstitch line":" backstitch lines"):"")]
-    .forEach(t=>{ g.fillText(t,M,y); y+=46; });
+  let g=page(), y=M+50; g.font="bold 64px sans-serif"; g.fillText(P.name,M,y,U); y+=70; g.font="32px sans-serif";
+  ["Fabric: "+P.count+" count Aida, "+P.fabric.toLowerCase(),"Design size: "+P.w+" × "+P.h+" stitches","Finished size: "+sizeText(P.w,P.h,P.count),"Threads: DMC stranded cotton, "+cols+(cols===1?" colour, ":" colours, ")+(P.cells.length-n[0])+" stitches"+(P.lines.length?", "+P.lines.length+(P.lines.length===1?" backstitch line":" backstitch lines"):""),
+   "Fabric to cut: "+shop.fabric.fw+" × "+shop.fabric.fh+" cm, with "+shop.fabric.margin+" cm spare on every side"]
+    .forEach(t=>{ g.fillText(t,M,y,U); y+=46; });
   /* first page: the finished design as a picture */
   y+=20; { const pic=imageCanvas(false), aw=PW-2*M, ah=PHt-y-150, k=Math.min(aw/pic.width,ah/pic.height), dw=Math.round(pic.width*k), dh=Math.round(pic.height*k), dx=Math.round((PW-dw)/2);
     g.imageSmoothingEnabled=false; g.drawImage(pic,dx,y,dw,dh); g.imageSmoothingEnabled=true; g.strokeStyle="#000"; g.lineWidth=2; g.strokeRect(dx+1,y+1,dw-2,dh-2); }
@@ -1788,18 +1867,31 @@ function patternPages(){ const PW=1654, PHt=2339, M=110, pages=[], n=counts(P), 
   used.forEach(i=>{ if(y>PHt-140){ foot(g); g=page(); y=M+40; head(); }
     g.font="34px sans-serif"; g.textAlign="center"; g.fillText(SYM[i%SYM.length],M+45,y); g.textAlign="left";
     g.fillStyle=PHEX[i]; g.fillRect(M+150,y-32,90,40); g.strokeStyle="#000"; g.lineWidth=1; g.strokeRect(M+150.5,y-31.5,90,40); g.fillStyle="#000";
-    g.font="30px sans-serif"; g.fillText(P.palette[i],M+310,y); g.fillText((BY[P.palette[i]]||{name:""}).name,M+470,y); g.textAlign="right"; g.fillText(n[i+1]+(n[i+1]===1?" stitch":" stitches"),PW-M,y); g.textAlign="left"; y+=52; });
+    g.font="30px sans-serif"; g.fillText(P.palette[i],M+310,y); g.fillText((BY[P.palette[i]]||{name:""}).name,M+470,y,Math.max(60,U-470-230)); g.textAlign="right"; g.fillText(n[i+1]+(n[i+1]===1?" stitch":" stitches"),PW-M,y); g.textAlign="left"; y+=52; });
   /* backstitch threads: a line mark in place of a symbol, and the length of line on the fabric */
   lused.forEach(i=>{ if(y>PHt-140){ foot(g); g=page(); y=M+40; head(); }
     g.lineCap="round"; g.strokeStyle="#000"; g.lineWidth=9; g.beginPath(); g.moveTo(M+8,y-12); g.lineTo(M+82,y-12); g.stroke(); g.strokeStyle=PHEX[i]; g.lineWidth=5; g.beginPath(); g.moveTo(M+8,y-12); g.lineTo(M+82,y-12); g.stroke(); g.lineCap="butt";
     g.fillStyle=PHEX[i]; g.fillRect(M+150,y-32,90,40); g.strokeStyle="#000"; g.lineWidth=1; g.strokeRect(M+150.5,y-31.5,90,40); g.fillStyle="#000";
-    g.font="30px sans-serif"; g.fillText(P.palette[i],M+310,y); g.fillText((BY[P.palette[i]]||{name:""}).name,M+470,y); g.textAlign="right"; g.fillText("Backstitch, "+lengthText(ll[i+1],P.count)+" of line",PW-M,y); g.textAlign="left"; y+=52; });
-  if(lused.length){ if(y>PHt-140){ foot(g); g=page(); y=M+40; } y+=10; g.font="26px sans-serif"; g.fillStyle="#333"; g.fillText("Bold lines on the chart are backstitch. Work them after the cross stitches are finished.",M,y); g.fillStyle="#000"; }
+    g.font="30px sans-serif"; g.fillText(P.palette[i],M+310,y); g.fillText((BY[P.palette[i]]||{name:""}).name,M+470,y,Math.max(60,U-470-260)); g.textAlign="right"; g.fillText("Line, "+lengthText(ll[i+1],P.count),PW-M,y); g.textAlign="left"; y+=52; });
+  if(lused.length){ if(y>PHt-140){ foot(g); g=page(); y=M+40; } y+=10; g.font="26px sans-serif"; g.fillStyle="#333"; wrapText(g,"Bold lines on the chart are backstitch. Work them after the cross stitches are finished.",U).forEach(t=>{ g.fillText(t,M,y); y+=36; }); g.fillStyle="#000"; }
+  /* the shopping list: calculated length, the extra, the total and the skeins, then how it was worked out */
+  if(shop.rows.length){ const cx=[0.52,0.68,0.84,1].map(f=>M+U*f), cw=U*0.16-14;
+    const shead=()=>{ g.font="bold 28px sans-serif"; g.fillText("DMC",M,y); g.fillText("Used for",M+U*0.14,y,U*0.2); g.textAlign="right"; ["Calculated",shop.opt.extra?"Extra "+shop.opt.extra+"%":"Extra","Total","Skeins"].forEach((t,k)=>g.fillText(t,cx[k],y,cw)); g.textAlign="left"; y+=16; g.fillRect(M,y,U,2); y+=44; };
+    if(y>PHt-420){ foot(g); g=page(); y=M+30; } else y+=50;
+    g.font="bold 44px sans-serif"; g.fillText("Thread to buy",M,y); y+=70; shead();
+    shop.rows.forEach(r=>{ if(y>PHt-140){ foot(g); g=page(); y=M+40; shead(); }
+      g.font="30px sans-serif"; g.fillText(r.num,M,y); g.fillText(r.kind==="lines"?"backstitch":r.amount+(r.amount===1?" stitch":" stitches"),M+U*0.14,y,U*0.2);
+      g.textAlign="right"; [mTxt(r.calc),"+ "+mTxt(r.extra),mTxt(r.total),r.first?String(r.skeins):""].forEach((t,k)=>g.fillText(t,cx[k],y,cw)); g.textAlign="left"; y+=52; });
+    g.fillRect(M,y-30,U,2); y+=14; g.font="bold 30px sans-serif"; g.fillText("Skeins to buy: "+shop.totalSkeins,M,y); y+=56;
+    g.font="26px sans-serif"; g.fillStyle="#333";
+    ["Cross stitches use "+shop.opt.st+(shop.opt.st===1?" strand":" strands")+" and backstitch uses "+shop.opt.bs+(shop.opt.bs===1?" strand.":" strands.")].concat(stx.how,["These figures are estimates. Thread use varies with how you stitch."])
+      .forEach(par=>wrapText(g,par,U).forEach(t=>{ if(y>PHt-110){ foot(g); g=page(); y=M+40; g.font="26px sans-serif"; g.fillStyle="#333"; } g.fillText(t,M,y); y+=36; }));
+    g.fillStyle="#000"; }
   foot(g);
-  /* chart pages: 50 stitches wide, 70 high */
-  const TW=50, TH=70, cs=28, X0=M+40, Y0=M+110;
+  /* chart pages: as many whole tens of stitches as the paper holds (50 wide and 70 high on upright A4) */
+  const cs=28, X0=M+40, Y0=M+110, TW=Math.max(10,Math.floor((U-40+8)/cs/10)*10), TH=Math.max(10,Math.floor((PHt-Y0-M-40)/cs/10)*10), midC=P.w/2, midR=P.h/2;
   for(let tr=0;tr<P.h;tr+=TH) for(let tc=0;tc<P.w;tc+=TW){ g=page(); const cw=Math.min(TW,P.w-tc), ch=Math.min(TH,P.h-tr);
-    g.font="bold 36px sans-serif"; g.fillText(P.name,M,M+20); g.font="26px sans-serif"; g.fillText("Columns "+(tc+1)+" to "+(tc+cw)+", rows "+(tr+1)+" to "+(tr+ch),M,M+60);
+    g.font="bold 36px sans-serif"; g.fillText(P.name,M,M+20); g.font="26px sans-serif"; g.fillText("Columns "+(tc+1)+" to "+(tc+cw)+", rows "+(tr+1)+" to "+(tr+ch)+". Arrows mark the centre of the design.",M,M+60,U);
     g.textAlign="center"; g.textBaseline="middle";
     for(let r=0;r<ch;r++) for(let c=0;c<cw;c++){ const v=P.cells[(tr+r)*P.w+tc+c]; if(!v) continue; const hex=PHEX[v-1]; g.fillStyle=hex; g.fillRect(X0+c*cs,Y0+r*cs,cs,cs);
       g.fillStyle=lum(hex)<0.5?"#fff":"#000"; g.font="20px sans-serif"; g.fillText(SYM[(v-1)%SYM.length],X0+c*cs+cs/2,Y0+r*cs+cs/2+1); }
@@ -1812,11 +1904,21 @@ function patternPages(){ const PW=1654, PHt=2339, M=110, pages=[], n=counts(P), 
     g.fillStyle="#000"; g.font="20px sans-serif";
     for(let c=0;c<=cw;c++) if((tc+c)%10===0&&tc+c>0) g.fillText(String(tc+c),X0+c*cs,Y0-16);
     g.textAlign="right"; for(let r=0;r<=ch;r++) if((tr+r)%10===0&&tr+r>0) g.fillText(String(tr+r),X0-10,Y0+r*cs);
+    /* centre marks: an arrow under the centre column and one beside the centre row, where there are no numbers in the way */
+    g.fillStyle="#000";
+    if(midC>=tc&&midC<=tc+cw){ const ax=X0+(midC-tc)*cs, ay=Y0+ch*cs+8; g.beginPath(); g.moveTo(ax,ay); g.lineTo(ax-13,ay+24); g.lineTo(ax+13,ay+24); g.closePath(); g.fill(); }
+    if(midR>=tr&&midR<=tr+ch){ const ax=X0+cw*cs+8, ay=Y0+(midR-tr)*cs; g.beginPath(); g.moveTo(ax,ay); g.lineTo(ax+24,ay-13); g.lineTo(ax+24,ay+13); g.closePath(); g.fill(); }
     g.textAlign="left"; g.textBaseline="alphabetic"; foot(g); }
   return pages; }
-$("mPrint").onclick=async()=>{ closeSheet(); toast("Preparing the pattern"); await new Promise(r=>setTimeout(r,30)); const pages=patternPages();
-  try{ if(window.jspdf&&window.jspdf.jsPDF){ const doc=new window.jspdf.jsPDF({unit:"pt",format:"a4",orientation:"portrait"});
-      pages.forEach((c,i)=>{ if(i) doc.addPage(); doc.addImage(c.toDataURL("image/jpeg",0.9),"JPEG",0,0,595.28,841.89); });
+PAPERS.forEach(q=>{ const o=document.createElement("option"); o.value=q[0]; o.textContent=q[1]+" ("+(q[0]==="letter"?"8.5 × 11 inches":q[0]==="legal"?"8.5 × 14 inches":q[2]+" × "+q[3]+" mm")+")"; $("prSize").append(o); });
+function paperNow(){ const q=PAPERS.find(x=>x[0]===$("prSize").value)||PAPERS[0], land=$("prTurn").value==="l"; return {id:q[0],name:q[1],land,w:land?q[3]:q[2],h:land?q[2]:q[3]}; }
+function printInfo(){ const q=paperNow(), px=v=>Math.round(v/25.4*200), U=px(q.w)-220, tw=Math.max(10,Math.floor((U-40+8)/28/10)*10), th=Math.max(10,Math.floor((px(q.h)-220-110-40)/28/10)*10), nx=Math.ceil(P.w/tw), ny=Math.ceil(P.h/th);
+  $("prInfo").textContent="Each chart page holds "+tw+" stitches across and "+th+" down, so this design needs "+(nx*ny)+(nx*ny===1?" chart page.":" chart pages."); store(KEY+"paper",JSON.stringify({size:q.id,turn:q.land?"l":"p"})); }
+$("prSize").addEventListener("change",printInfo); $("prTurn").addEventListener("change",printInfo);
+$("mPrint").onclick=()=>{ try{ const s=JSON.parse(load(KEY+"paper")||"null"); if(s){ if(PAPERS.some(x=>x[0]===s.size)) $("prSize").value=s.size; $("prTurn").value=s.turn==="l"?"l":"p"; } }catch(e){} printInfo(); openSheet("sheet-print"); };
+$("prGo").onclick=async()=>{ const q=paperNow(), px=v=>Math.round(v/25.4*200); closeSheet(); toast("Preparing the pattern"); await new Promise(r=>setTimeout(r,30)); const pages=patternPages(px(q.w),px(q.h));
+  try{ if(window.jspdf&&window.jspdf.jsPDF){ const doc=new window.jspdf.jsPDF({unit:"mm",format:[q.w,q.h],orientation:q.land?"landscape":"portrait"});
+      pages.forEach((c,i)=>{ if(i) doc.addPage([q.w,q.h],q.land?"landscape":"portrait"); doc.addImage(c.toDataURL("image/jpeg",0.9),"JPEG",0,0,q.w,q.h); });
       if(!report(await offer(fileBase()+"-pattern.pdf",doc.output("blob")))) return; } }catch(e){}
   showPics(pages); };
 
