@@ -41,4 +41,6 @@ This program is free software. You can redistribute it and modify it under the t
 
 The example designs are original drawings made for this project. They show everyday subjects, with no characters, logos or artwork taken from anyone else, and they are covered by the same licence.
 
+The font files in the `fonts` folder are not covered by the licence above. They belong to their authors and are used under the SIL Open Font License, Version 1.1. See `fonts/README.md` and `fonts/OFL.txt`.
+
 DMC is a trademark of its owner. This project is not affiliated with or endorsed by DMC.
