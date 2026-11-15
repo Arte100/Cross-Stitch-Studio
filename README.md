@@ -13,6 +13,7 @@ No account and no download are needed. It works on phones, tablets and computers
 - 237 example designs in ten groups
 - Backstitch lines, drawn from corner to corner, for outlines and details
 - Lettering: type a name, a date or a message, choose a font and a height, and place it as stitches
+- Outline and shadow for lettering and for any part of a design, in stitches or as a backstitch line
 - Copy or move part of a design, with mirror, flip and turn, to repeat motifs and build borders
 - Replace one thread colour with another across the whole design, and tidy stray single stitches
 - Photo to pattern converter, and Trace a photo for stitching over a picture by hand
