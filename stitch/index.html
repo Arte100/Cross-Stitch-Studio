@@ -25,8 +25,6 @@
 :root[data-skin="sky"]{ --bg:#E3EEF8; --ink:#12283D; --muted:#45617D; --line:#C2D7EB; --accent:#1F5C94; --work:#D0E1F1; }
 :root[data-skin="classic"]{ --bg:#eef0f4; --ink:#1b2233; --muted:#5d6678; --line:#d5d9e2; --accent:#b3203a; --work:#dde1e9; }
 :root[data-skin="dark"]{ --bg:#141821; --surface:#1e2430; --ink:#e9ecf3; --muted:#9aa3b5; --line:#343c4c; --accent:#ff6b81; --accent-ink:#1b0a0e; --work:#0e1118; color-scheme:dark; }
-/* The other website pages keep room for a scrollbar. Doing the same here stops the logo and menu moving between pages. */
-@media (min-width:761px){html{scrollbar-gutter:stable}}
 /* Website bar: the same logo, menu and theme button as the rest of thejollymakery.com. Hidden when the tool is installed as an app. */
 .sitebar{flex:none;background:var(--surface);border-bottom:1px solid var(--line);padding:4px 12px}
 .sb-in{display:flex;align-items:center;gap:6px}
@@ -41,9 +39,11 @@
 .sb-theme svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .sb-theme span{display:none}
 #homeBtn{display:none}
+/* Shown only in the installed app, where the website bar is hidden. */
+.app-only{display:none!important}
 /* On wider screens the bar lines up exactly with the header of the other website pages. */
 @media (min-width:761px){
-.sitebar{padding:8px 0}
+.sitebar{padding:8px var(--sbw,0px) 8px 0}
 .sb-in{max-width:1120px;margin:0 auto;padding:0 24px;gap:12px}
 .sb-brand{font-size:22.4px;gap:12px;line-height:1.5}
 .sb-brand img{width:46px}
@@ -53,7 +53,7 @@
 .sb-theme{width:auto;height:44px;padding:0 14px;gap:8px;border-radius:22px;font-size:16px;font-weight:700}
 .sb-theme span{display:inline}
 }
-@media (display-mode:standalone){.sitebar{display:none}#homeBtn{display:flex}}
+@media (display-mode:standalone){.sitebar{display:none}#homeBtn{display:flex}h3.app-only{display:block!important}.mcard.app-only{display:flex!important}}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html,body{height:100%;margin:0}
@@ -274,8 +274,8 @@ input[type=text],input[type=number],input[type=search],select{border:1px solid v
       <button class="mrow" id="mTidy" type="button"><span class="chip lav"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 19l9-9M14 10l2-6 4 4-6 2z"></path><path d="M5 5v2M4 6h2M9 3v2M8 4h2M19 15v2M18 16h2"></path></svg></span><span><b>Tidy stray stitches</b><small>Clean up single stitches, useful after a photo</small></span></button>
       <button class="mrow" id="mFit" type="button"><span class="chip lav"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"></path></svg></span><span><b>Fit to screen</b><small>See the whole design</small></span></button>
     </div>
-    <h3>Look</h3>
-    <div class="mcard">
+    <h3 class="app-only">Look</h3>
+    <div class="mcard app-only">
       <button class="mrow" id="mTheme" type="button"><span class="chip sky"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18c1.2 0 2-.9 2-2 0-1.3-1-1.6-1-2.6 0-.8.7-1.4 1.6-1.4H17a4 4 0 0 0 4-4c0-4.4-4-8-9-8z"></path><circle cx="7.5" cy="11.5" r="1"></circle><circle cx="10.5" cy="7.5" r="1"></circle><circle cx="15.5" cy="7.8" r="1"></circle></svg></span><span><b>Theme</b><small>Choose the colours of the app</small></span></button>
     </div>
     <h3>Stitch</h3>
@@ -290,8 +290,8 @@ input[type=text],input[type=number],input[type=search],select{border:1px solid v
       <button class="mrow" id="mRestore" type="button"><span class="chip mint"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><path d="M12 16v-5M9.5 13.5L12 11l2.5 2.5"></path></svg></span><span><b>Open the backup</b><small>Bring a saved design back</small></span></button>
       <button class="mrow" id="mPrint" type="button"><span class="chip mint"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M7 9V4h10v5"></path><rect x="4" y="9" width="16" height="8" rx="2"></rect><path d="M7 14h10v6H7z"></path></svg></span><span><b>Print the pattern</b><small>Choose the paper, then save it to print</small></span></button>
     </div>
-    <h3>The Jolly Makery</h3>
-    <div class="mcard">
+    <h3 class="app-only">The Jolly Makery</h3>
+    <div class="mcard app-only">
       <a class="mrow" id="mHome" href="../" style="text-decoration:none"><span class="chip rose"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 11l8-7 8 7"></path><path d="M6 10v10h12V10"></path><path d="M10 20v-6h4v6"></path></svg></span><span><b>Website home</b><small>Guides, feedback and other tools</small></span></a>
     </div>
     <p>The design you are working on is kept automatically on this device.</p>
@@ -1621,6 +1621,8 @@ SKINS.forEach(s=>{ const b=document.createElement("button"); b.type="button"; b.
   const t=document.createElement("span"); t.textContent=s[1]; b.append(sw,t); b.onclick=()=>applySkin(s[0],true); $("skinList").append(b); });
 $("mTheme").onclick=()=>openSheet("sheet-theme");
 $("sbTheme").onclick=()=>openSheet("sheet-theme");
+/* The other website pages always show a scrollbar. Leave the same room in the website bar, so the logo and menu do not move between pages. */
+(function(){ try{ const d=document.createElement("div"); d.style.cssText="position:absolute;top:-999px;width:100px;height:100px;overflow:scroll"; document.body.appendChild(d); const w=d.offsetWidth-d.clientWidth; d.remove(); document.documentElement.style.setProperty("--sbw",w+"px"); }catch(e){} })();
 
 /* sheets */
 function openSheet(id){ document.querySelectorAll(".sheet").forEach(s=>s.hidden=true); $("shade").hidden=false; $(id).hidden=false; }

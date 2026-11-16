@@ -21,7 +21,7 @@ CSS = """/* Colours follow the theme chosen here or in any tool. The names match
 :root[data-skin="dark"]{--bg:#141821;--surface:#1e2430;--ink:#e9ecf3;--muted:#9aa3b5;--line:#343c4c;--accent:#ff6b81;--accent-ink:#1b0a0e;color-scheme:dark}
 :root{--soft:color-mix(in srgb,var(--bg) 35%,var(--surface));--accent-deep:color-mix(in srgb,var(--accent) 80%,var(--ink))}
 *{box-sizing:border-box}
-html{-webkit-text-size-adjust:100%;scrollbar-gutter:stable}
+html{-webkit-text-size-adjust:100%;overflow-y:scroll}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:Figtree,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:1rem;line-height:1.5}
 img{max-width:100%;height:auto}
 a{color:var(--accent)}
@@ -60,6 +60,10 @@ details.theme[open] summary,details.theme summary:hover{background:var(--soft)}
 .social a{min-height:44px;padding:0 16px;display:inline-flex;align-items:center;border-radius:22px;border:1px solid var(--accent);color:var(--accent);font-weight:700;text-decoration:none}
 .social a:hover{background:var(--accent);color:var(--accent-ink)}
 .card h2{font-size:1.5rem}
+.grid.three{grid-template-columns:repeat(3,1fr)}
+@media (max-width:900px){.grid.three{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:560px){.grid.three{grid-template-columns:1fr}}
+.card .btn.follow{font-size:.95rem;padding:0 12px;white-space:nowrap}
 .card .btn.off{background:transparent;border-style:dashed;color:var(--muted);border-color:var(--muted);cursor:default}
 .btn{min-height:52px;padding:0 24px;display:inline-flex;align-items:center;justify-content:center;border-radius:26px;background:var(--accent);color:var(--accent-ink);font-size:1.05rem;font-weight:700;text-decoration:none;border:2px solid var(--accent);font-family:inherit;cursor:pointer}
 .btn:hover{background:var(--accent-deep);border-color:var(--accent-deep);color:var(--accent-ink)}
@@ -330,10 +334,10 @@ def community_body():
     cards = []
     for name, url, what in SOCIAL:
         if url:
-            action = '<a class="btn" href="%s" rel="noopener">Follow on %s</a>' % (url, name)
+            action = '<a class="btn follow" href="%s" rel="noopener">Follow on %s</a>' % (url, name)
             tag = ""
         else:
-            action = '<span class="btn off">Coming soon</span>'
+            action = '<span class="btn follow off">Coming soon</span>'
             tag = ""
         cards.append('<article class="card">%s<h2>%s</h2><p class="muted">%s</p>%s</article>' % (tag, name, what, action))
     return """<section class="band"><div class="wrap stack" style="gap:28px">
@@ -342,7 +346,7 @@ def community_body():
 <h1>Follow the project</h1>
 <p class="lead">The Jolly Makery is growing one tool at a time. Follow along to see what is new, share what you have made, and help decide what we build next.</p>
 </div>
-<div class="grid">
+<div class="grid three">
 """ + "\n".join(cards) + """
 </div>
 <div class="callout">
