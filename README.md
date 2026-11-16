@@ -1,10 +1,12 @@
-# Cross Stitch Studio
+# The Jolly Makery
 
-<img src="logo.png" alt="Cross Stitch Studio logo: an embroidery hoop with stitched roses, a needle and a heart of thread" width="160">
+<img src="logo.png" alt="The Jolly Makery logo: an embroidery hoop with stitched roses, a needle and a heart of thread" width="160">
 
-A cross stitch pattern designer that runs in the browser and installs on Android phones and tablets.
+Free tools for people who make things. The first tool is a cross stitch pattern designer that runs in the browser and installs on Android phones and tablets.
 
-**Open the app: https://arte100.github.io/Cross-Stitch-Studio/**
+**Website: https://thejollymakery.com/**
+
+**Cross stitch tool: https://thejollymakery.com/stitch/**
 
 No account and no download are needed. It works on phones, tablets and computers.
 
@@ -25,14 +27,16 @@ No account and no download are needed. It works on phones, tablets and computers
 
 ## Files
 
-- `index.html` is the whole app
-- `manifest.webmanifest` and the icon files make it installable
-- `test/index.html` is a test copy, where changes are tried before they reach the app
-- `sw.js` lets it open without an internet connection
+- `index.html`, `learn/`, `about/` and `feedback/` are the website pages, styled by `site.css`
+- `stitch/index.html` is the whole cross stitch tool
+- `stitch/manifest.webmanifest` and the icon files make the tool installable
+- `stitch/sw.js` lets the tool open without an internet connection
+- `stitch/test/index.html` is a test copy, where changes are tried before they reach the tool
+- `sw.js` at the top level retires the offline helper from when the tool lived there
 
 ## Install on Android
 
-Open https://arte100.github.io/Cross-Stitch-Studio/ in Chrome, open the Chrome menu and choose "Add to Home screen" or "Install app". On some tablets the option is under "Save and share".
+Open https://thejollymakery.com/stitch/ in Chrome, open the Chrome menu and choose "Add to Home screen" or "Install app". On some tablets the option is under "Save and share".
 
 ## Contributing
 

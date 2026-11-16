@@ -1,7 +1,7 @@
 {
-  "name": "Cross Stitch Studio",
+  "name": "The Jolly Makery: Cross Stitch",
   "short_name": "Cross Stitch",
-  "description": "Design cross stitch patterns with DMC thread colours.",
+  "description": "Design cross stitch patterns with DMC thread colours. Free, from The Jolly Makery.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
