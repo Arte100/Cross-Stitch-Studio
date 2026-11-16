@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#F7DDE2">
+<meta name="description" content="Tell The Jolly Makery what to fix, what to add, and which craft tool to build next.">
+<title>Feedback | The Jolly Makery</title>
+<link rel="icon" href="../stitch/favicon-32.png">
+<link rel="apple-touch-icon" href="../stitch/apple-touch-icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../site.css">
+</head>
+<body>
+<div style="background:#3A0F18;color:#fff;font:600 14px/1.4 system-ui,sans-serif;padding:8px 16px;text-align:center">Test copy of the new website. Not public yet.</div>
+<header class="site"><div class="wrap">
+<a class="brand" href="../"><img src="../logo.png" alt="" width="46" height="49">The Jolly Makery</a>
+<nav class="main" aria-label="Main menu">
+<a href="../">Home</a>
+<a href="../#tools">Tools</a>
+<a href="../learn/">Learning hub</a>
+<a href="../feedback/" aria-current="page">Feedback</a>
+<a href="../about/">About us</a>
+</nav>
+</div></header>
+<main>
+<section class="band"><div class="wrap narrow stack" style="gap:20px">
+<div class="stack" style="gap:10px">
+<h1>Feedback</h1>
+<p class="lead">Tell us what to fix, what to add, and how we can help makers more. Every message is read by the two of us.</p>
+</div>
+<form class="fb" id="fb">
+<fieldset>
+<legend>What is your message about?</legend>
+<label class="opt"><input type="radio" name="kind" value="An idea for a new feature" checked>An idea for a new feature</label>
+<label class="opt"><input type="radio" name="kind" value="Something is not working">Something is not working</label>
+<label class="opt"><input type="radio" name="kind" value="A tool for another craft">A tool for another craft</label>
+<label class="opt"><input type="radio" name="kind" value="Something else">Something else</label>
+</fieldset>
+<div class="field"><label for="fbTool">Which part?</label>
+<select id="fbTool"><option>Cross stitch tool</option><option>The website</option><option>Not sure</option></select></div>
+<div class="field"><label for="fbMsg">Your message</label>
+<textarea id="fbMsg" rows="7" placeholder="Tell us in your own words" required></textarea></div>
+<button class="btn" type="submit">Send feedback</button>
+<p class="small muted">This opens your email app with the message ready to send. Nothing is sent until you press send there. If it does not open, write to <a href="mailto:thejollymakery@gmail.com">thejollymakery@gmail.com</a>.</p>
+</form>
+<div class="card stack"><h2>What happens next</h2><p class="muted">We read every message and add good ideas to our list. Faults get fixed first.</p></div>
+</div></section>
+<script>
+document.getElementById("fb").addEventListener("submit", function (e) {
+  e.preventDefault();
+  var kind = document.querySelector('input[name="kind"]:checked').value;
+  var tool = document.getElementById("fbTool").value;
+  var msg = document.getElementById("fbMsg").value.trim();
+  if (!msg) { document.getElementById("fbMsg").focus(); return; }
+  var subject = "Feedback: " + kind + " (" + tool + ")";
+  location.href = "mailto:thejollymakery@gmail.com?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(msg);
+});
+</script>
+
+</main>
+<footer class="site"><div class="wrap">
+<span>The Jolly Makery. Free tools for people who make things.</span>
+<nav aria-label="Footer">
+<a href="../about/">About us</a>
+<a href="../feedback/">Feedback</a>
+</nav>
+</div></footer>
+</body>
+</html>
