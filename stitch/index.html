@@ -1965,19 +1965,54 @@ $("mImage").onclick=()=>openSheet("sheet-image"); $("iPlain").onclick=()=>saveIm
 /* paper sizes in millimetres; pages are drawn at 200 dots to the inch */
 const PAPERS=[["a4","A4",210,297],["a3","A3",297,420],["a5","A5",148,210],["letter","US Letter",215.9,279.4],["legal","US Legal",215.9,355.6]];
 function wrapText(g,text,maxW){ const out=[]; let line=""; text.split(" ").forEach(w=>{ const t=line?line+" "+w:w; if(line&&g.measureText(t).width>maxW){ out.push(line); line=w; } else line=t; }); if(line) out.push(line); return out; }
+/* the logo for the printed pattern, loaded ahead so it is ready when the pages are drawn */
+const LOGO=new Image(); LOGO.src=(TEST?"../../":"../")+"logo.png";
 function patternPages(PW,PHt){ PW=PW||1654; PHt=PHt||2339; const M=110, U=PW-2*M, pages=[], n=counts(P), ll=lineLengths(P), shop=shopping(P), stx=shopLines(shop);
   const used=[], lused=[]; let cols=0; P.palette.forEach((num,i)=>{ if(n[i+1]) used.push(i); if(ll[i+1]) lused.push(i); if(n[i+1]||ll[i+1]) cols++; });
   const page=()=>{ const c=document.createElement("canvas"); c.width=PW; c.height=PHt; const g=c.getContext("2d"); g.fillStyle="#fff"; g.fillRect(0,0,PW,PHt); g.fillStyle="#000"; g.textBaseline="alphabetic"; pages.push(c); return g; };
-  const foot=g=>{ g.font="26px sans-serif"; g.fillStyle="#666"; g.textAlign="center"; g.fillText("Page "+pages.length,PW/2,PHt-60); g.textAlign="left"; g.fillStyle="#000"; };
-  /* key pages */
-  let g=page(), y=M+50; g.font="bold 64px sans-serif"; g.fillText(P.name,M,y,U); y+=70; g.font="32px sans-serif";
-  ["Fabric: "+P.count+" count Aida, "+P.fabric.toLowerCase(),"Design size: "+P.w+" × "+P.h+" stitches","Finished size: "+sizeText(P.w,P.h,P.count),"Threads: DMC stranded cotton, "+cols+(cols===1?" colour, ":" colours, ")+(P.cells.length-n[0])+" stitches"+(P.lines.length?", "+P.lines.length+(P.lines.length===1?" backstitch line":" backstitch lines"):""),
-   "Fabric to cut: "+shop.fabric.fw+" × "+shop.fabric.fh+" cm, with "+shop.fabric.margin+" cm spare on every side"]
-    .forEach(t=>{ g.fillText(t,M,y,U); y+=46; });
-  /* first page: the finished design as a picture */
-  y+=20; { const pic=imageCanvas(false), aw=PW-2*M, ah=PHt-y-150, k=Math.min(aw/pic.width,ah/pic.height), dw=Math.round(pic.width*k), dh=Math.round(pic.height*k), dx=Math.round((PW-dw)/2);
-    g.imageSmoothingEnabled=false; g.drawImage(pic,dx,y,dw,dh); g.imageSmoothingEnabled=true; g.strokeStyle="#000"; g.lineWidth=2; g.strokeRect(dx+1,y+1,dw-2,dh-2); }
-  foot(g); g=page(); y=M+30; g.font="bold 44px sans-serif"; g.fillText("Thread key",M,y); y+=80;
+  const AC="#8B1A2B", PK="#F3CBD3", MU="#5b3a41", INK="#2a1318", land=PW>PHt;
+  const foot=g=>{ g.fillStyle=PK; g.fillRect(M,PHt-104,U,2); g.font="24px sans-serif"; g.fillStyle="#666"; g.textAlign="left"; g.fillText("Create it. Make it. Enjoy it.",M,PHt-60); g.textAlign="center"; g.fillText("thejollymakery.com",PW/2,PHt-60); g.textAlign="right"; g.fillText("Page "+pages.length,PW-M,PHt-60); g.textAlign="left"; g.fillStyle="#000"; };
+  const hasLogo=()=>LOGO.complete&&LOGO.naturalWidth>0;
+  /* the band at the top of the opening pages: logo, name, and a short label on the right */
+  const brand=(g,right)=>{ let x=M; if(hasLogo()){ const h=96, w=Math.round(h*LOGO.naturalWidth/LOGO.naturalHeight); g.drawImage(LOGO,M,M-40,w,h); x=M+w+24; }
+    g.textBaseline="middle"; g.fillStyle=INK; g.font="bold 38px sans-serif"; g.fillText("The Jolly Makery",x,M+10); const used=x+g.measureText("The Jolly Makery").width+40;
+    g.font="24px sans-serif"; g.fillStyle=AC; g.textAlign="right"; g.fillText(right,PW-M,M+10,Math.max(60,PW-M-used)); g.textAlign="left"; g.textBaseline="alphabetic";
+    g.fillStyle=PK; g.fillRect(M,M+76,U,3); g.fillStyle="#000"; return M+76; };
+  const rr=(g,x,y,w,h,r)=>{ g.beginPath(); g.moveTo(x+r,y); g.arcTo(x+w,y,x+w,y+h,r); g.arcTo(x+w,y+h,x,y+h,r); g.arcTo(x,y+h,x,y,r); g.arcTo(x,y,x+w,y,r); g.closePath(); };
+  const fit=(g,text,maxW,size,bold)=>{ let f=size; do{ g.font=(bold?"bold ":"")+f+"px sans-serif"; f-=2; }while(g.measureText(text).width>maxW&&f>14); };
+  const pill=(g,text,cx,cy,col)=>{ const w=g.measureText(text).width+24; g.fillStyle="#fff"; rr(g,cx-w/2,cy-20,w,40,12); g.fill(); g.fillStyle=col; g.textAlign="center"; g.textBaseline="middle"; g.fillText(text,cx,cy+1); g.textAlign="left"; g.textBaseline="alphabetic"; };
+  const inch=v=>(v/2.54).toFixed(1), F=shop.fabric;
+  /* cover: the name, the finished design as a picture, a few facts and the thread colours */
+  let g=page(), y=brand(g,"CROSS STITCH PATTERN")+110; g.fillStyle=INK; g.font="bold 84px sans-serif"; g.fillText(P.name,M,y,U); y+=56; g.font="32px sans-serif"; g.fillStyle=AC; g.fillText("Counted cross stitch pattern",M,y,U); y+=40;
+  { const pic=imageCanvas(false), aw=U, ah=Math.max(160,PHt-y-424), k=Math.min(aw/pic.width,ah/pic.height), dw=Math.round(pic.width*k), dh=Math.round(pic.height*k), dx=Math.round((PW-dw)/2);
+    g.imageSmoothingEnabled=k<1; g.imageSmoothingQuality="high"; g.drawImage(pic,dx,y,dw,dh); g.imageSmoothingEnabled=true; g.strokeStyle=INK; g.lineWidth=3; g.strokeRect(dx+1.5,y+1.5,dw-3,dh-3); y+=dh+40; }
+  { const tiles=[[P.w+" × "+P.h,"stitches"],[F.dw+" × "+F.dh+" cm","on "+P.count+" count Aida"],[String(cols),cols===1?"DMC colour":"DMC colours"],[String(shop.totalSkeins),shop.totalSkeins===1?"skein of thread":"skeins of thread"]], gap=20, tw=(U-3*gap)/4;
+    tiles.forEach((t,i)=>{ const x=M+i*(tw+gap); g.strokeStyle=PK; g.lineWidth=3; rr(g,x,y,tw,140,22); g.stroke(); g.textAlign="center"; g.fillStyle=AC; fit(g,t[0],tw-28,44,true); g.fillText(t[0],x+tw/2,y+66); g.fillStyle=MU; fit(g,t[1],tw-28,24,false); g.fillText(t[1],x+tw/2,y+108); g.textAlign="left"; });
+    y+=140+34+26; const dots=P.palette.map((num,i)=>i).filter(i=>n[i+1]||ll[i+1]).slice(0,Math.max(1,Math.floor(U/68))), x0=PW/2-(dots.length-1)*34;
+    dots.forEach((i,k)=>{ g.beginPath(); g.arc(x0+k*68,y,26,0,Math.PI*2); g.fillStyle=PHEX[i]; g.fill(); g.strokeStyle="#c9a4ab"; g.lineWidth=2; g.stroke(); }); g.fillStyle="#000"; }
+  foot(g);
+  /* size and fabric: the design drawn on its fabric, with the sizes marked around it */
+  g=page(); y=brand(g,P.name.toUpperCase())+90; g.fillStyle=INK; g.font="bold 56px sans-serif"; g.fillText("Size and fabric",M,y); y+=52; g.font="28px sans-serif"; g.fillStyle=MU;
+  wrapText(g,"A picture of the finished size. The spare fabric around the design is only a suggestion, handy if you plan to frame it or stretch it on a canvas.",U).forEach(t=>{ g.fillText(t,M,y); y+=38; }); y+=30;
+  { const B=land?PHt-210:PHt-420, k=Math.max(2,Math.min((U-220)/F.fw,(B-y-140)/F.fh)), FW=Math.round(F.fw*k), FH=Math.round(F.fh*k), fx=Math.round((PW-FW)/2), fy=Math.round(y+Math.max(0,(B-y-140-FH)/2)), mk=F.margin*k, dx=Math.round(fx+mk), dy=Math.round(fy+mk), DW=FW-2*Math.round(mk), DH=FH-2*Math.round(mk);
+    const dimH=(x1,x2,yy)=>{ g.fillStyle=AC; g.fillRect(x1,yy-2,x2-x1,4); g.fillRect(x1-2,yy-14,4,28); g.fillRect(x2-2,yy-14,4,28); }, dimV=(xx,y1,y2)=>{ g.fillStyle=AC; g.fillRect(xx-2,y1,4,y2-y1); g.fillRect(xx-14,y1-2,28,4); g.fillRect(xx-14,y2-2,28,4); };
+    /* the fabric: a light weave and a dashed edge, no solid fill, to save ink */
+    g.save(); g.beginPath(); g.rect(fx,fy,FW,FH); g.clip(); g.fillStyle="#efe6d6"; for(let v=fx;v<fx+FW;v+=16) g.fillRect(v,fy,2,FH); for(let v=fy;v<fy+FH;v+=16) g.fillRect(fx,v,FW,2); g.restore();
+    g.strokeStyle="#b89b6a"; g.lineWidth=4; g.setLineDash([18,12]); g.strokeRect(fx,fy,FW,FH); g.setLineDash([]);
+    const pic=imageCanvas(false); g.fillStyle="#fff"; g.fillRect(dx,dy,DW,DH); g.imageSmoothingEnabled=true; g.imageSmoothingQuality="high"; g.drawImage(pic,dx,dy,DW,DH); g.strokeStyle=INK; g.lineWidth=3; g.strokeRect(dx,dy,DW,DH);
+    if(mk>=200){ dimH(dx,dx+DW,dy+DH+36); g.textAlign="center"; g.fillStyle=AC; g.font="bold 30px sans-serif"; g.fillText(F.dw+" cm",dx+DW/2,dy+DH+82); g.fillStyle=MU; g.font="24px sans-serif"; g.fillText(P.w+" stitches, "+inch(F.dw)+" inches",dx+DW/2,dy+DH+116,DW+mk);
+      dimV(dx-36,dy,dy+DH); g.textAlign="right"; g.fillStyle=AC; g.font="bold 30px sans-serif"; g.fillText(F.dh+" cm",dx-60,dy+DH/2-4); g.fillStyle=MU; g.font="24px sans-serif"; g.fillText(P.h+" stitches",dx-60,dy+DH/2+30); g.textAlign="left"; }
+    else { g.font="bold 24px sans-serif"; pill(g,"Design: "+F.dw+" × "+F.dh+" cm, "+P.w+" × "+P.h+" stitches",dx+DW/2,dy+DH+ (mk>=60?Math.min(mk/2,40):-36),AC); }
+    g.font="bold 24px sans-serif"; if(mk>=56) pill(g,F.margin+" cm spare, optional",fx+FW/2,fy+Math.min(mk/2,60),"#7a5a2a"); if(mk>=200) pill(g,F.margin+" cm",dx+DW+mk/2,dy+DH/2,"#7a5a2a");
+    dimH(fx,fx+FW,fy+FH+44); g.textAlign="center"; g.fillStyle=AC; g.font="bold 30px sans-serif"; g.fillText("Suggested fabric: "+F.fw+" cm",fx+FW/2,fy+FH+92); g.fillStyle=MU; g.font="24px sans-serif"; g.fillText(inch(F.fw)+" inches",fx+FW/2,fy+FH+126);
+    dimV(fx+FW+44,fy,fy+FH); g.textAlign="left"; g.fillStyle=AC; g.font="bold 30px sans-serif"; g.fillText(F.fh+" cm",fx+FW+66,fy+FH/2+10,Math.max(60,PW-30-(fx+FW+66)));
+    /* what the two outlines mean, then three short facts */
+    g.font="24px sans-serif"; const la="Suggested fabric", lb="Stitched design", wa=g.measureText(la).width, wb=g.measureText(lb).width, tot=44+wa+50+44+wb; let lx=Math.round((PW-tot)/2); const ly=B+36;
+    g.strokeStyle="#b89b6a"; g.lineWidth=3; g.setLineDash([8,6]); g.strokeRect(lx,ly-22,32,24); g.setLineDash([]); g.fillStyle=MU; g.fillText(la,lx+44,ly); lx+=44+wa+50; g.strokeStyle=INK; g.strokeRect(lx,ly-22,32,24); g.fillText(lb,lx+44,ly);
+    if(!land){ const by=B+70, gap=20, bw=(U-2*gap)/3; [["Fabric",P.count+" count Aida, "+P.fabric.toLowerCase()],["Thread","DMC stranded cotton, "+shop.opt.st+(shop.opt.st===1?" strand":" strands")],["Where to start","The centre, marked by arrows on the chart"]].forEach((t,i)=>{ const x=M+i*(bw+gap);
+      g.strokeStyle=PK; g.lineWidth=3; rr(g,x,by,bw,130,22); g.stroke(); g.fillStyle=INK; g.font="bold 26px sans-serif"; g.fillText(t[0],x+28,by+50,bw-56); g.fillStyle=MU; fit(g,t[1],bw-56,24,false); g.fillText(t[1],x+28,by+92); }); }
+    g.fillStyle="#000"; }
+  foot(g); g=page(); y=brand(g,P.name.toUpperCase())+80; g.font="bold 44px sans-serif"; g.fillText("Thread key",M,y); y+=80;
   const head=()=>{ g.font="bold 28px sans-serif"; g.fillText("Symbol",M,y); g.fillText("Colour",M+150,y); g.fillText("DMC",M+310,y); g.fillText("Name",M+470,y); g.textAlign="right"; g.fillText("Amount",PW-M,y); g.textAlign="left"; y+=16; g.fillRect(M,y,PW-2*M,2); y+=44; };
   head();
   used.forEach(i=>{ if(y>PHt-140){ foot(g); g=page(); y=M+40; head(); }
@@ -2025,6 +2060,22 @@ function patternPages(PW,PHt){ PW=PW||1654; PHt=PHt||2339; const M=110, U=PW-2*M
     if(midC>=tc&&midC<=tc+cw){ const ax=X0+(midC-tc)*cs, ay=Y0+ch*cs+8; g.beginPath(); g.moveTo(ax,ay); g.lineTo(ax-13,ay+24); g.lineTo(ax+13,ay+24); g.closePath(); g.fill(); }
     if(midR>=tr&&midR<=tr+ch){ const ax=X0+cw*cs+8, ay=Y0+(midR-tr)*cs; g.beginPath(); g.moveTo(ax,ay); g.lineTo(ax+24,ay-13); g.lineTo(ax+24,ay+13); g.closePath(); g.fill(); }
     g.textAlign="left"; g.textBaseline="alphabetic"; foot(g); }
+  /* last page: a thank you, and where to find us */
+  { g=page(); const lim=PHt-140; let y=M+40; g.textAlign="center";
+    if(hasLogo()){ const h=PHt<1500?130:260, w=Math.round(h*LOGO.naturalWidth/LOGO.naturalHeight); g.drawImage(LOGO,Math.round((PW-w)/2),y,w,h); y+=h; }
+    y+=84; g.fillStyle=INK; fit(g,"Thank you for stitching with us",U,56,true); g.fillText("Thank you for stitching with us",PW/2,y); y+=58;
+    g.font="28px sans-serif"; g.fillStyle=MU; wrapText(g,"This pattern was made with the free cross stitch tool from The Jolly Makery. We are two people who like making things.",Math.min(U,1100)).forEach(t=>{ g.fillText(t,PW/2,y); y+=40; }); y+=30; g.textAlign="left";
+    const cards=[["Show us your finished piece","We would love to see it. Tag @thejollymakery when you share it."],["Tell us what you think","Found a mistake, or have an idea? Leave feedback at thejollymakery.com/feedback"],["Design your own","Turn a photo or a drawing into a pattern, free, at thejollymakery.com/stitch"],["More from us","Guides and more tools for makers at thejollymakery.com"]], nc=land?4:2, gap=24, cw=(U-(nc-1)*gap)/nc;
+    g.font="24px sans-serif"; const wrapped=cards.map(c=>wrapText(g,c[1],cw-56)), ch=96+Math.max(...wrapped.map(w=>w.length))*34+26;
+    let tf=30; g.font="bold 30px sans-serif"; while(tf>18&&Math.max(...cards.map(c=>g.measureText(c[0]).width))>cw-56){ tf-=2; g.font="bold "+tf+"px sans-serif"; }
+    cards.forEach((c,i)=>{ const x=M+(i%nc)*(cw+gap), cy=y+Math.floor(i/nc)*(ch+gap); g.strokeStyle=PK; g.lineWidth=3; rr(g,x,cy,cw,ch,24); g.stroke(); g.fillStyle=INK; g.font="bold "+tf+"px sans-serif"; g.fillText(c[0],x+28,cy+56,cw-56); g.font="24px sans-serif"; g.fillStyle=MU; wrapped[i].forEach((t,k)=>g.fillText(t,x+28,cy+100+k*34,cw-56)); });
+    y+=Math.ceil(cards.length/nc)*(ch+gap)+50; g.textAlign="center";
+    if(y<lim){ g.fillStyle=AC; g.font="bold 40px sans-serif"; g.fillText("@thejollymakery",PW/2,y); y+=40; }
+    g.font="bold 24px sans-serif"; const names=["Instagram","Facebook","TikTok","YouTube","Pinterest","X"], ws=names.map(t=>g.measureText(t).width+52), rows=[[]]; let acc=0;
+    names.forEach((t,i)=>{ if(acc+ws[i]>U&&rows[rows.length-1].length){ rows.push([]); acc=0; } rows[rows.length-1].push(i); acc+=ws[i]+14; });
+    rows.forEach(r=>{ if(y+52>lim) return; let x=Math.round((PW-(r.reduce((a,i)=>a+ws[i],0)+(r.length-1)*14))/2); r.forEach(i=>{ g.strokeStyle=AC; g.lineWidth=3; rr(g,x,y,ws[i],52,26); g.stroke(); g.fillStyle=AC; g.textBaseline="middle"; g.fillText(names[i],x+ws[i]/2,y+27); g.textBaseline="alphabetic"; x+=ws[i]+14; }); y+=66; });
+    y+=40; g.font="22px sans-serif"; g.fillStyle="#666"; wrapText(g,"Thread colours on screen and in print can differ from the real thread. DMC is a trade mark of its owner, used here only to name thread colours.",U).forEach(t=>{ if(y<lim){ g.fillText(t,PW/2,y); y+=32; } });
+    g.textAlign="left"; g.fillStyle="#000"; foot(g); }
   return pages; }
 PAPERS.forEach(q=>{ const o=document.createElement("option"); o.value=q[0]; o.textContent=q[1]+" ("+(q[0]==="letter"?"8.5 × 11 inches":q[0]==="legal"?"8.5 × 14 inches":q[2]+" × "+q[3]+" mm")+")"; $("prSize").append(o); });
 function paperNow(){ const q=PAPERS.find(x=>x[0]===$("prSize").value)||PAPERS[0], land=$("prTurn").value==="l"; return {id:q[0],name:q[1],land,w:land?q[3]:q[2],h:land?q[2]:q[3]}; }
