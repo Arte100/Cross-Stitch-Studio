@@ -51,7 +51,7 @@
 .sb-theme{width:auto;height:44px;padding:0 14px;gap:8px;border-radius:22px;font-size:16px;font-weight:700}
 .sb-theme span{display:inline}
 }
-@media (display-mode:standalone){.sitebar{display:none}#homeBtn{display:flex}h3.app-only{display:block!important}.mcard.app-only{display:flex!important}}
+@media (display-mode:standalone){.sitebar{display:none}#homeBtn{display:flex}}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html,body{height:100%;margin:0}
@@ -2045,6 +2045,9 @@ $("restoreFile").onchange=e=>{ const f=e.target.files[0]; e.target.value=""; if(
 
 /* start */
 applySkin(load(KEY+"skin")||"pink",false);
+/* pick up a theme chosen on the website while the tool stayed open */
+const reSkin=()=>{ const s=load(KEY+"skin")||"pink"; if(s!==skin) applySkin(s,false); };
+window.addEventListener("pageshow",reSkin); window.addEventListener("storage",reSkin); document.addEventListener("visibilitychange",()=>{ if(!document.hidden) reSkin(); });
 let start=null; try{ const raw=load(KEY+"current"); if(raw) start=unpack(JSON.parse(raw)); }catch(e){ start=null; }
 const first=!start; setProject(start||newProject("My design",60,60,14,"White"),true); loadOverlay(); resize();
 if(first) toast("Tap Menu for examples and fabric choices");
