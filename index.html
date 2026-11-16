@@ -23,6 +23,8 @@
 <a href="./" aria-current="page">Home</a>
 <a href="tools/">Tools</a>
 <a href="learn/">Learning hub</a>
+<a href="shop/">Shop</a>
+<a href="community/">Community</a>
 <a href="feedback/">Feedback</a>
 <a href="about/">About us</a>
 </nav>
@@ -106,8 +108,10 @@
 <div class="stack" style="gap:4px">
 <span>The Jolly Makery. Free tools for people who make things.</span>
 <nav aria-label="Footer">
-<a href="about/">About us</a>
+<a href="shop/">Shop</a>
+<a href="community/">Community</a>
 <a href="feedback/">Feedback</a>
+<a href="about/">About us</a>
 </nav>
 </div>
 
@@ -125,6 +129,9 @@
   buttons.forEach(function(b){ b.addEventListener("click",function(){ show(b.dataset.skin); try{ localStorage.setItem("xs.skin",b.dataset.skin); }catch(e){} box.open=false; }); });
   document.addEventListener("click",function(e){ if(box.open && !box.contains(e.target)) box.open=false; });
   document.addEventListener("keydown",function(e){ if(e.key==="Escape") box.open=false; });
+  /* On a phone the menu slides sideways: bring the current page's link into view. */
+  var nav=document.querySelector("nav.main"), cur=nav&&nav.querySelector('[aria-current="page"]');
+  if(cur) nav.scrollLeft=cur.offsetLeft-nav.offsetLeft-(nav.clientWidth-cur.offsetWidth)/2;
 })();
 </script>
 </body>

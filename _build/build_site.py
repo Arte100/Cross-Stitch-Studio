@@ -59,6 +59,8 @@ details.theme[open] summary,details.theme summary:hover{background:var(--soft)}
 .social{display:flex;flex-wrap:wrap;gap:8px}
 .social a{min-height:44px;padding:0 16px;display:inline-flex;align-items:center;border-radius:22px;border:1px solid var(--accent);color:var(--accent);font-weight:700;text-decoration:none}
 .social a:hover{background:var(--accent);color:var(--accent-ink)}
+.card h2{font-size:1.5rem}
+.card .btn.off{background:transparent;border-style:dashed;color:var(--muted);border-color:var(--muted);cursor:default}
 .btn{min-height:52px;padding:0 24px;display:inline-flex;align-items:center;justify-content:center;border-radius:26px;background:var(--accent);color:var(--accent-ink);font-size:1.05rem;font-weight:700;text-decoration:none;border:2px solid var(--accent);font-family:inherit;cursor:pointer}
 .btn:hover{background:var(--accent-deep);border-color:var(--accent-deep);color:var(--accent-ink)}
 .btn.ghost{background:var(--surface);color:var(--accent)}
@@ -118,8 +120,15 @@ nav.main a{flex:none;padding:0 11px;font-size:.95rem;min-height:40px}
 
 FONTS = '<link rel="preconnect" href="https://fonts.googleapis.com">\n<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">'
 
-# Social media links for the footer: (name, address). Shown only when the list is not empty.
-SOCIAL = []
+# Social media accounts: (name, address, what we post there). Leave the address as None until the account exists:
+# the Community page then shows "Coming soon" for it, and the footer lists only the accounts that have an address.
+SOCIAL = [
+    ("Instagram", None, "Finished pieces, work in progress and new designs."),
+    ("TikTok", None, "Short videos of patterns being made and stitched."),
+    ("YouTube", None, "Longer guides to the tools, step by step."),
+    ("Pinterest", None, "Pattern ideas and colour palettes to save."),
+    ("Facebook", None, "News, and a place to share what you have made."),
+]
 
 THEMES = [("pink", "Pink", "#F7DDE2", "#8F1A2E"), ("lavender", "Lavender", "#ECE9F8", "#4B3FA3"), ("mint", "Mint", "#E3F3EC", "#17685A"),
           ("sky", "Sky blue", "#E3EEF8", "#1F5C94"), ("classic", "Classic grey", "#eef0f4", "#b3203a"), ("dark", "Dark", "#141821", "#ff6b81")]
@@ -127,7 +136,8 @@ THEME_BUTTONS = "\n".join(
     '<button type="button" data-skin="%s"><i style="background:linear-gradient(135deg,%s 50%%,%s 50%%)"></i>%s</button>' % (i, bg, ac, n)
     for i, n, bg, ac in THEMES)
 
-NAV = [("home", "Home", ""), ("tools", "Tools", "tools/"), ("learn", "Learning hub", "learn/"), ("feedback", "Feedback", "feedback/"), ("about", "About us", "about/")]
+NAV = [("home", "Home", ""), ("tools", "Tools", "tools/"), ("learn", "Learning hub", "learn/"), ("shop", "Shop", "shop/"),
+       ("community", "Community", "community/"), ("feedback", "Feedback", "feedback/"), ("about", "About us", "about/")]
 
 
 def link(up, target):
@@ -145,9 +155,10 @@ def page(path, key, title, desc, body):
     nav = "\n".join(
         '<a href="%s"%s>%s</a>' % (link(up, t), ' aria-current="page"' if k == key else "", label)
         for k, label, t in NAV)
+    live_social = [(n, u) for n, u, _ in SOCIAL if u]
     social = ""
-    if SOCIAL:
-        social = '<nav class="social" aria-label="Social media">' + "".join('<a href="%s" rel="noopener">%s</a>' % (u, n) for n, u in SOCIAL) + "</nav>"
+    if live_social:
+        social = '<nav class="social" aria-label="Social media">' + "".join('<a href="%s" rel="noopener">%s</a>' % (u, n) for n, u in live_social) + "</nav>"
     stitch = "http://thejollymakery.com/" if MODE == "preview" else up + "stitch/"
     body = body.replace('{UP}stitch/{IDX}', stitch).replace('{UP}', up).replace('{IDX}', IDX)
     html = f"""<!DOCTYPE html>
@@ -187,8 +198,10 @@ def page(path, key, title, desc, body):
 <div class="stack" style="gap:4px">
 <span>The Jolly Makery. Free tools for people who make things.</span>
 <nav aria-label="Footer">
-<a href="{link(up, 'about/')}">About us</a>
+<a href="{link(up, 'shop/')}">Shop</a>
+<a href="{link(up, 'community/')}">Community</a>
 <a href="{link(up, 'feedback/')}">Feedback</a>
+<a href="{link(up, 'about/')}">About us</a>
 </nav>
 </div>
 {social}
@@ -206,6 +219,9 @@ def page(path, key, title, desc, body):
   buttons.forEach(function(b){{ b.addEventListener("click",function(){{ show(b.dataset.skin); try{{ localStorage.setItem("xs.skin",b.dataset.skin); }}catch(e){{}} box.open=false; }}); }});
   document.addEventListener("click",function(e){{ if(box.open && !box.contains(e.target)) box.open=false; }});
   document.addEventListener("keydown",function(e){{ if(e.key==="Escape") box.open=false; }});
+  /* On a phone the menu slides sideways: bring the current page's link into view. */
+  var nav=document.querySelector("nav.main"), cur=nav&&nav.querySelector('[aria-current="page"]');
+  if(cur) nav.scrollLeft=cur.offsetLeft-nav.offsetLeft-(nav.clientWidth-cur.offsetWidth)/2;
 }})();
 </script>
 </body>
@@ -308,6 +324,55 @@ TOOLS = """<section class="band"><div class="wrap stack" style="gap:28px">
 </div></section>
 """
 
+def community_body():
+    cards = []
+    for name, url, what in SOCIAL:
+        if url:
+            action = '<a class="btn" href="%s" rel="noopener">Follow on %s</a>' % (url, name)
+            tag = ""
+        else:
+            action = '<span class="btn off">Coming soon</span>'
+            tag = ""
+        cards.append('<article class="card">%s<h2>%s</h2><p class="muted">%s</p>%s</article>' % (tag, name, what, action))
+    return """<section class="band"><div class="wrap stack" style="gap:28px">
+<div class="stack" style="gap:10px">
+<p class="eyebrow">Community</p>
+<h1>Follow the project</h1>
+<p class="lead">The Jolly Makery is growing one tool at a time. Follow along to see what is new, share what you have made, and help decide what we build next.</p>
+</div>
+<div class="grid">
+""" + "\n".join(cards) + """
+</div>
+<div class="callout">
+<div class="stack" style="gap:8px"><h2>Made something with our tools?</h2><p>We would love to see it. Tell us about it, and tell us what would make the tools better.</p></div>
+<a class="btn light" href="{UP}feedback/{IDX}">Leave feedback</a>
+</div>
+</div></section>
+"""
+
+
+SHOP = """<section class="band"><div class="wrap narrow stack" style="gap:24px">
+<div class="stack" style="gap:10px">
+<span class="tag line">Coming soon</span>
+<h1>Shop</h1>
+<p class="lead">Our shop is on its way. It will open on Etsy, starting with cross stitch patterns as PDF files that you download and print at home.</p>
+</div>
+<div class="card stack">
+<h2>What to expect</h2>
+<ul class="muted" style="margin:0;padding-left:1.2rem;display:flex;flex-direction:column;gap:6px">
+<li>Original patterns designed by us, made with our own cross stitch tool</li>
+<li>Each pattern as a printable PDF, with a picture of the finished piece, a thread key and clear charts</li>
+<li>More kinds of handmade work later</li>
+</ul>
+</div>
+<div class="card soft stack">
+<h2>The tools stay free</h2>
+<p class="muted">The shop helps to pay for the website. The tools and the example designs inside them remain free for everyone.</p>
+<div class="row"><a class="btn" href="{UP}community/{IDX}">Follow us to hear when it opens</a><a class="btn ghost" href="{UP}stitch/{IDX}">Design your own pattern</a></div>
+</div>
+</div></section>
+"""
+
 LEARN = """<section class="band"><div class="wrap narrow stack" style="gap:24px">
 <div class="stack" style="gap:10px">
 <h1>Learning hub</h1>
@@ -373,7 +438,7 @@ ABOUT = """<section class="band"><div class="wrap narrow stack" style="gap:24px"
 <p>We started with a cross stitch pattern designer, because we wanted one that was simple, free and worked on a phone. More tools for other crafts will follow.</p>
 <p>Everything here is free to use. There is no account to create and there are no adverts.</p>
 </div>
-<div class="card pink stack">
+<div class="card soft stack">
 <h2>Tell us what you think</h2>
 <p class="muted">The best ideas for what to build next come from the people using the tools.</p>
 <div class="row"><a class="btn" href="{UP}feedback/{IDX}">Leave feedback</a></div>
@@ -431,6 +496,10 @@ page("tools/index.html", "tools", "Tools | The Jolly Makery",
      "Free craft tools from The Jolly Makery, starting with a cross stitch pattern designer.", TOOLS)
 page("learn/index.html", "learn", "Learning hub | The Jolly Makery",
      "Short cross stitch guides: reading a chart, choosing a fabric count, and turning a photo into a pattern.", LEARN)
+page("shop/index.html", "shop", "Shop | The Jolly Makery",
+     "The Jolly Makery shop is coming soon on Etsy, starting with printable cross stitch patterns.", SHOP)
+page("community/index.html", "community", "Community | The Jolly Makery",
+     "Follow The Jolly Makery on social media, share what you have made, and help decide what we build next.", community_body())
 page("about/index.html", "about", "About us | The Jolly Makery",
      "Who is behind The Jolly Makery and why the tools are free.", ABOUT)
 page("feedback/index.html", "feedback", "Feedback | The Jolly Makery",
@@ -441,7 +510,7 @@ if MODE == "live":
     page("404.html", "", "Page not found | The Jolly Makery", "Page not found.", NOTFOUND)
     p = os.path.join(OUT, "404.html")
     h = open(p).read()
-    for a in ('href="site.css"', 'href="stitch/', 'src="logo.png"', 'href="learn/"', 'href="feedback/"', 'href="about/"', 'href="tools/"', 'href="./"', 'href="#tools"'):
+    for a in ('href="site.css"', 'href="stitch/', 'src="logo.png"', 'href="learn/"', 'href="feedback/"', 'href="about/"', 'href="tools/"', 'href="shop/"', 'href="community/"', 'href="./"', 'href="#tools"'):
         attr, val = a.split('="')
         h = h.replace(a, attr + '="/' + ('"' if val == './"' else val))
     h = h.replace('href="/', 'href="/').replace('href="/"', 'href="/"')
