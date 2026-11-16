@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#F7DDE2">
+<meta name="description" content="Short cross stitch guides: reading a chart, choosing a fabric count, and turning a photo into a pattern.">
+<title>Learning hub | The Jolly Makery</title>
+<link rel="icon" href="../stitch/favicon-32.png">
+<link rel="apple-touch-icon" href="../stitch/apple-touch-icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../site.css">
+<script>
+/* The colour theme is shared with the tools: both read and save the same setting on this device. */
+(function(){try{var s=localStorage.getItem("xs.skin");if(s&&s!=="pink")document.documentElement.setAttribute("data-skin",s);}catch(e){}})();
+</script>
+</head>
+<body>
+<header class="site"><div class="wrap">
+<a class="brand" href="../"><img src="../logo.png" alt="" width="46" height="49">The Jolly Makery</a>
+<nav class="main" aria-label="Main menu">
+<a href="../">Home</a>
+<a href="../tools/">Tools</a>
+<a href="../learn/" aria-current="page">Learning hub</a>
+<a href="../feedback/">Feedback</a>
+<a href="../about/">About us</a>
+</nav>
+</div></header>
+<main>
+<section class="band"><div class="wrap narrow stack" style="gap:24px">
+<div class="stack" style="gap:10px">
+<h1>Learning hub</h1>
+<p class="lead">Short guides for beginners and returning makers. More will be added as the tools grow.</p>
+<ul style="margin:0;padding-left:1.2rem">
+<li><a href="#chart">How to read a cross stitch chart</a></li>
+<li><a href="#fabric">Choosing your fabric count</a></li>
+<li><a href="#photo">Turning a photo into a pattern</a></li>
+</ul>
+</div>
+
+<article class="guide" id="chart">
+<p class="eyebrow">Getting started</p>
+<h2>How to read a cross stitch chart</h2>
+<p>A chart is a map of your fabric. Each square on the chart is one stitch, and each square on the fabric is one place to make it.</p>
+<ul>
+<li><strong>Symbols and colours.</strong> Every square holds a symbol, a colour, or both. Each one stands for one thread shade.</li>
+<li><strong>The thread key.</strong> The key lists every symbol beside its thread number, so you know which thread to use.</li>
+<li><strong>Heavier grid lines.</strong> A thicker line every ten squares makes counting easier.</li>
+<li><strong>Centre marks.</strong> Small arrows on the edges point to the middle of the design.</li>
+<li><strong>Lines along the grid.</strong> These are backstitch, a plain running line added at the end for outlines and details.</li>
+</ul>
+<p>Most stitchers start in the middle. Fold your fabric in half twice to find its centre, find the centre of the chart, and begin there. That way the design sits evenly on the fabric.</p>
+<p>One habit makes the finished piece look neat: keep the top arm of every cross slanting the same way.</p>
+</article>
+
+<article class="guide" id="fabric">
+<p class="eyebrow">Materials</p>
+<h2>Choosing your fabric count</h2>
+<p>Cross stitch fabric called Aida is woven in small squares. The count is the number of squares, and so stitches, in one inch. A higher count means smaller stitches and a smaller finished piece.</p>
+<p>To work out the finished size, divide the number of stitches by the count. The answer is in inches. Multiply by 2.54 for centimetres.</p>
+<ul>
+<li>A design 70 stitches wide on 14 count is 5 inches wide (12.7 centimetres).</li>
+<li>The same design on 18 count is about 3.9 inches wide (9.9 centimetres).</li>
+</ul>
+<p>14 count is the usual choice for a first project, because the squares are easy to see. Two strands of thread is usual on 14 count.</p>
+<p>Buy more fabric than the design needs. Leave a margin on every side for framing, often around 3 inches (7.5 centimetres). The cross stitch tool works out both sizes for you in its shopping list.</p>
+</article>
+
+<article class="guide" id="photo">
+<p class="eyebrow">Using the tool</p>
+<h2>Turning a photo into a pattern</h2>
+<p>The cross stitch tool can turn a photo into a chart. Open the Menu and choose Photo to pattern. The photo you pick makes the biggest difference to the result.</p>
+<ul>
+<li><strong>Choose a clear subject.</strong> One face, one flower or one pet works better than a busy scene.</li>
+<li><strong>Look for contrast.</strong> A subject that stands out from a plain background gives cleaner shapes.</li>
+<li><strong>Crop close.</strong> Cut away anything you do not want to stitch.</li>
+<li><strong>Pick a sensible size.</strong> More stitches keep more detail, and also mean more work.</li>
+<li><strong>Keep the colours down.</strong> Fewer thread colours make a pattern that is cheaper to buy for and calmer to sew.</li>
+</ul>
+<p>Afterwards, use Tidy stray stitches to remove lone single stitches, then touch up any area by hand.</p>
+<p>Only use photos you took yourself, or have permission to use.</p>
+</article>
+
+<div class="row"><a class="btn" href="../stitch/">Open the cross stitch tool</a></div>
+</div></section>
+
+</main>
+<footer class="site"><div class="wrap">
+<div class="stack" style="gap:4px">
+<span>The Jolly Makery. Free tools for people who make things.</span>
+<nav aria-label="Footer">
+<a href="../about/">About us</a>
+<a href="../feedback/">Feedback</a>
+</nav>
+</div>
+<div class="themepick">
+<label for="themeSel">Colour theme</label>
+<select id="themeSel">
+<option value="pink">Pink</option><option value="lavender">Lavender</option><option value="mint">Mint</option><option value="sky">Sky blue</option><option value="classic">Classic grey</option><option value="dark">Dark</option>
+</select>
+<span class="small">Also used by the tools.</span>
+</div>
+</div></footer>
+<script>
+(function(){
+  var BG={pink:"#F7DDE2",lavender:"#ECE9F8",mint:"#E3F3EC",sky:"#E3EEF8",classic:"#eef0f4",dark:"#141821"};
+  var sel=document.getElementById("themeSel"), root=document.documentElement;
+  function show(id){ if(!BG[id]) id="pink"; if(id==="pink") root.removeAttribute("data-skin"); else root.setAttribute("data-skin",id);
+    var m=document.querySelector('meta[name="theme-color"]'); if(m) m.setAttribute("content",BG[id]); sel.value=id; }
+  var saved=null; try{ saved=localStorage.getItem("xs.skin"); }catch(e){}
+  show(saved||"pink");
+  sel.addEventListener("change",function(){ show(sel.value); try{ localStorage.setItem("xs.skin",sel.value); }catch(e){} });
+})();
+</script>
+</body>
+</html>
