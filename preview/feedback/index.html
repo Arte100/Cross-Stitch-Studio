@@ -12,6 +12,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../site.css">
+<script>
+/* The colour theme is shared with the tools: both read and save the same setting on this device. */
+(function(){try{var s=localStorage.getItem("xs.skin");if(s&&s!=="pink")document.documentElement.setAttribute("data-skin",s);}catch(e){}})();
+</script>
 </head>
 <body>
 <div style="background:#3A0F18;color:#fff;font:600 14px/1.4 system-ui,sans-serif;padding:8px 16px;text-align:center">Test copy of the new website. Not public yet.</div>
@@ -19,7 +23,7 @@
 <a class="brand" href="../"><img src="../logo.png" alt="" width="46" height="49">The Jolly Makery</a>
 <nav class="main" aria-label="Main menu">
 <a href="../">Home</a>
-<a href="../#tools">Tools</a>
+<a href="../tools/">Tools</a>
 <a href="../learn/">Learning hub</a>
 <a href="../feedback/" aria-current="page">Feedback</a>
 <a href="../about/">About us</a>
@@ -40,11 +44,11 @@
 <label class="opt"><input type="radio" name="kind" value="Something else">Something else</label>
 </fieldset>
 <div class="field"><label for="fbTool">Which part?</label>
-<select id="fbTool"><option>Cross stitch tool</option><option>The website</option><option>Not sure</option></select></div>
+<select id="fbTool"><option>Cross stitch tool</option><option>A new tool</option><option>The website</option><option>Not sure</option></select></div>
 <div class="field"><label for="fbMsg">Your message</label>
 <textarea id="fbMsg" rows="7" placeholder="Tell us in your own words" required></textarea></div>
 <button class="btn" type="submit">Send feedback</button>
-<p class="small muted">This opens your email app with the message ready to send. Nothing is sent until you press send there. If it does not open, write to <a href="mailto:thejollymakery@gmail.com">thejollymakery@gmail.com</a>.</p>
+<p class="small muted">This opens your email app with the message ready to send. Nothing is sent until you press send there. If it does not open, write to <a href="mailto:thejollymakery+feedback@gmail.com">thejollymakery+feedback@gmail.com</a>.</p>
 </form>
 <div class="card stack"><h2>What happens next</h2><p class="muted">We read every message and add good ideas to our list. Faults get fixed first.</p></div>
 </div></section>
@@ -55,18 +59,38 @@ document.getElementById("fb").addEventListener("submit", function (e) {
   var tool = document.getElementById("fbTool").value;
   var msg = document.getElementById("fbMsg").value.trim();
   if (!msg) { document.getElementById("fbMsg").focus(); return; }
-  var subject = "Feedback: " + kind + " (" + tool + ")";
-  location.href = "mailto:thejollymakery@gmail.com?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(msg);
+  var subject = "[Website feedback] " + kind + " (" + tool + ")";
+  location.href = "mailto:thejollymakery+feedback@gmail.com?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(msg);
 });
 </script>
 
 </main>
 <footer class="site"><div class="wrap">
+<div class="stack" style="gap:4px">
 <span>The Jolly Makery. Free tools for people who make things.</span>
 <nav aria-label="Footer">
 <a href="../about/">About us</a>
 <a href="../feedback/">Feedback</a>
 </nav>
+</div>
+<div class="themepick">
+<label for="themeSel">Colour theme</label>
+<select id="themeSel">
+<option value="pink">Pink</option><option value="lavender">Lavender</option><option value="mint">Mint</option><option value="sky">Sky blue</option><option value="classic">Classic grey</option><option value="dark">Dark</option>
+</select>
+<span class="small">Also used by the tools.</span>
+</div>
 </div></footer>
+<script>
+(function(){
+  var BG={pink:"#F7DDE2",lavender:"#ECE9F8",mint:"#E3F3EC",sky:"#E3EEF8",classic:"#eef0f4",dark:"#141821"};
+  var sel=document.getElementById("themeSel"), root=document.documentElement;
+  function show(id){ if(!BG[id]) id="pink"; if(id==="pink") root.removeAttribute("data-skin"); else root.setAttribute("data-skin",id);
+    var m=document.querySelector('meta[name="theme-color"]'); if(m) m.setAttribute("content",BG[id]); sel.value=id; }
+  var saved=null; try{ saved=localStorage.getItem("xs.skin"); }catch(e){}
+  show(saved||"pink");
+  sel.addEventListener("change",function(){ show(sel.value); try{ localStorage.setItem("xs.skin",sel.value); }catch(e){} });
+})();
+</script>
 </body>
 </html>
