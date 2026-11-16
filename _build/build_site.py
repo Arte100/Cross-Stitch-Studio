@@ -5,6 +5,7 @@ Usage: python3 build_site.py <output folder> live|preview
 live:    links end in a slash (thejollymakery.com/learn/)
 preview: links end in index.html, so the pages also work where folders are not served
 """
+import hashlib
 import os
 import sys
 
@@ -122,6 +123,8 @@ nav.main a{flex:none;padding:0 11px;font-size:.95rem;min-height:40px}
 @media (max-width:560px){.band{padding:40px 0}.callout{padding:26px}.btn{width:100%}}
 """
 
+CSS_VER = hashlib.md5(CSS.encode()).hexdigest()[:8]
+
 FONTS = '<link rel="preconnect" href="https://fonts.googleapis.com">\n<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">'
 
 # Social media accounts: (name, address, what we post there). Leave the address as None until the account exists:
@@ -177,7 +180,7 @@ def page(path, key, title, desc, body):
 <link rel="icon" href="{up}stitch/favicon-32.png">
 <link rel="apple-touch-icon" href="{up}stitch/apple-touch-icon-180.png">
 {FONTS}
-<link rel="stylesheet" href="{up}site.css">
+<link rel="stylesheet" href="{up}site.css?v={CSS_VER}">
 <script>
 /* The colour theme is shared with the tools: both read and save the same setting on this device. */
 (function(){{try{{var s=localStorage.getItem("xs.skin");if(s&&s!=="pink")document.documentElement.setAttribute("data-skin",s);}}catch(e){{}}}})();
@@ -516,7 +519,8 @@ if MODE == "live":
     page("404.html", "", "Page not found | The Jolly Makery", "Page not found.", NOTFOUND)
     p = os.path.join(OUT, "404.html")
     h = open(p).read()
-    for a in ('href="site.css"', 'href="stitch/', 'src="logo.png"', 'href="learn/"', 'href="feedback/"', 'href="about/"', 'href="tools/"', 'href="shop/"', 'href="community/"', 'href="./"', 'href="#tools"'):
+    h = h.replace('href="site.css?v=', 'href="/site.css?v=')
+    for a in ( 'href="stitch/', 'src="logo.png"', 'href="learn/"', 'href="feedback/"', 'href="about/"', 'href="tools/"', 'href="shop/"', 'href="community/"', 'href="./"', 'href="#tools"'):
         attr, val = a.split('="')
         h = h.replace(a, attr + '="/' + ('"' if val == './"' else val))
     h = h.replace('href="/', 'href="/').replace('href="/"', 'href="/"')
