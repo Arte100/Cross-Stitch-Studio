@@ -294,7 +294,6 @@ input[type=text],input[type=number],input[type=search],select{border:1px solid v
     <div class="mcard app-only">
       <a class="mrow" id="mHome" href="../" style="text-decoration:none"><span class="chip rose"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 11l8-7 8 7"></path><path d="M6 10v10h12V10"></path><path d="M10 20v-6h4v6"></path></svg></span><span><b>Website home</b><small>Guides, feedback and other tools</small></span></a>
     </div>
-    <p>The design you are working on is kept automatically on this device.</p>
     <div class="stack" id="savedWrap" hidden>
       <h3>Saved earlier on this device</h3>
       <div class="stack" id="savedList"></div>
@@ -1546,22 +1545,28 @@ cv.addEventListener("pointerdown",e=>{ e.preventDefault(); try{ cv.setPointerCap
   if(pts.size===2){ cancelStroke(); cancelTick(); if(draft){ draft=null; redraw(); } txDrag=null; if(sel&&sel.drag){ sel.drag=false; sel.a=null; sel.picked=false; selUI(); redraw(); } pan=null; blocked=true; const a=[...pts.values()];
     pinch={d:Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y)||1,mx:(a[0].x+a[1].x)/2,my:(a[0].y+a[1].y)/2,s:view.s,x:view.x,y:view.y}; return; }
   if(pts.size>2||blocked) return;
+  /* With a mouse: the middle button (the wheel pressed down) drags the fabric, and the right button unpicks. */
+  const mouse=e.pointerType==="mouse";
+  if(mouse&&e.button===1){ pan={px:p.x,py:p.y,x:view.x,y:view.y}; cv.style.cursor="grabbing"; return; }
+  if(mouse&&e.button>2) return;
+  const rub=mouse&&e.button===2;
   if(txt){ txDrag={px:p.x,py:p.y,x:txt.x,y:txt.y}; return; }
   if(sel){ const c=cellClamp(p); sel.a=c; sel.b=c; sel.drag=true; sel.picked=false; selUI(); redraw(); return; }
   if(mode==="stitch"){ if(stTool==="move"){ pan={px:p.x,py:p.y,x:view.x,y:view.y}; return; }
     if(stTool==="one"){ const li=lineAt(p); if(li>=0){ const next=copyLines(P.lines); next[li][5]=next[li][5]?0:1; setLines(next); return; } }
     const sc=cellAt(p); if(!sc) return; const g=tickGroup(P,sc[0],sc[1],stTool); if(!g.length){ if(stTool==="one") toast("No stitch there"); return; }
-    tk={map:new Map(),val:g.every(j=>P.done[j])?0:1}; g.forEach(tickPut); if(stTool==="one") last=sc; else commitTick(); showCount(); redraw(); return; }
-  if(tool==="move"){ pan={px:p.x,py:p.y,x:view.x,y:view.y}; return; }
-  if(tool==="line"){ const k=cornerAt(p); if(k){ draft=[k[0],k[1],k[0],k[1]]; redraw(); } return; }
-  if(tool==="erase"||tool==="pick"){ const li=lineAt(p); if(li>=0){
-      if(tool==="erase"){ const next=copyLines(P.lines); next.splice(li,1); setLines(next); toast("Line removed"); }
+    tk={map:new Map(),val:rub?0:(g.every(j=>P.done[j])?0:1)}; g.forEach(tickPut); if(stTool==="one") last=sc; else commitTick(); showCount(); redraw(); return; }
+  const t=rub?"erase":tool; /* the right mouse button works as Unpick, whichever tool is chosen */
+  if(t==="move"){ pan={px:p.x,py:p.y,x:view.x,y:view.y}; return; }
+  if(t==="line"){ const k=cornerAt(p); if(k){ draft=[k[0],k[1],k[0],k[1]]; redraw(); } return; }
+  if(t==="erase"||t==="pick"){ const li=lineAt(p); if(li>=0){
+      if(t==="erase"){ const next=copyLines(P.lines); next.splice(li,1); setLines(next); toast("Line removed"); }
       else { P.cur=P.lines[li][4]-1; setTool("line"); refreshPalette(); toast("Picked DMC "+P.palette[P.cur]); }
       return; } }
   const cell=cellAt(p); if(!cell) return; const i=cell[1]*P.w+cell[0];
-  if(tool==="pick"){ const v=P.cells[i]; if(v){ P.cur=v-1; setTool("draw"); refreshPalette(); toast("Picked DMC "+P.palette[v-1]); } else if(!pickFromPicture(cell)) toast("No stitch there"); return; }
-  const val=tool==="erase"?0:P.cur+1; stroke={map:new Map(),val};
-  if(tool==="fill"){ if(P.cells[i]!==val) floodCells(P.cells,P.w,P.h,i).forEach(j=>put(j,val)); commit(); redraw(); return; }
+  if(t==="pick"){ const v=P.cells[i]; if(v){ P.cur=v-1; setTool("draw"); refreshPalette(); toast("Picked DMC "+P.palette[v-1]); } else if(!pickFromPicture(cell)) toast("No stitch there"); return; }
+  const val=t==="erase"?0:P.cur+1; stroke={map:new Map(),val};
+  if(t==="fill"){ if(P.cells[i]!==val) floodCells(P.cells,P.w,P.h,i).forEach(j=>put(j,val)); commit(); redraw(); return; }
   put(i,val); last=cell; redraw(); });
 cv.addEventListener("pointermove",e=>{ if(!pts.has(e.pointerId)) return; const p=pos(e); pts.set(e.pointerId,p);
   if(ov&&ov.moving){ const a=[...pts.values()];
@@ -1572,6 +1577,7 @@ cv.addEventListener("pointermove",e=>{ if(!pts.has(e.pointerId)) return; const p
     return; }
   if(pinch&&pts.size>=2){ const a=[...pts.values()], d=Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y)||1, mx=(a[0].x+a[1].x)/2, my=(a[0].y+a[1].y)/2;
     const s=Math.max(2,Math.min(60,pinch.s*d/pinch.d)); view.x=mx-(pinch.mx-pinch.x)/pinch.s*s; view.y=my-(pinch.my-pinch.y)/pinch.s*s; view.s=s; redraw(); return; }
+  if(pan){ view.x=pan.x+p.x-pan.px; view.y=pan.y+p.y-pan.py; redraw(); return; }
   if(sel){ if(sel.drag){ const c=cellClamp(p); if(c[0]!==sel.b[0]||c[1]!==sel.b[1]){ sel.b=c; redraw(); } } return; }
   if(txt){ if(txDrag){ const nx=Math.max(1-txt.w,Math.min(P.w-1,Math.round(txDrag.x+(p.x-txDrag.px)/view.s))), ny=Math.max(1-txt.h,Math.min(P.h-1,Math.round(txDrag.y+(p.y-txDrag.py)/view.s)));
       if(nx!==txt.x||ny!==txt.y){ txt.x=nx; txt.y=ny; redraw(); } } return; }
@@ -1582,12 +1588,15 @@ cv.addEventListener("pointermove",e=>{ if(!pts.has(e.pointerId)) return; const p
     lineCells(last[0],last[1],cell[0],cell[1]).forEach(q=>tickPut(q[1]*P.w+q[0])); last=cell; showCount(); redraw(); return; }
   if(stroke&&last){ const cell=cellAt(p); if(!cell) return; if(cell[0]===last[0]&&cell[1]===last[1]) return;
     lineCells(last[0],last[1],cell[0],cell[1]).forEach(q=>put(q[1]*P.w+q[0],stroke.val)); last=cell; redraw(); } });
-function up(e){ if(!pts.has(e.pointerId)) return; pts.delete(e.pointerId); if(pts.size<2){ pinch=null; ovPinch=null; } if(pts.size===0){ commit(); commitTick(); commitDraft(); txDrag=null; if(sel&&sel.drag){ sel.drag=false; sel.picked=true; selUI(); redraw(); } pan=null; blocked=false; if(ovDrag||(ov&&ov.moving)){ ovDrag=null; saveOverlay(); } } }
+function up(e){ if(!pts.has(e.pointerId)) return; pts.delete(e.pointerId); if(pts.size<2){ pinch=null; ovPinch=null; } if(pts.size===0){ commit(); commitTick(); commitDraft(); txDrag=null; if(sel&&sel.drag){ sel.drag=false; sel.picked=true; selUI(); redraw(); } pan=null; cv.style.cursor=""; blocked=false; if(ovDrag||(ov&&ov.moving)){ ovDrag=null; saveOverlay(); } } }
 /* finishing a line: a line drawn over an existing one replaces it, so its colour can be changed */
 function commitDraft(){ if(!draft) return; const d=draft; draft=null;
   if(d[0]===d[2]&&d[1]===d[3]){ redraw(); toast("Drag from one corner to another"); return; }
   const nl=[d[0],d[1],d[2],d[3],P.cur+1,0], next=copyLines(P.lines).filter(l=>!sameLine(l,nl)); next.push(nl); setLines(next); }
 cv.addEventListener("pointerup",up); cv.addEventListener("pointercancel",e=>{ if(draft){ draft=null; redraw(); } up(e); });
+/* no browser menu on a right click, and no scroll circle on a middle click */
+cv.addEventListener("contextmenu",e=>e.preventDefault());
+cv.addEventListener("mousedown",e=>{ if(e.button===1) e.preventDefault(); });
 cv.addEventListener("wheel",e=>{ e.preventDefault();
   if(ov&&ov.moving){ const q=pos(e), cx=(q.x-view.x)/view.s, cy=(q.y-view.y)/view.s, nw=Math.max(3,Math.min(3000,ov.w*(e.deltaY<0?1.08:1/1.08))), k=nw/ov.w;
     ov.x=cx-(cx-ov.x)*k; ov.y=cy-(cy-ov.y)*k; ov.w=nw; ov.h*=k; redraw(); saveOverlay(); return; }
