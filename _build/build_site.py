@@ -128,6 +128,7 @@ SOCIAL = [
     ("TikTok", "https://www.tiktok.com/@thejollymakery", "Short videos of patterns being made and stitched."),
     ("YouTube", "https://www.youtube.com/@thejollymakery", "Longer guides to the tools, step by step."),
     ("Pinterest", "https://uk.pinterest.com/thejollymakery/", "Pattern ideas and colour palettes to save."),
+    ("X", "https://x.com/thejollymakery", "Short updates and news about the tools."),
 ]
 
 THEMES = [("pink", "Pink", "#F7DDE2", "#8F1A2E"), ("lavender", "Lavender", "#ECE9F8", "#4B3FA3"), ("mint", "Mint", "#E3F3EC", "#17685A"),
