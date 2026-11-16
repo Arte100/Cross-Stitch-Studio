@@ -33,6 +33,7 @@ No account and no download are needed. It works on phones, tablets and computers
 - `stitch/sw.js` lets the tool open without an internet connection
 - `stitch/test/index.html` is a test copy, where changes are tried before they reach the tool
 - `sw.js` at the top level retires the offline helper from when the tool lived there
+- `_build/build_site.py` writes the website pages and `site.css`. Change the pages there, then run `python3 _build/build_site.py . live`
 
 ## Install on Android
 

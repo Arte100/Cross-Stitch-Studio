@@ -23,6 +23,35 @@
 :root[data-skin="sky"]{ --bg:#E3EEF8; --ink:#12283D; --muted:#45617D; --line:#C2D7EB; --accent:#1F5C94; --work:#D0E1F1; }
 :root[data-skin="classic"]{ --bg:#eef0f4; --ink:#1b2233; --muted:#5d6678; --line:#d5d9e2; --accent:#b3203a; --work:#dde1e9; }
 :root[data-skin="dark"]{ --bg:#141821; --surface:#1e2430; --ink:#e9ecf3; --muted:#9aa3b5; --line:#343c4c; --accent:#ff6b81; --accent-ink:#1b0a0e; --work:#0e1118; color-scheme:dark; }
+/* Website bar: the same logo, menu and theme button as the rest of thejollymakery.com. Hidden when the tool is installed as an app. */
+.sitebar{flex:none;background:var(--surface);border-bottom:1px solid var(--line);padding:4px 12px}
+.sb-in{display:flex;align-items:center;gap:6px}
+.sb-brand{flex:none;display:flex;align-items:center;gap:8px;color:var(--ink);text-decoration:none;font-family:var(--display);font-weight:700;font-size:17px}
+.sb-brand img{width:32px;height:auto;display:block}
+.sb-brand b{display:none}
+.sb-links{flex:1;min-width:0;display:flex;gap:2px;overflow-x:auto;white-space:nowrap;scrollbar-width:none}
+.sb-links::-webkit-scrollbar{display:none}
+.sb-links a{flex:none;min-height:40px;padding:0 10px;display:flex;align-items:center;border-radius:20px;color:var(--ink);font-weight:600;font-size:14px;text-decoration:none}
+.sb-links a[aria-current="page"]{background:var(--bg)}
+.sb-theme{flex:none;width:40px;height:40px;padding:0;border-radius:20px;border:1px solid var(--line);background:var(--surface);color:var(--accent);display:flex;align-items:center;justify-content:center}
+.sb-theme svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.sb-theme span{display:none}
+#homeBtn{display:none}
+/* Shown only in the installed app, where the website bar is hidden. */
+.app-only{display:none!important}
+/* On wider screens the bar lines up exactly with the header of the other website pages. */
+@media (min-width:761px){
+.sitebar{padding:8px var(--sbw,0px) 8px 0}
+.sb-in{max-width:1120px;margin:0 auto;padding:0 24px;gap:12px}
+.sb-brand{font-size:22.4px;gap:12px;line-height:1.5}
+.sb-brand img{width:46px}
+.sb-brand b{display:inline;font-weight:700}
+.sb-links{flex:0 1 auto;margin-left:auto;gap:4px;overflow:visible}
+.sb-links a{min-height:44px;padding:0 14px;border-radius:22px;font-size:16px}
+.sb-theme{width:auto;height:44px;padding:0 14px;gap:8px;border-radius:22px;font-size:16px;font-weight:700}
+.sb-theme span{display:inline}
+}
+@media (display-mode:standalone){.sitebar{display:none}#homeBtn{display:flex}h3.app-only{display:block!important}.mcard.app-only{display:flex!important}}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html,body{height:100%;margin:0}
@@ -148,6 +177,12 @@ input[type=text],input[type=number],input[type=search],select{border:1px solid v
 </head>
 <body>
 
+<nav class="sitebar" aria-label="The Jolly Makery website"><div class="sb-in">
+  <a class="sb-brand" href="../../" aria-label="The Jolly Makery home"><img src="../../logo.png" alt="" width="32" height="34"><b>The Jolly Makery</b></a>
+  <div class="sb-links"><a href="../../">Home</a><a href="../../tools/" aria-current="page">Tools</a><a href="../../learn/">Learning hub</a><a href="../../shop/">Shop</a><a href="../../community/">Community</a><a href="../../feedback/">Feedback</a><a href="../../about/">About us</a></div>
+  <button class="sb-theme" id="sbTheme" type="button" aria-label="Colour theme" title="Colour theme"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18c1.2 0 2-.9 2-2 0-1.3-1-1.6-1-2.6 0-.8.7-1.4 1.6-1.4H17a4 4 0 0 0 4-4c0-4.4-4-8-9-8z"></path><circle cx="7.5" cy="11.5" r="1"></circle><circle cx="10.5" cy="7.5" r="1"></circle><circle cx="15.5" cy="7.8" r="1"></circle></svg><span>Theme</span></button>
+</div></nav>
+
 <header class="bar">
   <a class="btn icon" id="homeBtn" href="../../" aria-label="Website home" title="Website home" style="color:inherit;text-decoration:none"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11l8-7 8 7"></path><path d="M6 10v10h12V10"></path><path d="M10 20v-6h4v6"></path></svg></a>
   <div class="title">
@@ -237,8 +272,8 @@ input[type=text],input[type=number],input[type=search],select{border:1px solid v
       <button class="mrow" id="mTidy" type="button"><span class="chip lav"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 19l9-9M14 10l2-6 4 4-6 2z"></path><path d="M5 5v2M4 6h2M9 3v2M8 4h2M19 15v2M18 16h2"></path></svg></span><span><b>Tidy stray stitches</b><small>Clean up single stitches, useful after a photo</small></span></button>
       <button class="mrow" id="mFit" type="button"><span class="chip lav"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"></path></svg></span><span><b>Fit to screen</b><small>See the whole design</small></span></button>
     </div>
-    <h3>Look</h3>
-    <div class="mcard">
+    <h3 class="app-only">Look</h3>
+    <div class="mcard app-only">
       <button class="mrow" id="mTheme" type="button"><span class="chip sky"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18c1.2 0 2-.9 2-2 0-1.3-1-1.6-1-2.6 0-.8.7-1.4 1.6-1.4H17a4 4 0 0 0 4-4c0-4.4-4-8-9-8z"></path><circle cx="7.5" cy="11.5" r="1"></circle><circle cx="10.5" cy="7.5" r="1"></circle><circle cx="15.5" cy="7.8" r="1"></circle></svg></span><span><b>Theme</b><small>Choose the colours of the app</small></span></button>
     </div>
     <h3>Stitch</h3>
@@ -253,11 +288,10 @@ input[type=text],input[type=number],input[type=search],select{border:1px solid v
       <button class="mrow" id="mRestore" type="button"><span class="chip mint"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><path d="M12 16v-5M9.5 13.5L12 11l2.5 2.5"></path></svg></span><span><b>Open the backup</b><small>Bring a saved design back</small></span></button>
       <button class="mrow" id="mPrint" type="button"><span class="chip mint"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M7 9V4h10v5"></path><rect x="4" y="9" width="16" height="8" rx="2"></rect><path d="M7 14h10v6H7z"></path></svg></span><span><b>Print the pattern</b><small>Choose the paper, then save it to print</small></span></button>
     </div>
-    <h3>The Jolly Makery</h3>
-    <div class="mcard">
+    <h3 class="app-only">The Jolly Makery</h3>
+    <div class="mcard app-only">
       <a class="mrow" id="mHome" href="../../" style="text-decoration:none"><span class="chip rose"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 11l8-7 8 7"></path><path d="M6 10v10h12V10"></path><path d="M10 20v-6h4v6"></path></svg></span><span><b>Website home</b><small>Guides, feedback and other tools</small></span></a>
     </div>
-    <p>The design you are working on is kept automatically on this device.</p>
     <div class="stack" id="savedWrap" hidden>
       <h3>Saved earlier on this device</h3>
       <div class="stack" id="savedList"></div>
@@ -1509,22 +1543,28 @@ cv.addEventListener("pointerdown",e=>{ e.preventDefault(); try{ cv.setPointerCap
   if(pts.size===2){ cancelStroke(); cancelTick(); if(draft){ draft=null; redraw(); } txDrag=null; if(sel&&sel.drag){ sel.drag=false; sel.a=null; sel.picked=false; selUI(); redraw(); } pan=null; blocked=true; const a=[...pts.values()];
     pinch={d:Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y)||1,mx:(a[0].x+a[1].x)/2,my:(a[0].y+a[1].y)/2,s:view.s,x:view.x,y:view.y}; return; }
   if(pts.size>2||blocked) return;
+  /* With a mouse: the middle button (the wheel pressed down) drags the fabric, and the right button unpicks. */
+  const mouse=e.pointerType==="mouse";
+  if(mouse&&e.button===1){ pan={px:p.x,py:p.y,x:view.x,y:view.y}; cv.style.cursor="grabbing"; return; }
+  if(mouse&&e.button>2) return;
+  const rub=mouse&&e.button===2;
   if(txt){ txDrag={px:p.x,py:p.y,x:txt.x,y:txt.y}; return; }
   if(sel){ const c=cellClamp(p); sel.a=c; sel.b=c; sel.drag=true; sel.picked=false; selUI(); redraw(); return; }
   if(mode==="stitch"){ if(stTool==="move"){ pan={px:p.x,py:p.y,x:view.x,y:view.y}; return; }
     if(stTool==="one"){ const li=lineAt(p); if(li>=0){ const next=copyLines(P.lines); next[li][5]=next[li][5]?0:1; setLines(next); return; } }
     const sc=cellAt(p); if(!sc) return; const g=tickGroup(P,sc[0],sc[1],stTool); if(!g.length){ if(stTool==="one") toast("No stitch there"); return; }
-    tk={map:new Map(),val:g.every(j=>P.done[j])?0:1}; g.forEach(tickPut); if(stTool==="one") last=sc; else commitTick(); showCount(); redraw(); return; }
-  if(tool==="move"){ pan={px:p.x,py:p.y,x:view.x,y:view.y}; return; }
-  if(tool==="line"){ const k=cornerAt(p); if(k){ draft=[k[0],k[1],k[0],k[1]]; redraw(); } return; }
-  if(tool==="erase"||tool==="pick"){ const li=lineAt(p); if(li>=0){
-      if(tool==="erase"){ const next=copyLines(P.lines); next.splice(li,1); setLines(next); toast("Line removed"); }
+    tk={map:new Map(),val:rub?0:(g.every(j=>P.done[j])?0:1)}; g.forEach(tickPut); if(stTool==="one") last=sc; else commitTick(); showCount(); redraw(); return; }
+  const t=rub?"erase":tool; /* the right mouse button works as Unpick, whichever tool is chosen */
+  if(t==="move"){ pan={px:p.x,py:p.y,x:view.x,y:view.y}; return; }
+  if(t==="line"){ const k=cornerAt(p); if(k){ draft=[k[0],k[1],k[0],k[1]]; redraw(); } return; }
+  if(t==="erase"||t==="pick"){ const li=lineAt(p); if(li>=0){
+      if(t==="erase"){ const next=copyLines(P.lines); next.splice(li,1); setLines(next); toast("Line removed"); }
       else { P.cur=P.lines[li][4]-1; setTool("line"); refreshPalette(); toast("Picked DMC "+P.palette[P.cur]); }
       return; } }
   const cell=cellAt(p); if(!cell) return; const i=cell[1]*P.w+cell[0];
-  if(tool==="pick"){ const v=P.cells[i]; if(v){ P.cur=v-1; setTool("draw"); refreshPalette(); toast("Picked DMC "+P.palette[v-1]); } else if(!pickFromPicture(cell)) toast("No stitch there"); return; }
-  const val=tool==="erase"?0:P.cur+1; stroke={map:new Map(),val};
-  if(tool==="fill"){ if(P.cells[i]!==val) floodCells(P.cells,P.w,P.h,i).forEach(j=>put(j,val)); commit(); redraw(); return; }
+  if(t==="pick"){ const v=P.cells[i]; if(v){ P.cur=v-1; setTool("draw"); refreshPalette(); toast("Picked DMC "+P.palette[v-1]); } else if(!pickFromPicture(cell)) toast("No stitch there"); return; }
+  const val=t==="erase"?0:P.cur+1; stroke={map:new Map(),val};
+  if(t==="fill"){ if(P.cells[i]!==val) floodCells(P.cells,P.w,P.h,i).forEach(j=>put(j,val)); commit(); redraw(); return; }
   put(i,val); last=cell; redraw(); });
 cv.addEventListener("pointermove",e=>{ if(!pts.has(e.pointerId)) return; const p=pos(e); pts.set(e.pointerId,p);
   if(ov&&ov.moving){ const a=[...pts.values()];
@@ -1535,6 +1575,7 @@ cv.addEventListener("pointermove",e=>{ if(!pts.has(e.pointerId)) return; const p
     return; }
   if(pinch&&pts.size>=2){ const a=[...pts.values()], d=Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y)||1, mx=(a[0].x+a[1].x)/2, my=(a[0].y+a[1].y)/2;
     const s=Math.max(2,Math.min(60,pinch.s*d/pinch.d)); view.x=mx-(pinch.mx-pinch.x)/pinch.s*s; view.y=my-(pinch.my-pinch.y)/pinch.s*s; view.s=s; redraw(); return; }
+  if(pan){ view.x=pan.x+p.x-pan.px; view.y=pan.y+p.y-pan.py; redraw(); return; }
   if(sel){ if(sel.drag){ const c=cellClamp(p); if(c[0]!==sel.b[0]||c[1]!==sel.b[1]){ sel.b=c; redraw(); } } return; }
   if(txt){ if(txDrag){ const nx=Math.max(1-txt.w,Math.min(P.w-1,Math.round(txDrag.x+(p.x-txDrag.px)/view.s))), ny=Math.max(1-txt.h,Math.min(P.h-1,Math.round(txDrag.y+(p.y-txDrag.py)/view.s)));
       if(nx!==txt.x||ny!==txt.y){ txt.x=nx; txt.y=ny; redraw(); } } return; }
@@ -1545,12 +1586,15 @@ cv.addEventListener("pointermove",e=>{ if(!pts.has(e.pointerId)) return; const p
     lineCells(last[0],last[1],cell[0],cell[1]).forEach(q=>tickPut(q[1]*P.w+q[0])); last=cell; showCount(); redraw(); return; }
   if(stroke&&last){ const cell=cellAt(p); if(!cell) return; if(cell[0]===last[0]&&cell[1]===last[1]) return;
     lineCells(last[0],last[1],cell[0],cell[1]).forEach(q=>put(q[1]*P.w+q[0],stroke.val)); last=cell; redraw(); } });
-function up(e){ if(!pts.has(e.pointerId)) return; pts.delete(e.pointerId); if(pts.size<2){ pinch=null; ovPinch=null; } if(pts.size===0){ commit(); commitTick(); commitDraft(); txDrag=null; if(sel&&sel.drag){ sel.drag=false; sel.picked=true; selUI(); redraw(); } pan=null; blocked=false; if(ovDrag||(ov&&ov.moving)){ ovDrag=null; saveOverlay(); } } }
+function up(e){ if(!pts.has(e.pointerId)) return; pts.delete(e.pointerId); if(pts.size<2){ pinch=null; ovPinch=null; } if(pts.size===0){ commit(); commitTick(); commitDraft(); txDrag=null; if(sel&&sel.drag){ sel.drag=false; sel.picked=true; selUI(); redraw(); } pan=null; cv.style.cursor=""; blocked=false; if(ovDrag||(ov&&ov.moving)){ ovDrag=null; saveOverlay(); } } }
 /* finishing a line: a line drawn over an existing one replaces it, so its colour can be changed */
 function commitDraft(){ if(!draft) return; const d=draft; draft=null;
   if(d[0]===d[2]&&d[1]===d[3]){ redraw(); toast("Drag from one corner to another"); return; }
   const nl=[d[0],d[1],d[2],d[3],P.cur+1,0], next=copyLines(P.lines).filter(l=>!sameLine(l,nl)); next.push(nl); setLines(next); }
 cv.addEventListener("pointerup",up); cv.addEventListener("pointercancel",e=>{ if(draft){ draft=null; redraw(); } up(e); });
+/* no browser menu on a right click, and no scroll circle on a middle click */
+cv.addEventListener("contextmenu",e=>e.preventDefault());
+cv.addEventListener("mousedown",e=>{ if(e.button===1) e.preventDefault(); });
 cv.addEventListener("wheel",e=>{ e.preventDefault();
   if(ov&&ov.moving){ const q=pos(e), cx=(q.x-view.x)/view.s, cy=(q.y-view.y)/view.s, nw=Math.max(3,Math.min(3000,ov.w*(e.deltaY<0?1.08:1/1.08))), k=nw/ov.w;
     ov.x=cx-(cx-ov.x)*k; ov.y=cy-(cy-ov.y)*k; ov.w=nw; ov.h*=k; redraw(); saveOverlay(); return; }
@@ -1583,6 +1627,9 @@ function applySkin(id,save){ const s=SKINS.find(x=>x[0]===id)||SKINS[0]; skin=s[
 SKINS.forEach(s=>{ const b=document.createElement("button"); b.type="button"; b.className="skin"; b.dataset.skin=s[0]; const sw=document.createElement("i"); sw.style.background="linear-gradient(135deg,"+s[2]+" 50%,"+s[3]+" 50%)";
   const t=document.createElement("span"); t.textContent=s[1]; b.append(sw,t); b.onclick=()=>applySkin(s[0],true); $("skinList").append(b); });
 $("mTheme").onclick=()=>openSheet("sheet-theme");
+$("sbTheme").onclick=()=>openSheet("sheet-theme");
+/* The other website pages always show a scrollbar. Leave the same room in the website bar, so the logo and menu do not move between pages. */
+(function(){ try{ const d=document.createElement("div"); d.style.cssText="position:absolute;top:-999px;width:100px;height:100px;overflow:scroll"; document.body.appendChild(d); const w=d.offsetWidth-d.clientWidth; d.remove(); document.documentElement.style.setProperty("--sbw",w+"px"); }catch(e){} })();
 
 /* sheets */
 function openSheet(id){ document.querySelectorAll(".sheet").forEach(s=>s.hidden=true); $("shade").hidden=false; $(id).hidden=false; }
