@@ -7,7 +7,7 @@
 :root[data-skin="dark"]{--bg:#141821;--surface:#1e2430;--ink:#e9ecf3;--muted:#9aa3b5;--line:#343c4c;--accent:#ff6b81;--accent-ink:#1b0a0e;color-scheme:dark}
 :root{--soft:color-mix(in srgb,var(--bg) 35%,var(--surface));--accent-deep:color-mix(in srgb,var(--accent) 80%,var(--ink))}
 *{box-sizing:border-box}
-html{-webkit-text-size-adjust:100%}
+html{-webkit-text-size-adjust:100%;scrollbar-gutter:stable}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:Figtree,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:1rem;line-height:1.5}
 img{max-width:100%;height:auto}
 a{color:var(--accent)}
@@ -30,7 +30,7 @@ header.site .wrap{display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;pa
 .brand img{width:46px;height:auto}
 nav.main{display:flex;gap:4px;margin-left:auto}
 nav.main a{min-height:44px;padding:0 14px;display:flex;align-items:center;border-radius:22px;color:var(--ink);font-weight:600;text-decoration:none}
-nav.main a[aria-current="page"]{background:var(--bg);font-weight:700}
+nav.main a[aria-current="page"]{background:var(--bg)}
 nav.main a:hover{background:var(--soft)}
 details.theme{position:relative}
 details.theme summary{list-style:none;min-height:44px;padding:0 14px;display:flex;align-items:center;gap:8px;border-radius:22px;border:1px solid var(--line);color:var(--accent);font-weight:700;cursor:pointer;user-select:none}
