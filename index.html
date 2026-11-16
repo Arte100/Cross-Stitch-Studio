@@ -114,7 +114,7 @@
 <a href="about/">About us</a>
 </nav>
 </div>
-
+<nav class="social" aria-label="Social media"><a href="https://www.instagram.com/thejollymakery" rel="noopener">Instagram</a><a href="https://www.facebook.com/thejollymakery" rel="noopener">Facebook</a><a href="https://www.tiktok.com/@thejollymakery" rel="noopener">TikTok</a><a href="https://www.youtube.com/@thejollymakery" rel="noopener">YouTube</a><a href="https://uk.pinterest.com/thejollymakery/" rel="noopener">Pinterest</a></nav>
 </div></footer>
 <script>
 (function(){
@@ -131,7 +131,8 @@
   document.addEventListener("keydown",function(e){ if(e.key==="Escape") box.open=false; });
   /* On a phone the menu slides sideways: bring the current page's link into view. */
   var nav=document.querySelector("nav.main"), cur=nav&&nav.querySelector('[aria-current="page"]');
-  if(cur) nav.scrollLeft=cur.offsetLeft-nav.offsetLeft-(nav.clientWidth-cur.offsetWidth)/2;
+  if(cur){ var left=cur.offsetLeft-nav.offsetLeft, right=left+cur.offsetWidth;
+    if(right>nav.clientWidth) nav.scrollLeft=right-nav.clientWidth+12; }
 })();
 </script>
 </body>

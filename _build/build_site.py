@@ -21,7 +21,7 @@ CSS = """/* Colours follow the theme chosen here or in any tool. The names match
 :root[data-skin="dark"]{--bg:#141821;--surface:#1e2430;--ink:#e9ecf3;--muted:#9aa3b5;--line:#343c4c;--accent:#ff6b81;--accent-ink:#1b0a0e;color-scheme:dark}
 :root{--soft:color-mix(in srgb,var(--bg) 35%,var(--surface));--accent-deep:color-mix(in srgb,var(--accent) 80%,var(--ink))}
 *{box-sizing:border-box}
-html{-webkit-text-size-adjust:100%}
+html{-webkit-text-size-adjust:100%;scrollbar-gutter:stable}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:Figtree,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:1rem;line-height:1.5}
 img{max-width:100%;height:auto}
 a{color:var(--accent)}
@@ -44,7 +44,7 @@ header.site .wrap{display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;pa
 .brand img{width:46px;height:auto}
 nav.main{display:flex;gap:4px;margin-left:auto}
 nav.main a{min-height:44px;padding:0 14px;display:flex;align-items:center;border-radius:22px;color:var(--ink);font-weight:600;text-decoration:none}
-nav.main a[aria-current="page"]{background:var(--bg);font-weight:700}
+nav.main a[aria-current="page"]{background:var(--bg)}
 nav.main a:hover{background:var(--soft)}
 details.theme{position:relative}
 details.theme summary{list-style:none;min-height:44px;padding:0 14px;display:flex;align-items:center;gap:8px;border-radius:22px;border:1px solid var(--line);color:var(--accent);font-weight:700;cursor:pointer;user-select:none}
@@ -123,11 +123,11 @@ FONTS = '<link rel="preconnect" href="https://fonts.googleapis.com">\n<link href
 # Social media accounts: (name, address, what we post there). Leave the address as None until the account exists:
 # the Community page then shows "Coming soon" for it, and the footer lists only the accounts that have an address.
 SOCIAL = [
-    ("Instagram", None, "Finished pieces, work in progress and new designs."),
-    ("TikTok", None, "Short videos of patterns being made and stitched."),
-    ("YouTube", None, "Longer guides to the tools, step by step."),
-    ("Pinterest", None, "Pattern ideas and colour palettes to save."),
-    ("Facebook", None, "News, and a place to share what you have made."),
+    ("Instagram", "https://www.instagram.com/thejollymakery", "Finished pieces, work in progress and new designs."),
+    ("Facebook", "https://www.facebook.com/thejollymakery", "News, and a place to share what you have made."),
+    ("TikTok", "https://www.tiktok.com/@thejollymakery", "Short videos of patterns being made and stitched."),
+    ("YouTube", "https://www.youtube.com/@thejollymakery", "Longer guides to the tools, step by step."),
+    ("Pinterest", "https://uk.pinterest.com/thejollymakery/", "Pattern ideas and colour palettes to save."),
 ]
 
 THEMES = [("pink", "Pink", "#F7DDE2", "#8F1A2E"), ("lavender", "Lavender", "#ECE9F8", "#4B3FA3"), ("mint", "Mint", "#E3F3EC", "#17685A"),
@@ -221,7 +221,8 @@ def page(path, key, title, desc, body):
   document.addEventListener("keydown",function(e){{ if(e.key==="Escape") box.open=false; }});
   /* On a phone the menu slides sideways: bring the current page's link into view. */
   var nav=document.querySelector("nav.main"), cur=nav&&nav.querySelector('[aria-current="page"]');
-  if(cur) nav.scrollLeft=cur.offsetLeft-nav.offsetLeft-(nav.clientWidth-cur.offsetWidth)/2;
+  if(cur){{ var left=cur.offsetLeft-nav.offsetLeft, right=left+cur.offsetWidth;
+    if(right>nav.clientWidth) nav.scrollLeft=right-nav.clientWidth+12; }}
 }})();
 </script>
 </body>
