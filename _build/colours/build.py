@@ -149,6 +149,17 @@ for b, own in OWN.items():
         if a in CONV[b]: continue
         dd = deltaE_ciede2000(np.tile(_lab[a], (len(ks), 1)), M); k = int(np.argmin(dd))
         if dd[k] <= 10: CONV[b][a] = {'p': [ks[k]], 's': 'ours'}; OURS[b] += 1
+# ---- Our own colour matching as a second opinion: where the published match is clearly off by colour (over 12) and another
+# thread of that brand is much closer (at least 6 better), the closer thread is offered beside the published one.
+CLOSER = collections.Counter()
+for b, own in OWN.items():
+    ol = {c: _l(h) for c, h in own.items()}; ks = list(ol); M = np.array([ol[c] for c in ks])
+    for a, e in CONV[b].items():
+        c = e['p'][0]
+        if e['s'] == 'ours' or c not in ol: continue
+        dp = float(deltaE_ciede2000(ol[c], _lab[a])); dd = deltaE_ciede2000(np.tile(_lab[a], (len(ks), 1)), M); k = int(np.argmin(dd))
+        if dp > 12 and dd[k] <= dp - 6 and ks[k] not in e['p']: e['c'] = ks[k]; CLOSER[b] += 1
+print('Published match kept, closer thread by colour offered beside it:', dict(CLOSER))
 print('Closest by colour, our own suggestions:', dict(OURS))
 print('Colour sense check removed', len(REPORT), 'entries:')
 for r in REPORT: print('  ', *r)
