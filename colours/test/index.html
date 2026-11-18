@@ -70,7 +70,7 @@ td.n{color:var(--muted);font-size:12.5px}
  <section class="card" id="chooser">
   <div class="lab">I have</div><div class="seg" id="haveSeg"></div>
   <div class="lab" style="margin-top:14px">I want</div><div class="seg" id="wantSeg"></div>
-  <div class="lab" style="margin-top:14px"><label for="q">Colour number or name</label></div>
+  <div class="lab" style="margin-top:14px"><label for="q" id="qLab">Colour number or name</label></div>
   <input class="box" id="q" inputmode="search" autocomplete="off" placeholder="for example 321 or red">
   <div class="msg" id="msg" role="status"></div>
   <button class="btn" id="go">Show the match</button>
@@ -88,7 +88,7 @@ td.n{color:var(--muted);font-size:12.5px}
  <section class="card" id="tableCard" hidden>
   <div class="lab">The whole table</div>
   <div class="seg" id="famSeg"></div>
-  <div class="seg" id="sortSeg"><button data-s="number">Sort: number</button><button data-s="shade">Sort: light to dark</button></div>
+  <div class="seg" id="sortSeg"><button data-s="number">Sort: number</button><button data-s="shade">Sort: light to dark</button><button data-s="dark">Sort: dark to light</button></div>
   <div class="count" id="count"></div>
   <p class="note" id="tnote" style="margin-top:4px"></p>
   <table><thead><tr><th>Colours</th><th id="thA"></th><th>Name</th><th id="thB"></th></tr></thead><tbody id="tb"></tbody></table>
@@ -96,9 +96,10 @@ td.n{color:var(--muted);font-size:12.5px}
 
  <section class="card"><div class="lab">Good to know</div>
   <p class="note">A match is the closest colour in the other brand. It is a guide, not an exact copy, because every maker dyes its own shades.</p>
-  <p class="note" style="margin-top:8px"><b>Where the colours come from.</b> DMC: measured by us from real thread on our own DMC colour card. Madeira: read from the printed colour boxes of the Madeira Mouliné colour card, 2024. Anchor: read from the coloured charts of Country Threads and Goblen ART, which agree closely. Cosmo: read from the pictures on the Wyldwood Creative comparison page, for about three in four Cosmo threads. Sullivans: we have no colours yet, so each pair is shown in its DMC colour. Colours read from a printed card or a picture are less exact than measured thread, and screens differ, so check against real thread where you can.</p>
-  <p class="note" style="margin-top:8px"><b>Where the matches come from.</b> Sullivans: the Sullivans USA conversion chart. Madeira: the Madeira Mouliné colour card, 2024. Anchor: cross-checked between the charts of Country Threads, Lazy May Sewing Club and Cyberstitchers. Where they differ, the other numbers are listed as “Also suggested”. Cosmo: the Snuggly Monkey chart, which the Wyldwood Creative chart largely confirms. Sullivans is confirmed by the Cyberstitchers chart. Published charts contain slips, so we check every match against the colours above and leave out any that are clearly the wrong colour. Where that leaves a colour with no published match, we suggest the closest thread by colour and say so. Where a published match looks clearly off by colour, we keep it and name the thread that looks closer.</p>
-  <p class="note" style="margin-top:8px">This is an independent guide. The Jolly Makery is not connected to any thread maker, and the brand names belong to their owners. Spotted a mistake? Please tell us on the <a href="/feedback/">feedback page</a> and we will put it right.</p>
+  <p class="note" style="margin-top:8px"><b>Where the colours come from.</b> DMC colours were measured by us from real thread on our own DMC colour card. Madeira colours are read from Madeira’s own printed colour card. Anchor and Cosmo colours are read from published colour charts and pictures, so they are less exact. Sullivans has no colours yet, so each pair is shown in its DMC colour. Screens differ, so check against real thread where you can.</p>
+  <p class="note" style="margin-top:8px"><b>Where the matches come from.</b> Madeira and Sullivans: each maker’s own conversion chart. Anchor and Cosmo: several published conversion charts, cross-checked against each other. Where charts differ, the other numbers are listed as “Also suggested”. Published charts contain slips, so we check every match against the colours above and leave out any that are clearly the wrong colour. Where that leaves a colour with no published match, we suggest the closest thread by colour and say so. Where a published match looks clearly off by colour, we keep it and name the thread that looks closer.</p>
+  <p class="note" style="margin-top:8px">This is an independent guide. The Jolly Makery is not connected to any thread maker, and the brand names belong to their owners.</p>
+  <p style="margin-top:12px;font-size:15px;line-height:1.45;font-weight:600">Spotted a mistake? Please tell us on the <a href="/feedback/">feedback page</a> and we will put it right.</p>
  </section>
 </main>
 <div id="full"><div id="fA"><span class="chip" id="fcA"></span></div><div id="fB"><span class="chip" id="fcB"></span></div><button id="fx" aria-label="Close">✕</button><div id="ftip"><span>Turn your screen brightness up</span></div></div>
@@ -140,7 +141,8 @@ function match(item){ const h=state.have, w=state.want; if(!w) return null; cons
 // Colours for a pair. A thread with a colour of its own is drawn in it. A thread without one borrows its partner's colour.
 function pairCol(a,b){ if(!b) return [a.hex,a.hex]; if(a.own&&b.own) return [a.hex,b.hex]; if(a.own) return [a.hex,a.hex]; if(b.own) return [b.hex,b.hex]; return [a.hex,a.hex]; }
 function seg(el,list,cur,on){ el.textContent=""; list.forEach(([id,label,dis])=>{ const b=document.createElement("button"); b.textContent=label; b.setAttribute("aria-pressed",String(id===cur)); if(dis) b.disabled=true; b.onclick=()=>on(id); el.appendChild(b); }); }
-function drawChooser(){ seg($("haveSeg"),BRANDS.map(b=>[b.id,b.label]),state.have,id=>{ state.have=id; if(state.want===id) state.want=(BRANDS.find(b=>b.id!==id)||{}).id||null; state.sel=null; redraw(); });
+const EXAMPLE={dmc:"for example DMC 321, or red",anchor:"for example Anchor 403",madeira:"for example Madeira 0510",cosmo:"for example Cosmo 600",sullivans:"for example Sullivans 45053"};
+function drawChooser(){ $("q").placeholder=EXAMPLE[state.have]||""; $("qLab").textContent=state.have==="dmc"?"Colour number or name":"Colour number"; seg($("haveSeg"),BRANDS.map(b=>[b.id,b.label]),state.have,id=>{ state.have=id; if(state.want===id) state.want=(BRANDS.find(b=>b.id!==id)||{}).id||null; state.sel=null; redraw(); });
   seg($("wantSeg"),BRANDS.length>1?BRANDS.map(b=>[b.id,b.label,b.id===state.have]):[["none","Other brands are not added yet",true]],state.want,id=>{ state.want=id; redraw(); }); }
 function chipText(el,brand,item,extra){ el.textContent=""; el.append(brand); const b=document.createElement("b"); b.textContent=item.code; el.append(b); el.append(item.name||extra||""); }
 function drawResult(){ const it=state.sel, sec=$("result"); if(!it){ sec.hidden=true; return; } sec.hidden=false; const hb=B[state.have], m=match(it), wb=state.want?B[state.want]:null;
@@ -160,7 +162,7 @@ function drawResult(){ const it=state.sel, sec=$("result"); if(!it){ sec.hidden=
 function drawTable(){ const hb=B[state.have], wb=state.want?B[state.want]:null; $("thA").textContent=hb.label; $("thB").textContent=wb?wb.label:"";
   seg($("famSeg"),FAMS.map(f=>[f,f]),state.fam,f=>{ state.fam=f; drawTable(); });
   [...$("sortSeg").children].forEach(b=>{ b.setAttribute("aria-pressed",String(b.dataset.s===state.sort)); b.onclick=()=>{ state.sort=b.dataset.s; drawTable(); }; });
-  let rows=hb.items.filter(o=>state.fam==="All"||o.fam===state.fam); rows=rows.slice().sort(state.sort==="number"?natural:(a,b)=>b.lab[0]-a.lab[0]);
+  let rows=hb.items.filter(o=>state.fam==="All"||o.fam===state.fam); rows=rows.slice().sort(state.sort==="number"?natural:state.sort==="dark"?(a,b)=>a.lab[0]-b.lab[0]:(a,b)=>b.lab[0]-a.lab[0]);
   $("count").textContent=rows.length+(rows.length===1?" colour":" colours"); $("tnote").textContent=wb?"Each row shows the "+hb.label+" number and its "+wb.label+" match. Two colours in a box mean both threads have a colour of their own. “By colour” marks our own suggestion where no chart gives a match. Tap a row to see it large.":""; const tb=$("tb"); tb.textContent=""; const frag=document.createDocumentFragment();
   rows.forEach(o=>{ const tr=document.createElement("tr"); tr.className="r"; const m=match(o);
     const td=(html,cls)=>{ const c=document.createElement("td"); if(cls) c.className=cls; tr.appendChild(c); return c; };
@@ -171,7 +173,7 @@ function drawTable(){ const hb=B[state.have], wb=state.want?B[state.want]:null; 
   tb.appendChild(frag); }
 function redraw(){ drawChooser(); drawResult(); if(!$("tableCard").hidden) drawTable(); }
 function pick(o){ state.sel=o; $("q").value=o.code; $("msg").textContent=""; drawResult(); $("result").scrollIntoView({behavior:"smooth",block:"start"}); }
-function find(){ const q=$("q").value.trim().toLowerCase(), items=B[state.have].items; if(!q){ $("msg").textContent="Type a colour number or a name first."; return; }
+function find(){ const q=$("q").value.trim().toLowerCase().replace(/^(dmc|anchor|madeira|cosmo|sullivans)\s+/,""), items=B[state.have].items; if(!q){ $("msg").textContent="Type a colour number or a name first."; return; }
   const hit=items.find(o=>o.key===q)||items.find(o=>o.key.replace(/^0+/,"")===q.replace(/^0+/,""))||items.find(o=>o.name.toLowerCase()===q)||items.filter(o=>o.name.toLowerCase().includes(q)).sort((a,b)=>a.name.length-b.name.length)[0]||(ws=>items.filter(o=>ws.every(w=>o.name.toLowerCase().includes(w))).sort((a,b)=>a.name.length-b.name.length)[0])(q.split(/\s+/));
   if(!hit){ $("msg").textContent="No "+B[state.have].label+" colour found for “"+$("q").value.trim()+"”. Try the table."; return; } pick(hit); }
 $("go").onclick=find; $("q").addEventListener("keydown",e=>{ if(e.key==="Enter") find(); });
