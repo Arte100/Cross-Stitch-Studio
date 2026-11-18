@@ -140,6 +140,16 @@ for b, own in OWN.items():
         if not e['p'] and e.get('a'): e['p'] = e['a'][:1]; e['a'] = e['a'][1:]
         if not e.get('a'): e.pop('a', None)
         if not e['p']: del d[a]
+# ---- Our own suggestion where no published match survives: the closest thread of that brand by colour (Arte, 18 November 2026).
+# Only for brands with colours of their own, and only when the closest thread is close enough to be worth offering.
+OURS = collections.Counter()
+for b, own in OWN.items():
+    ol = {c: _l(h) for c, h in own.items()}; ks = list(ol); M = np.array([ol[c] for c in ks])
+    for a in DMC:
+        if a in CONV[b]: continue
+        dd = deltaE_ciede2000(np.tile(_lab[a], (len(ks), 1)), M); k = int(np.argmin(dd))
+        if dd[k] <= 10: CONV[b][a] = {'p': [ks[k]], 's': 'ours'}; OURS[b] += 1
+print('Closest by colour, our own suggestions:', dict(OURS))
 print('Colour sense check removed', len(REPORT), 'entries:')
 for r in REPORT: print('  ', *r)
 LABEL = {'sullivans': 'Sullivans', 'madeira': 'Madeira', 'anchor': 'Anchor', 'cosmo': 'Cosmo', 'jpcoats': 'J&P Coats'}
@@ -148,13 +158,16 @@ hexof = {r[0]: r[2].upper() for r in dmc}
 def nat(c):
     m = re.match(r'(\d+)(.*)', c); return (int(m.group(1)), m.group(2)) if m else (-1, c)
 brands = [{'id': 'dmc', 'label': 'DMC', 'rows': [[r[0], r[1].replace('Gray', 'Grey'), r[2].upper(), ''] for r in dmc]}]
-OUT = {}; RANK = {'maker': 0, 'agreed': 1, 'one': 2, 'split': 3, 'doubt': 4}
+OUT = {}; RANK = {'maker': 0, 'agreed': 1, 'one': 2, 'split': 3, 'doubt': 4, 'ours': 5}
 for b in ORDER:
     d = {a: v for a, v in CONV[b].items() if a in DSET}
     r = {}
     for a in DMC:
         e = d.get(a)
         if not e: continue
+        if e['s'] == 'ours':      # our own suggestion: in the other direction it is only ever an extra
+            for c in e['p']: r.setdefault(c, {'p': [], 'a': [], 's': 'split', 'first': []}); r[c]['a'].append(a)
+            continue
         for n, c in enumerate(e['p']): r.setdefault(c, {'p': [], 'a': [], 's': e['s'], 'first': []}); r[c]['p'].append(a); r[c]['s'] = max(r[c]['s'], e['s'], key=lambda z: RANK[z]); r[c]['first'].append(n == 0)
         for c in e.get('a', []): r.setdefault(c, {'p': [], 'a': [], 's': e['s'], 'first': []}); r[c]['a'].append(a)
     rows = []
