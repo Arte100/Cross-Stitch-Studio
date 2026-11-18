@@ -34,13 +34,14 @@ for k in range(0, len(L), 2):
     ds = L[k][3:].replace('B 5200', 'B5200').split(); ms = [x for x in L[k + 1][3:].split() if re.fullmatch(r'\d{4}', x)]
     assert len(ds) == len(ms)
     for a, c in zip(ds, ms): d[norm(a)] = {'p': [c], 's': 'maker'}
-rev = collections.defaultdict(list); L = [l for l in open(S + 'madeira_p2.txt').read().split('\n') if l]
-for k in range(0, len(L), 3):
-    for c, a in zip(L[k].split()[1:], L[k + 2].split()[1:]): rev[norm(a)].append(c)
+rev = collections.defaultdict(list)
+for c, v in json.load(open(HERE + '/swatches/madeira_colours.json')).items():
+    if len(v['rest']) > 1: rev[norm(v['rest'][1])].append(c)
 for a, cs in rev.items():
     if a in d:
         alt = [c for c in uniq(cs) if c not in d[a]['p']]
         if alt: d[a]['a'] = alt
+    elif a in DSET: d[a] = {'p': uniq(cs), 's': 'maker'}
 for a in ('3847', '3848', '3765'): d[a]['s'] = 'doubt'   # looks like a slip in the maker's chart (3847/3848 repeat 3347/3348; 3765 is given a white)
 CONV['madeira'] = d
 # ---- Anchor: three independent charts, cross-checked
@@ -120,6 +121,25 @@ for b, a, c in (('jpcoats', '995', '3843'), ('jpcoats', '703', '3238'), ('madeir
     e = CONV[b][a]; e['p'] = [x for x in e['p'] if x != c]; REPORT.append((b, a, c, 'match', e['p'][0] if e['p'] else 'No match'))
     if not e['p']: del CONV[b][a]
 for b in CONV: sense(b, CONV[b])
+# ---- Second check, for brands that have colours of their own (see own_colours.py): a match is removed when the brand
+# thread's own colour is clearly not the DMC thread's colour, and a closer published number is moved to the front.
+OWN = {}
+if os.path.exists(HERE + '/swatches/brand_colours.json'): OWN = json.load(open(HERE + '/swatches/brand_colours.json'))
+def _l(h): h = h.lstrip('#'); return rgb2lab(np.array([[[int(h[i:i + 2], 16) / 255 for i in (0, 2, 4)]]]))[0, 0]
+for b, own in OWN.items():
+    ol = {c: _l(h) for c, h in own.items()}; d = CONV[b]
+    for a in list(d):
+        e = d[a]; dist = lambda c: float(deltaE_ciede2000(ol[c], _lab[a])) if c in ol else 10.0
+        for c in [c for c in e['p'] + e.get('a', []) if dist(c) > 20]:
+            was = 'match' if c in e['p'] else 'also'; e['p'] = [x for x in e['p'] if x != c]; e['a'] = [x for x in e.get('a', []) if x != c]
+            REPORT.append((b, a, c, was + ' (own colour)', ''))
+        allc = e['p'] + e.get('a', [])
+        if allc and dist(allc[0]) > 12:
+            best = min(allc, key=dist)
+            if dist(best) < dist(allc[0]) - 6: allc.remove(best); allc.insert(0, best); n = max(1, len(e['p'])); e['p'] = allc[:1] if best not in e['p'] else [best] + [x for x in e['p'] if x != best]; e['a'] = [x for x in allc if x not in e['p']]
+        if not e['p'] and e.get('a'): e['p'] = e['a'][:1]; e['a'] = e['a'][1:]
+        if not e.get('a'): e.pop('a', None)
+        if not e['p']: del d[a]
 print('Colour sense check removed', len(REPORT), 'entries:')
 for r in REPORT: print('  ', *r)
 LABEL = {'sullivans': 'Sullivans', 'madeira': 'Madeira', 'anchor': 'Anchor', 'cosmo': 'Cosmo', 'jpcoats': 'J&P Coats'}
@@ -141,7 +161,7 @@ for b in ORDER:
     for c in sorted(r, key=nat):
         e = r[c]; cand = [a for a, f in zip(e['p'], e['first']) if f] or e['p'] or e['a']
         best = [a for a in cand if d[a]['s'] in ('maker', 'agreed') and len(d[a]['p']) == 1] or cand
-        rows.append([c, '', hexof[best[0]], best[0]]); del e['first']
+        oh = OWN.get(b, {}).get(c); rows.append([c, '', (oh or hexof[best[0]]).lstrip('#').upper(), best[0], 1 if oh else 0]); del e['first']
         if not e['a']: del e['a']
         if not e['p']: e['s'] = 'split'
     brands.append({'id': b, 'label': LABEL[b], 'rows': rows}); OUT[b] = {'d': d, 'r': r}
