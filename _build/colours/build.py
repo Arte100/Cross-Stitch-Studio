@@ -153,7 +153,9 @@ print('Closest by colour, our own suggestions:', dict(OURS))
 print('Colour sense check removed', len(REPORT), 'entries:')
 for r in REPORT: print('  ', *r)
 LABEL = {'sullivans': 'Sullivans', 'madeira': 'Madeira', 'anchor': 'Anchor', 'cosmo': 'Cosmo', 'jpcoats': 'J&P Coats'}
-ORDER = ['anchor', 'madeira', 'cosmo', 'sullivans', 'jpcoats']
+# J&P Coats is left out (Arte, 18 November 2026: a brand we cannot validate is taken out). Its only chart is the Cyberstitchers one;
+# the Goblen ART chart agrees with it on just 120 of 730 pairs, and there are no J&P Coats colours. The data stays in src/ for later.
+ORDER = ['anchor', 'madeira', 'cosmo', 'sullivans']
 hexof = {r[0]: r[2].upper() for r in dmc}
 def nat(c):
     m = re.match(r'(\d+)(.*)', c); return (int(m.group(1)), m.group(2)) if m else (-1, c)
