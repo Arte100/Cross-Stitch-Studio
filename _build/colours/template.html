@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en-GB"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<!--ROBOTS-->
+<link rel="icon" href="/stitch/favicon-32.png">
+<title>Thread colour converter | The Jolly Makery</title>
+<style>
+:root{--bg:#F7DDE2;--surface:#fff;--ink:#3A0F18;--muted:#7A4450;--line:#EFC4CD;--accent:#8F1A2E;--accent-ink:#fff}
+:root[data-skin="lavender"]{--bg:#ECE9F8;--ink:#221C3F;--muted:#5B5580;--line:#D3CDEE;--accent:#4B3FA3}
+:root[data-skin="mint"]{--bg:#E3F3EC;--ink:#0F2F26;--muted:#3F6558;--line:#BFE0D2;--accent:#17685A}
+:root[data-skin="sky"]{--bg:#E3EEF8;--ink:#12283D;--muted:#45617D;--line:#C2D7EB;--accent:#1F5C94}
+:root[data-skin="classic"]{--bg:#eef0f4;--ink:#1b2233;--muted:#5d6678;--line:#d5d9e2;--accent:#b3203a}
+:root[data-skin="dark"]{--bg:#141821;--surface:#1e2430;--ink:#e9ecf3;--muted:#9aa3b5;--line:#343c4c;--accent:#ff6b81;--accent-ink:#1b0a0e}
+*{box-sizing:border-box;margin:0;padding:0}
+html{overflow-y:scroll}
+body{background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;font-size:15px;line-height:1.4}
+button,input{font:inherit;color:inherit}
+header.site{background:var(--surface);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;padding:8px 14px;position:sticky;top:0;z-index:5}
+header.site img{height:38px}header.site b{font-size:16px}
+.private{background:#3A0F18;color:#fff;font-size:12px;padding:6px 14px}
+main{max-width:640px;margin:0 auto;padding:16px 14px 40px}
+h1{font-size:25px;line-height:1.15}
+.lead{font-size:13.5px;color:var(--muted);margin-top:6px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px;margin-top:14px}
+.lab{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.seg{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.seg button{border:1.5px solid var(--line);border-radius:999px;padding:8px 14px;font-size:13.5px;background:var(--surface);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:700}
+.seg button:disabled{opacity:.4;cursor:default}
+input.box{width:100%;border:1.5px solid var(--accent);border-radius:14px;padding:12px 14px;font-size:16px;margin-top:8px;background:var(--surface)}
+.btn{display:block;width:100%;background:var(--accent);color:var(--accent-ink);border:2px solid var(--accent);border-radius:999px;text-align:center;padding:12px;font-weight:700;font-size:15px;margin-top:12px;cursor:pointer}
+.btn.o{background:var(--surface);color:var(--accent)}
+.msg{font-size:13px;color:var(--accent);margin-top:8px;min-height:18px;font-weight:600}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:4px}
+.row h2{font-size:21px;line-height:1.2}
+.badge{display:inline-block;background:#E3F3EC;color:#17685A;border-radius:999px;padding:4px 11px;font-size:12px;font-weight:700;white-space:nowrap}
+.badge.w{background:#FFF3D6;color:#8a5a00}
+.pair{display:grid;grid-template-columns:1fr 1fr;margin-top:10px;border-radius:16px;overflow:hidden;border:2px solid var(--ink)}
+.pair div{height:min(58vw,260px);display:flex;align-items:flex-end;padding:10px}
+.chip{background:#fff;color:#3A0F18;border-radius:10px;padding:6px 9px;font-size:12px;line-height:1.25}
+.chip b{display:block;font-size:18px}
+.nb{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:10px}
+.nb button{border-radius:12px;height:92px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:6px;border:1px solid rgba(0,0,0,.18);cursor:pointer}
+.nb span{background:#fff;color:#3A0F18;border-radius:8px;font-size:12px;font-weight:700;padding:1px 7px}
+.note{font-size:11.5px;color:var(--muted);margin-top:10px;line-height:1.45}
+table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13.5px}
+th{font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);text-align:left;padding:6px 4px;border-bottom:1.5px solid var(--ink)}
+td{padding:7px 4px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr.r{cursor:pointer}
+td .sw2{display:flex;width:76px;height:38px;border-radius:8px;overflow:hidden;border:1px solid rgba(0,0,0,.25)}
+td .sw2 i{flex:1;display:block}
+td b{font-weight:700}
+td.n{color:var(--muted);font-size:12.5px}
+.count{font-size:12px;color:var(--muted);margin-top:8px}
+#full{position:fixed;inset:0;z-index:20;display:none;grid-template-rows:1fr 1fr}
+#full.on{display:grid}
+#full div{display:flex;align-items:center;justify-content:center}
+#full .chip{text-align:center}
+#fx{position:absolute;right:12px;top:12px;background:#fff;color:#3A0F18;border:0;border-radius:999px;width:42px;height:42px;font-weight:700;font-size:18px;cursor:pointer}
+#ftip{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);text-align:center;pointer-events:none}
+#ftip span{background:#fff;color:#3A0F18;border-radius:999px;padding:6px 14px;font-size:12px;font-weight:700}
+[hidden]{display:none!important}
+</style></head><body>
+<header class="site"><a href="/" style="display:flex;align-items:center;gap:10px;color:inherit;text-decoration:none"><img src="LOGO_SRC" alt=""><b>The Jolly Makery</b></a></header>
+<!--PRIVATE-->
+<main>
+ <h1>Thread colour converter</h1>
+ <p class="lead">Convert a thread number between DMC, Anchor, Madeira, Cosmo, Sullivans and J&amp;P Coats, and see the colour big enough to hold your thread against.</p>
+
+ <section class="card" id="chooser">
+  <div class="lab">I have</div><div class="seg" id="haveSeg"></div>
+  <div class="lab" style="margin-top:14px">I want</div><div class="seg" id="wantSeg"></div>
+  <div class="lab" style="margin-top:14px"><label for="q">Colour number or name</label></div>
+  <input class="box" id="q" inputmode="search" autocomplete="off" placeholder="for example 321 or red">
+  <div class="msg" id="msg" role="status"></div>
+  <button class="btn" id="go">Show the match</button>
+  <button class="btn o" id="browse">Or browse the whole table</button>
+ </section>
+
+ <section id="result" hidden>
+  <div class="row" style="margin-top:18px"><h2 id="rTitle"></h2><span class="badge" id="rBadge"></span></div>
+  <div class="pair"><div id="pA"><span class="chip" id="cA"></span></div><div id="pB"><span class="chip" id="cB"></span></div></div>
+  <p class="note" id="more" style="margin:10px 0 0"></p>
+  <button class="btn" id="fullBtn">Full screen, to hold thread against</button>
+  <div class="card"><div class="lab" id="nbLab"></div><div class="nb" id="nb"></div><p class="note" style="margin-top:8px">Tap a neighbour to convert that one instead.</p></div>
+ </section>
+
+ <section class="card" id="tableCard" hidden>
+  <div class="lab">The whole table</div>
+  <div class="seg" id="famSeg"></div>
+  <div class="seg" id="sortSeg"><button data-s="number">Sort: number</button><button data-s="shade">Sort: light to dark</button></div>
+  <div class="count" id="count"></div>
+  <p class="note" id="tnote" style="margin-top:4px"></p>
+  <table><thead><tr><th>Colours</th><th id="thA"></th><th>Name</th><th id="thB"></th><th>How sure</th></tr></thead><tbody id="tb"></tbody></table>
+ </section>
+
+ <section class="card"><div class="lab">Good to know</div>
+  <p class="note">A match is the closest colour in the other brand. It is a guide, not an exact copy, because every maker dyes its own shades.</p>
+  <p class="note" style="margin-top:8px">The DMC colours on this page were measured by us from real thread on our own DMC colour card. Threads of other brands are shown in the colour of their closest DMC thread, because DMC is the only brand we have measured so far. Screens also differ, so check against real thread where you can.</p>
+  <p class="note" style="margin-top:8px"><b>What the labels mean.</b> Maker's own match: taken from that thread maker's own chart. Charts agree: at least two independent charts give this number. Charts differ: the charts do not agree, so the other suggestions are listed too. One chart only: we found a single chart for it. Worked out through DMC: converted in two steps, by way of the DMC number.</p>
+  <p class="note" style="margin-top:8px"><b>Where the matches come from.</b> Sullivans: the Sullivans USA conversion chart. Madeira: the Madeira Mouliné colour card, 2024. Anchor: cross-checked between the charts of Country Threads, Lazy May Sewing Club and Cyberstitchers. Cosmo: the Snuggly Monkey chart. J&amp;P Coats: the Cyberstitchers chart, which uses the older J&amp;P Coats numbers.</p>
+  <p class="note" style="margin-top:8px">This is an independent guide. The Jolly Makery is not connected to any thread maker, and the brand names belong to their owners. Spotted a mistake? Please tell us on the <a href="/feedback/">feedback page</a> and we will put it right.</p>
+ </section>
+</main>
+<div id="full"><div id="fA"><span class="chip" id="fcA"></span></div><div id="fB"><span class="chip" id="fcB"></span></div><button id="fx" aria-label="Close">✕</button><div id="ftip"><span>Turn your screen brightness up</span></div></div>
+<script>
+"use strict";
+/*DATA*/
+try{ const s=localStorage.getItem("xs.skin"); if(s&&s!=="pink") document.documentElement.dataset.skin=JSON.parse(s); }catch(e){ try{ const s=localStorage.getItem("xs.skin"); if(s) document.documentElement.dataset.skin=s.replace(/"/g,""); }catch(e2){} }
+const $=id=>document.getElementById(id);
+/* colour maths: screen colour to CIELAB (a colour space built around how the eye sees), then the CIEDE2000 difference */
+function lab(hex){ const c=[0,2,4].map(i=>parseInt(hex.substr(i,2),16)/255).map(v=>v<=0.04045?v/12.92:Math.pow((v+0.055)/1.055,2.4));
+  const x=(0.4124*c[0]+0.3576*c[1]+0.1805*c[2])/0.95047, y=0.2126*c[0]+0.7152*c[1]+0.0722*c[2], z=(0.0193*c[0]+0.1192*c[1]+0.9505*c[2])/1.08883, f=t=>t>0.008856?Math.cbrt(t):7.787*t+16/116;
+  return [116*f(y)-16,500*(f(x)-f(y)),200*(f(y)-f(z))]; }
+function de00(p,q){ const [L1,a1,b1]=p,[L2,a2,b2]=q, rad=Math.PI/180, C1=Math.hypot(a1,b1), C2=Math.hypot(a2,b2), Cb=(C1+C2)/2, G=0.5*(1-Math.sqrt(Math.pow(Cb,7)/(Math.pow(Cb,7)+6103515625)));
+  const ap1=(1+G)*a1, ap2=(1+G)*a2, Cp1=Math.hypot(ap1,b1), Cp2=Math.hypot(ap2,b2), h=(b,a)=>{ let v=Math.atan2(b,a)/rad; return v<0?v+360:v; }, h1=Cp1?h(b1,ap1):0, h2=Cp2?h(b2,ap2):0;
+  const dL=L2-L1, dC=Cp2-Cp1; let dh=h2-h1; if(Cp1*Cp2===0) dh=0; else if(dh>180) dh-=360; else if(dh<-180) dh+=360; const dH=2*Math.sqrt(Cp1*Cp2)*Math.sin(dh/2*rad);
+  const Lm=(L1+L2)/2, Cm=(Cp1+Cp2)/2; let hm=h1+h2; if(Cp1*Cp2!==0){ if(Math.abs(h1-h2)>180) hm+= hm<360?360:-360; hm/=2; }
+  const T=1-0.17*Math.cos((hm-30)*rad)+0.24*Math.cos(2*hm*rad)+0.32*Math.cos((3*hm+6)*rad)-0.20*Math.cos((4*hm-63)*rad);
+  const Sl=1+0.015*Math.pow(Lm-50,2)/Math.sqrt(20+Math.pow(Lm-50,2)), Sc=1+0.045*Cm, Sh=1+0.015*Cm*T, Rt=-2*Math.sqrt(Math.pow(Cm,7)/(Math.pow(Cm,7)+6103515625))*Math.sin(60*Math.exp(-Math.pow((hm-275)/25,2))*rad);
+  return Math.sqrt(Math.pow(dL/Sl,2)+Math.pow(dC/Sc,2)+Math.pow(dH/Sh,2)+Rt*(dC/Sc)*(dH/Sh)); }
+function family(L){ const C=Math.hypot(L[1],L[2]); let h=Math.atan2(L[2],L[1])*180/Math.PI; if(h<0) h+=360;
+  if(C<9) return "Greys and whites";
+  if(h>=20&&h<95&&((L[0]<62&&C<52)||(L[0]<45))) return "Browns";
+  if(h<20||h>=345) return L[0]>62?"Pinks":"Reds";
+  if(h<40) return L[0]>68&&C<40?"Pinks":"Reds";
+  if(h<72) return "Oranges"; if(h<108) return "Yellows"; if(h<200) return "Greens"; if(h<290) return "Blues"; return L[0]>62&&h>=325?"Pinks":"Purples"; }
+const FAMS=["All","Reds","Pinks","Oranges","Yellows","Greens","Blues","Purples","Browns","Greys and whites"];
+const B={}; BRANDS.forEach(b=>{ b.by={}; b.items=b.rows.map((r,i)=>{ const L=lab(r[2]); return b.by[r[0]]={code:r[0],name:r[1],hex:"#"+r[2],rep:r[3],lab:L,fam:family(L),i,key:r[0].toLowerCase()}; }); B[b.id]=b; });
+const state={have:"dmc",want:BRANDS.length>1?BRANDS[1].id:null,sel:null,fam:"All",sort:"number"}, cache={};
+const natural=(a,b)=>{ const na=parseFloat(a.code), nb=parseFloat(b.code), ia=isNaN(na), ib=isNaN(nb); if(ia!==ib) return ia?-1:1; if(ia) return a.code.localeCompare(b.code); return na-nb||a.code.localeCompare(b.code); };
+function nearest(item,brandId,n,skipSelf){ return B[brandId].items.filter(o=>!(skipSelf&&o===item)).map(o=>({o,d:de00(item.lab,o.lab)})).sort((a,b)=>a.d-b.d).slice(0,n); }
+function match(item){ const h=state.have, w=state.want; if(!w) return null; const k=h+">"+w+">"+item.code; if(cache[k]) return cache[k];
+  const its=(bid,codes)=>(codes||[]).map(c=>B[bid].by[c]).filter(Boolean); let res;
+  if(h==="dmc"){ const e=CONV[w].d[item.code]; res=e?{items:its(w,e.p),alts:its(w,e.a),s:e.s}:{items:[],alts:[],s:"none"}; }
+  else if(w==="dmc"){ const e=CONV[h].r[item.code]; res=e?{items:its("dmc",e.p),alts:its("dmc",e.a),s:e.s}:{items:[],alts:[],s:"none"}; }
+  else { const e=CONV[h].r[item.code], ds=e?(e.p.length?e.p:(e.a||[])):[], out=[]; ds.forEach(d=>{ const f=CONV[w].d[d]; if(f) f.p.forEach(c=>{ if(!out.includes(c)) out.push(c); }); }); res={items:its(w,out),alts:[],s:"via"}; }
+  if(!res.items.length&&res.alts.length){ res.items=res.alts; res.alts=[]; res.s="split"; }
+  if(!res.items.length) res.s="none"; return cache[k]=res; }
+const ST={maker:["Maker\u2019s own match","Maker",""],agreed:["Charts agree","Agree",""],split:["Charts differ","Differ","w"],one:["One chart only","One chart","w"],via:["Worked out through DMC","Through DMC","w"],doubt:["Doubtful, please check","Doubtful","w"],none:["No match published","None","w"]};
+function seg(el,list,cur,on){ el.textContent=""; list.forEach(([id,label,dis])=>{ const b=document.createElement("button"); b.textContent=label; b.setAttribute("aria-pressed",String(id===cur)); if(dis) b.disabled=true; b.onclick=()=>on(id); el.appendChild(b); }); }
+function drawChooser(){ seg($("haveSeg"),BRANDS.map(b=>[b.id,b.label]),state.have,id=>{ state.have=id; if(state.want===id) state.want=(BRANDS.find(b=>b.id!==id)||{}).id||null; state.sel=null; redraw(); });
+  seg($("wantSeg"),BRANDS.length>1?BRANDS.map(b=>[b.id,b.label,b.id===state.have]):[["none","Other brands are not added yet",true]],state.want,id=>{ state.want=id; redraw(); }); }
+function chipText(el,brand,item,extra){ el.textContent=""; el.append(brand); const b=document.createElement("b"); b.textContent=item.code; el.append(b); el.append(item.name||(item.rep?"shown as DMC "+item.rep:"")||extra||""); }
+function drawResult(){ const it=state.sel, sec=$("result"); if(!it){ sec.hidden=true; return; } sec.hidden=false; const hb=B[state.have], m=match(it), wb=state.want?B[state.want]:null;
+  $("rTitle").textContent=hb.label+" "+it.code+(wb?" to "+wb.label:"");
+  $("pA").style.background=$("fA").style.background=it.hex; chipText($("cA"),hb.label,it); chipText($("fcA"),hb.label,it);
+  const pb=$("pB"), fb=$("fB");
+  const st=ST[m?m.s:"none"]; $("rBadge").textContent=st[0]; $("rBadge").className="badge "+st[2]; $("rBadge").hidden=!wb; const more=$("more"); more.textContent="";
+  if(m&&m.items.length){ const o=m.items[0]; pb.style.background=fb.style.background=o.hex; chipText($("cB"),wb.label,o); chipText($("fcB"),wb.label,o);
+    const line=(lab,list)=>{ if(!list.length) return; const d=document.createElement("div"); d.append(lab+" "); list.forEach((x,i)=>{ const a=document.createElement("b"); a.textContent=x.code; d.append(a); if(i<list.length-1) d.append(", "); }); more.appendChild(d); };
+    line("Also given for this colour:",m.items.slice(1)); line("Other charts suggest:",m.alts);
+    if(m.s==="doubt"){ const d=document.createElement("div"); d.textContent="The maker\u2019s chart looks wrong for this colour, so please check it against real thread."; more.appendChild(d); } }
+  else { pb.style.background=fb.style.background="#fff"; $("cB").textContent=wb?"No "+wb.label+" match has been published for this colour":"Choose a brand"; $("fcB").textContent=""; }
+  $("nbLab").textContent="Close neighbours in "+hb.label; const nb=$("nb"); nb.textContent="";
+  nearest(it,state.have,5,true).forEach(({o})=>{ const b=document.createElement("button"); b.style.background=o.hex; b.title=o.name; const s=document.createElement("span"); s.textContent=o.code; b.appendChild(s); b.onclick=()=>pick(o); nb.appendChild(b); }); }
+function drawTable(){ const hb=B[state.have], wb=state.want?B[state.want]:null; $("thA").textContent=hb.label; $("thB").textContent=wb?wb.label:"";
+  seg($("famSeg"),FAMS.map(f=>[f,f]),state.fam,f=>{ state.fam=f; drawTable(); });
+  [...$("sortSeg").children].forEach(b=>{ b.setAttribute("aria-pressed",String(b.dataset.s===state.sort)); b.onclick=()=>{ state.sort=b.dataset.s; drawTable(); }; });
+  let rows=hb.items.filter(o=>state.fam==="All"||o.fam===state.fam); rows=rows.slice().sort(state.sort==="number"?natural:(a,b)=>b.lab[0]-a.lab[0]);
+  $("count").textContent=rows.length+(rows.length===1?" colour":" colours"); $("tnote").textContent=wb?"Each row shows the "+hb.label+" colour on the left and its "+wb.label+" match on the right. \u201cHow sure\u201d says how well the match is backed up. The labels are explained at the bottom of the page.":""; const tb=$("tb"); tb.textContent=""; const frag=document.createDocumentFragment();
+  rows.forEach(o=>{ const tr=document.createElement("tr"); tr.className="r"; const m=match(o);
+    const td=(html,cls)=>{ const c=document.createElement("td"); if(cls) c.className=cls; tr.appendChild(c); return c; };
+    const sw=document.createElement("span"); sw.className="sw2"; const s1=document.createElement("i"); s1.style.background=o.hex; sw.appendChild(s1); if(m&&m.items.length){ const s2=document.createElement("i"); s2.style.background=m.items[0].hex; sw.appendChild(s2); } td().appendChild(sw);
+    const a=document.createElement("b"); a.textContent=o.code; td().appendChild(a); td("", "n").textContent=o.name||(o.rep?"shown as DMC "+o.rep:"");
+    const c4=td(); if(m&&m.items.length){ const w=document.createElement("b"); w.textContent=m.items.map(x=>x.code).join(", "); c4.appendChild(w); }
+    const c5=td(); if(m){ const t=ST[m.s], s=document.createElement("span"); s.className="badge "+t[2]; s.textContent=t[1]; c5.appendChild(s); }
+    tr.onclick=()=>pick(o); frag.appendChild(tr); });
+  tb.appendChild(frag); }
+function redraw(){ drawChooser(); drawResult(); if(!$("tableCard").hidden) drawTable(); }
+function pick(o){ state.sel=o; $("q").value=o.code; $("msg").textContent=""; drawResult(); $("result").scrollIntoView({behavior:"smooth",block:"start"}); }
+function find(){ const q=$("q").value.trim().toLowerCase(), items=B[state.have].items; if(!q){ $("msg").textContent="Type a colour number or a name first."; return; }
+  const hit=items.find(o=>o.key===q)||items.find(o=>o.key.replace(/^0+/,"")===q.replace(/^0+/,""))||items.find(o=>o.name.toLowerCase()===q)||items.filter(o=>o.name.toLowerCase().includes(q)).sort((a,b)=>a.name.length-b.name.length)[0]||(ws=>items.filter(o=>ws.every(w=>o.name.toLowerCase().includes(w))).sort((a,b)=>a.name.length-b.name.length)[0])(q.split(/\s+/));
+  if(!hit){ $("msg").textContent="No "+B[state.have].label+" colour found for “"+$("q").value.trim()+"”. Try the table."; return; } pick(hit); }
+$("go").onclick=find; $("q").addEventListener("keydown",e=>{ if(e.key==="Enter") find(); });
+$("browse").onclick=()=>{ $("tableCard").hidden=false; drawTable(); $("tableCard").scrollIntoView({behavior:"smooth",block:"start"}); };
+$("fullBtn").onclick=()=>$("full").classList.add("on"); $("fx").onclick=()=>$("full").classList.remove("on");
+document.addEventListener("keydown",e=>{ if(e.key==="Escape") $("full").classList.remove("on"); });
+redraw();
+</script></body></html>
