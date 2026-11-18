@@ -78,7 +78,7 @@ td.n{color:var(--muted);font-size:12.5px}
  </section>
 
  <section id="result" hidden>
-  <div class="row" style="margin-top:18px"><h2 id="rTitle"></h2><span class="badge" id="rBadge"></span></div>
+  <div class="row" style="margin-top:18px"><h2 id="rTitle"></h2></div>
   <div class="pair"><div id="pA"><span class="chip" id="cA"></span></div><div id="pB"><span class="chip" id="cB"></span></div></div>
   <p class="note" id="more" style="margin:10px 0 0"></p>
   <button class="btn" id="fullBtn">Full screen, to hold thread against</button>
@@ -91,14 +91,13 @@ td.n{color:var(--muted);font-size:12.5px}
   <div class="seg" id="sortSeg"><button data-s="number">Sort: number</button><button data-s="shade">Sort: light to dark</button></div>
   <div class="count" id="count"></div>
   <p class="note" id="tnote" style="margin-top:4px"></p>
-  <table><thead><tr><th>Colours</th><th id="thA"></th><th>Name</th><th id="thB"></th><th>How sure</th></tr></thead><tbody id="tb"></tbody></table>
+  <table><thead><tr><th>Colours</th><th id="thA"></th><th>Name</th><th id="thB"></th></tr></thead><tbody id="tb"></tbody></table>
  </section>
 
  <section class="card"><div class="lab">Good to know</div>
   <p class="note">A match is the closest colour in the other brand. It is a guide, not an exact copy, because every maker dyes its own shades.</p>
   <p class="note" style="margin-top:8px">The DMC colours on this page were measured by us from real thread on our own DMC colour card. Threads of other brands are shown in the colour of their closest DMC thread, because DMC is the only brand we have measured so far. Screens also differ, so check against real thread where you can.</p>
-  <p class="note" style="margin-top:8px"><b>What the labels mean.</b> Maker's own match: taken from that thread maker's own chart. Charts agree: at least two independent charts give this number. Charts differ: the charts do not agree, so the other suggestions are listed too. One chart only: we found a single chart for it. Worked out through DMC: converted in two steps, by way of the DMC number.</p>
-  <p class="note" style="margin-top:8px"><b>Where the matches come from.</b> Sullivans: the Sullivans USA conversion chart. Madeira: the Madeira Mouliné colour card, 2024. Anchor: cross-checked between the charts of Country Threads, Lazy May Sewing Club and Cyberstitchers. Cosmo: the Snuggly Monkey chart. J&amp;P Coats: the Cyberstitchers chart, which uses the older J&amp;P Coats numbers.</p>
+  <p class="note" style="margin-top:8px"><b>Where the matches come from.</b> Sullivans: the Sullivans USA conversion chart. Madeira: the Madeira Mouliné colour card, 2024. Anchor: cross-checked between the charts of Country Threads, Lazy May Sewing Club and Cyberstitchers. Where they differ, the other numbers are listed as “Also suggested”. Cosmo: the Snuggly Monkey chart. J&amp;P Coats: the Cyberstitchers chart, which uses the older J&amp;P Coats numbers.</p>
   <p class="note" style="margin-top:8px">This is an independent guide. The Jolly Makery is not connected to any thread maker, and the brand names belong to their owners. Spotted a mistake? Please tell us on the <a href="/feedback/">feedback page</a> and we will put it right.</p>
  </section>
 </main>
@@ -138,7 +137,6 @@ function match(item){ const h=state.have, w=state.want; if(!w) return null; cons
   else { const e=CONV[h].r[item.code], ds=e?(e.p.length?e.p:(e.a||[])):[], out=[]; ds.forEach(d=>{ const f=CONV[w].d[d]; if(f) f.p.forEach(c=>{ if(!out.includes(c)) out.push(c); }); }); res={items:its(w,out),alts:[],s:"via"}; }
   if(!res.items.length&&res.alts.length){ res.items=res.alts; res.alts=[]; res.s="split"; }
   if(!res.items.length) res.s="none"; return cache[k]=res; }
-const ST={maker:["Maker\u2019s own match","Maker",""],agreed:["Charts agree","Agree",""],split:["Charts differ","Differ","w"],one:["One chart only","One chart","w"],via:["Worked out through DMC","Through DMC","w"],doubt:["Doubtful, please check","Doubtful","w"],none:["No match published","None","w"]};
 function seg(el,list,cur,on){ el.textContent=""; list.forEach(([id,label,dis])=>{ const b=document.createElement("button"); b.textContent=label; b.setAttribute("aria-pressed",String(id===cur)); if(dis) b.disabled=true; b.onclick=()=>on(id); el.appendChild(b); }); }
 function drawChooser(){ seg($("haveSeg"),BRANDS.map(b=>[b.id,b.label]),state.have,id=>{ state.have=id; if(state.want===id) state.want=(BRANDS.find(b=>b.id!==id)||{}).id||null; state.sel=null; redraw(); });
   seg($("wantSeg"),BRANDS.length>1?BRANDS.map(b=>[b.id,b.label,b.id===state.have]):[["none","Other brands are not added yet",true]],state.want,id=>{ state.want=id; redraw(); }); }
@@ -147,11 +145,11 @@ function drawResult(){ const it=state.sel, sec=$("result"); if(!it){ sec.hidden=
   $("rTitle").textContent=hb.label+" "+it.code+(wb?" to "+wb.label:"");
   $("pA").style.background=$("fA").style.background=it.hex; chipText($("cA"),hb.label,it); chipText($("fcA"),hb.label,it);
   const pb=$("pB"), fb=$("fB");
-  const st=ST[m?m.s:"none"]; $("rBadge").textContent=st[0]; $("rBadge").className="badge "+st[2]; $("rBadge").hidden=!wb; const more=$("more"); more.textContent="";
+  const more=$("more"); more.textContent="";
   if(m&&m.items.length){ const o=m.items[0]; pb.style.background=fb.style.background=o.hex; chipText($("cB"),wb.label,o); chipText($("fcB"),wb.label,o);
     const line=(lab,list)=>{ if(!list.length) return; const d=document.createElement("div"); d.append(lab+" "); list.forEach((x,i)=>{ const a=document.createElement("b"); a.textContent=x.code; d.append(a); if(i<list.length-1) d.append(", "); }); more.appendChild(d); };
-    line("Also given for this colour:",m.items.slice(1)); line("Other charts suggest:",m.alts);
-    if(m.s==="doubt"){ const d=document.createElement("div"); d.textContent="The maker\u2019s chart looks wrong for this colour, so please check it against real thread."; more.appendChild(d); } }
+    line("Also suggested:",m.items.slice(1).concat(m.alts));
+    if(m.s==="doubt"){ const d=document.createElement("div"); d.textContent="This match looks doubtful, so please check it against real thread."; more.appendChild(d); } }
   else { pb.style.background=fb.style.background="#fff"; $("cB").textContent=wb?"No "+wb.label+" match has been published for this colour":"Choose a brand"; $("fcB").textContent=""; }
   $("nbLab").textContent="Close neighbours in "+hb.label; const nb=$("nb"); nb.textContent="";
   nearest(it,state.have,5,true).forEach(({o})=>{ const b=document.createElement("button"); b.style.background=o.hex; b.title=o.name; const s=document.createElement("span"); s.textContent=o.code; b.appendChild(s); b.onclick=()=>pick(o); nb.appendChild(b); }); }
@@ -159,13 +157,12 @@ function drawTable(){ const hb=B[state.have], wb=state.want?B[state.want]:null; 
   seg($("famSeg"),FAMS.map(f=>[f,f]),state.fam,f=>{ state.fam=f; drawTable(); });
   [...$("sortSeg").children].forEach(b=>{ b.setAttribute("aria-pressed",String(b.dataset.s===state.sort)); b.onclick=()=>{ state.sort=b.dataset.s; drawTable(); }; });
   let rows=hb.items.filter(o=>state.fam==="All"||o.fam===state.fam); rows=rows.slice().sort(state.sort==="number"?natural:(a,b)=>b.lab[0]-a.lab[0]);
-  $("count").textContent=rows.length+(rows.length===1?" colour":" colours"); $("tnote").textContent=wb?"Each row shows the "+hb.label+" colour on the left and its "+wb.label+" match on the right. \u201cHow sure\u201d says how well the match is backed up. The labels are explained at the bottom of the page.":""; const tb=$("tb"); tb.textContent=""; const frag=document.createDocumentFragment();
+  $("count").textContent=rows.length+(rows.length===1?" colour":" colours"); $("tnote").textContent=wb?"Each row shows the "+hb.label+" colour on the left and its "+wb.label+" match on the right. Tap a row to see it large.":""; const tb=$("tb"); tb.textContent=""; const frag=document.createDocumentFragment();
   rows.forEach(o=>{ const tr=document.createElement("tr"); tr.className="r"; const m=match(o);
     const td=(html,cls)=>{ const c=document.createElement("td"); if(cls) c.className=cls; tr.appendChild(c); return c; };
     const sw=document.createElement("span"); sw.className="sw2"; const s1=document.createElement("i"); s1.style.background=o.hex; sw.appendChild(s1); if(m&&m.items.length){ const s2=document.createElement("i"); s2.style.background=m.items[0].hex; sw.appendChild(s2); } td().appendChild(sw);
     const a=document.createElement("b"); a.textContent=o.code; td().appendChild(a); td("", "n").textContent=o.name||(o.rep?"shown as DMC "+o.rep:"");
-    const c4=td(); if(m&&m.items.length){ const w=document.createElement("b"); w.textContent=m.items.map(x=>x.code).join(", "); c4.appendChild(w); }
-    const c5=td(); if(m){ const t=ST[m.s], s=document.createElement("span"); s.className="badge "+t[2]; s.textContent=t[1]; c5.appendChild(s); }
+    const c4=td(); if(m&&m.items.length){ const w=document.createElement("b"); w.textContent=m.items[0].code; c4.appendChild(w); } else if(m) c4.textContent="No match";
     tr.onclick=()=>pick(o); frag.appendChild(tr); });
   tb.appendChild(frag); }
 function redraw(){ drawChooser(); drawResult(); if(!$("tableCard").hidden) drawTable(); }
