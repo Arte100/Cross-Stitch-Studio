@@ -2,7 +2,12 @@
 <html lang="en-GB"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <!--ROBOTS-->
+<meta name="description" content="Free thread colour converter. Convert thread numbers between DMC, Anchor, Madeira, Cosmo and Sullivans, and see the colour on screen.">
+<meta name="theme-color" content="#F7DDE2">
 <link rel="icon" href="/stitch/favicon-32.png">
+<link rel="apple-touch-icon" href="/stitch/apple-touch-icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
 <title>Thread colour converter | The Jolly Makery</title>
 <style>
 :root{--bg:#F7DDE2;--surface:#fff;--ink:#3A0F18;--muted:#7A4450;--line:#EFC4CD;--accent:#8F1A2E;--accent-ink:#fff}
@@ -15,8 +20,36 @@
 html{overflow-y:scroll}
 body{background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;font-size:15px;line-height:1.4}
 button,input{font:inherit;color:inherit}
-header.site{background:var(--surface);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;padding:8px 14px;position:sticky;top:0;z-index:5}
-header.site img{height:38px}header.site b{font-size:16px}
+/* Website bar: the same logo, menu and theme button as the rest of thejollymakery.com. */
+.sitebar{background:var(--surface);border-bottom:1px solid var(--line);padding:4px 12px;position:sticky;top:0;z-index:5;font-family:Figtree,system-ui,sans-serif}
+.sb-in{display:flex;align-items:center;gap:6px}
+.sb-brand{flex:none;display:flex;align-items:center;gap:8px;color:var(--ink);text-decoration:none;font-family:"Bricolage Grotesque",Figtree,sans-serif;font-weight:700;font-size:17px}
+.sb-brand img{width:32px;height:auto;display:block}
+.sb-brand b{display:none}
+.sb-links{flex:1;min-width:0;display:flex;gap:2px;overflow-x:auto;white-space:nowrap;scrollbar-width:none}
+.sb-links::-webkit-scrollbar{display:none}
+.sb-links a{flex:none;min-height:40px;padding:0 10px;display:flex;align-items:center;border-radius:20px;color:var(--ink);font-weight:600;font-size:14px;text-decoration:none}
+.sb-links a[aria-current="page"]{background:var(--bg)}
+details.theme{position:relative;flex:none}
+details.theme summary{list-style:none;width:40px;height:40px;display:flex;align-items:center;justify-content:center;gap:8px;border-radius:20px;border:1px solid var(--line);color:var(--accent);font-weight:700;cursor:pointer;user-select:none}
+details.theme summary::-webkit-details-marker{display:none}
+details.theme summary svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+details.theme summary span{display:none}
+.themelist{position:absolute;right:0;top:calc(100% + 8px);width:220px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:8px;display:flex;flex-direction:column;gap:2px;box-shadow:0 10px 30px rgba(0,0,0,.18)}
+.themelist button{min-height:44px;padding:0 10px;display:flex;align-items:center;gap:12px;border:none;border-radius:10px;background:transparent;color:var(--ink);font:inherit;font-weight:600;text-align:left;cursor:pointer}
+.themelist button[aria-pressed="true"]{background:var(--bg);font-weight:700}
+.themelist i{flex:none;width:24px;height:24px;border-radius:12px;border:1px solid var(--line)}
+@media (min-width:761px){
+.sitebar{padding:8px 0}
+.sb-in{max-width:1120px;margin:0 auto;padding:0 24px;gap:12px}
+.sb-brand{font-size:22.4px;gap:12px;line-height:1.5}
+.sb-brand img{width:46px}
+.sb-brand b{display:inline}
+.sb-links{flex:0 1 auto;margin-left:auto;gap:4px;overflow:visible}
+.sb-links a{min-height:44px;padding:0 14px;border-radius:22px;font-size:16px}
+details.theme summary{width:auto;height:44px;padding:0 14px;border-radius:22px;font-size:16px}
+details.theme summary span{display:inline}
+}
 .private{background:#3A0F18;color:#fff;font-size:12px;padding:6px 14px}
 main{max-width:640px;margin:0 auto;padding:16px 14px 40px}
 h1{font-size:25px;line-height:1.15}
@@ -61,7 +94,12 @@ td.n{color:var(--muted);font-size:12.5px}
 #ftip span{background:#fff;color:#3A0F18;border-radius:999px;padding:6px 14px;font-size:12px;font-weight:700}
 [hidden]{display:none!important}
 </style></head><body>
-<header class="site"><a href="/" style="display:flex;align-items:center;gap:10px;color:inherit;text-decoration:none"><img src="LOGO_SRC" alt=""><b>The Jolly Makery</b></a></header>
+<nav class="sitebar" aria-label="The Jolly Makery website"><div class="sb-in">
+  <a class="sb-brand" href="/" aria-label="The Jolly Makery home"><img src="LOGO_SRC" alt="" width="32" height="34"><b>The Jolly Makery</b></a>
+  <div class="sb-links"><a href="/">Home</a><a href="/tools/" aria-current="page">Tools</a><a href="/learn/">Learning hub</a><a href="/shop/">Shop</a><a href="/community/">Community</a><a href="/feedback/">Feedback</a><a href="/about/">About us</a></div>
+  <details class="theme" id="themeBox"><summary aria-label="Colour theme" title="Colour theme"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18c1.2 0 2-.9 2-2 0-1.3-1-1.6-1-2.6 0-.8.7-1.4 1.6-1.4H17a4 4 0 0 0 4-4c0-4.4-4-8-9-8z"></path><circle cx="7.5" cy="11.5" r="1"></circle><circle cx="10.5" cy="7.5" r="1"></circle><circle cx="15.5" cy="7.8" r="1"></circle></svg><span>Theme</span></summary>
+  <div class="themelist" role="group" aria-label="Colour theme"><button type="button" data-skin="pink"><i style="background:linear-gradient(135deg,#F7DDE2 50%,#8F1A2E 50%)"></i>Pink</button><button type="button" data-skin="lavender"><i style="background:linear-gradient(135deg,#ECE9F8 50%,#4B3FA3 50%)"></i>Lavender</button><button type="button" data-skin="mint"><i style="background:linear-gradient(135deg,#E3F3EC 50%,#17685A 50%)"></i>Mint</button><button type="button" data-skin="sky"><i style="background:linear-gradient(135deg,#E3EEF8 50%,#1F5C94 50%)"></i>Sky blue</button><button type="button" data-skin="classic"><i style="background:linear-gradient(135deg,#eef0f4 50%,#b3203a 50%)"></i>Classic grey</button><button type="button" data-skin="dark"><i style="background:linear-gradient(135deg,#141821 50%,#ff6b81 50%)"></i>Dark</button></div></details>
+</div></nav>
 <!--PRIVATE-->
 <main>
  <h1>Thread colour converter</h1>
@@ -107,6 +145,13 @@ td.n{color:var(--muted);font-size:12.5px}
 /*DATA*/
 try{ const s=localStorage.getItem("xs.skin"); if(s&&s!=="pink") document.documentElement.dataset.skin=JSON.parse(s); }catch(e){ try{ const s=localStorage.getItem("xs.skin"); if(s) document.documentElement.dataset.skin=s.replace(/"/g,""); }catch(e2){} }
 const $=id=>document.getElementById(id);
+/* The colour theme is shared with the website and the other tools: all read and save the same setting on this device. */
+(function(){ const BG={pink:"#F7DDE2",lavender:"#ECE9F8",mint:"#E3F3EC",sky:"#E3EEF8",classic:"#eef0f4",dark:"#141821"}, box=$("themeBox"), root=document.documentElement, bs=[...box.querySelectorAll("button[data-skin]")];
+  const show=id=>{ if(!BG[id]) id="pink"; if(id==="pink") delete root.dataset.skin; else root.dataset.skin=id; const m=document.querySelector('meta[name="theme-color"]'); if(m) m.content=BG[id]; bs.forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.skin===id))); };
+  show(root.dataset.skin||"pink");
+  bs.forEach(b=>b.onclick=()=>{ show(b.dataset.skin); try{ localStorage.setItem("xs.skin",b.dataset.skin); }catch(e){} box.open=false; });
+  document.addEventListener("click",e=>{ if(box.open&&!box.contains(e.target)) box.open=false; });
+  document.addEventListener("keydown",e=>{ if(e.key==="Escape") box.open=false; }); })();
 /* colour maths: screen colour to CIELAB (a colour space built around how the eye sees), then the CIEDE2000 difference */
 function lab(hex){ const c=[0,2,4].map(i=>parseInt(hex.substr(i,2),16)/255).map(v=>v<=0.04045?v/12.92:Math.pow((v+0.055)/1.055,2.4));
   const x=(0.4124*c[0]+0.3576*c[1]+0.1805*c[2])/0.95047, y=0.2126*c[0]+0.7152*c[1]+0.0722*c[2], z=(0.0193*c[0]+0.1192*c[1]+0.9505*c[2])/1.08883, f=t=>t>0.008856?Math.cbrt(t):7.787*t+16/116;

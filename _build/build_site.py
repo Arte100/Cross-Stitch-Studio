@@ -257,7 +257,7 @@ HOME = """<section class="band"><div class="wrap hero">
 <section class="band white" id="tools"><div class="wrap stack" style="gap:28px">
 <div class="stack" style="gap:8px">
 <h2>The tools</h2>
-<p class="lead">One tool is ready today. More crafts will follow.</p>
+<p class="lead">Two tools are ready today. More crafts will follow.</p>
 </div>
 <div class="grid">
 <article class="card pink">
@@ -265,6 +265,12 @@ HOME = """<section class="band"><div class="wrap hero">
 <h3>Cross stitch</h3>
 <p class="muted">Draw a pattern, turn a photo into one, or start from 237 example designs. Add lettering and outlines, get a shopping list for thread and fabric, then tick off stitches as you sew.</p>
 <a class="btn" href="{UP}stitch/{IDX}">Open tool</a>
+</article>
+<article class="card">
+<span class="tag">Ready</span>
+<h3>Thread colour converter</h3>
+<p class="muted">Convert a thread number between DMC, Anchor, Madeira, Cosmo and Sullivans, and see the colour big enough to hold your thread against.</p>
+<a class="btn" href="{UP}colours/{IDX}">Open tool</a>
 </article>
 <article class="card soft">
 <span class="tag line">Your idea</span>
@@ -322,6 +328,19 @@ TOOLS = """<section class="band"><div class="wrap stack" style="gap:28px">
 <li>Save as an image, or print the pattern</li>
 </ul>
 <a class="btn" href="{UP}stitch/{IDX}">Open tool</a>
+</article>
+<article class="card">
+<span class="tag">Ready</span>
+<h2>Thread colour converter</h2>
+<p class="muted">Have a pattern written for one thread brand and a box of another? Find the matching number.</p>
+<ul class="muted" style="margin:0;padding-left:1.2rem;display:flex;flex-direction:column;gap:4px">
+<li>DMC, Anchor, Madeira, Cosmo and Sullivans</li>
+<li>Search by number, or by colour name for DMC</li>
+<li>See both colours side by side, or full screen</li>
+<li>Browse the whole table, sorted by number or shade</li>
+<li>Matches cross-checked, with clear slips removed</li>
+</ul>
+<a class="btn" href="{UP}colours/{IDX}">Open tool</a>
 </article>
 <article class="card soft">
 <span class="tag line">Your idea</span>
@@ -502,7 +521,7 @@ open(os.path.join(OUT, "site.css"), "w").write(CSS)
 page("index.html", "home", "The Jolly Makery: free tools for people who make things",
      "Free craft tools that work on your phone. Design, stitch and print your own cross stitch patterns. No account and no adverts.", HOME)
 page("tools/index.html", "tools", "Tools | The Jolly Makery",
-     "Free craft tools from The Jolly Makery, starting with a cross stitch pattern designer.", TOOLS)
+     "Free craft tools from The Jolly Makery: a cross stitch pattern designer and a thread colour converter.", TOOLS)
 page("learn/index.html", "learn", "Learning hub | The Jolly Makery",
      "Short cross stitch guides: reading a chart, choosing a fabric count, and turning a photo into a pattern.", LEARN)
 page("shop/index.html", "shop", "Shop | The Jolly Makery",
