@@ -96,8 +96,8 @@ td.n{color:var(--muted);font-size:12.5px}
 
  <section class="card"><div class="lab">Good to know</div>
   <p class="note">A match is the closest colour in the other brand. It is a guide, not an exact copy, because every maker dyes its own shades.</p>
-  <p class="note" style="margin-top:8px">The DMC colours on this page were measured by us from real thread on our own DMC colour card. Threads of other brands are shown in the colour of their closest DMC thread, because DMC is the only brand we have measured so far. Screens also differ, so check against real thread where you can.</p>
-  <p class="note" style="margin-top:8px"><b>Where the matches come from.</b> Sullivans: the Sullivans USA conversion chart. Madeira: the Madeira Mouliné colour card, 2024. Anchor: cross-checked between the charts of Country Threads, Lazy May Sewing Club and Cyberstitchers. Where they differ, the other numbers are listed as “Also suggested”. Cosmo: the Snuggly Monkey chart. J&amp;P Coats: the Cyberstitchers chart, which uses the older J&amp;P Coats numbers.</p>
+  <p class="note" style="margin-top:8px">The DMC colours on this page were measured by us from real thread on our own DMC colour card. DMC is the only brand we have measured so far, so each pair is shown in the colour of its DMC thread. Screens also differ, so check against real thread where you can.</p>
+  <p class="note" style="margin-top:8px"><b>Where the matches come from.</b> Sullivans: the Sullivans USA conversion chart. Madeira: the Madeira Mouliné colour card, 2024. Anchor: cross-checked between the charts of Country Threads, Lazy May Sewing Club and Cyberstitchers. Where they differ, the other numbers are listed as “Also suggested”. Published charts contain slips, so we check every match against our measured colours and leave out any that are clearly the wrong colour. Cosmo: the Snuggly Monkey chart. J&amp;P Coats: the Cyberstitchers chart, which uses the older J&amp;P Coats numbers.</p>
   <p class="note" style="margin-top:8px">This is an independent guide. The Jolly Makery is not connected to any thread maker, and the brand names belong to their owners. Spotted a mistake? Please tell us on the <a href="/feedback/">feedback page</a> and we will put it right.</p>
  </section>
 </main>
@@ -139,13 +139,13 @@ function match(item){ const h=state.have, w=state.want; if(!w) return null; cons
 function seg(el,list,cur,on){ el.textContent=""; list.forEach(([id,label,dis])=>{ const b=document.createElement("button"); b.textContent=label; b.setAttribute("aria-pressed",String(id===cur)); if(dis) b.disabled=true; b.onclick=()=>on(id); el.appendChild(b); }); }
 function drawChooser(){ seg($("haveSeg"),BRANDS.map(b=>[b.id,b.label]),state.have,id=>{ state.have=id; if(state.want===id) state.want=(BRANDS.find(b=>b.id!==id)||{}).id||null; state.sel=null; redraw(); });
   seg($("wantSeg"),BRANDS.length>1?BRANDS.map(b=>[b.id,b.label,b.id===state.have]):[["none","Other brands are not added yet",true]],state.want,id=>{ state.want=id; redraw(); }); }
-function chipText(el,brand,item,extra){ el.textContent=""; el.append(brand); const b=document.createElement("b"); b.textContent=item.code; el.append(b); el.append(item.name||(item.rep?"shown as DMC "+item.rep:"")||extra||""); }
+function chipText(el,brand,item,extra){ el.textContent=""; el.append(brand); const b=document.createElement("b"); b.textContent=item.code; el.append(b); el.append(item.name||extra||""); }
 function drawResult(){ const it=state.sel, sec=$("result"); if(!it){ sec.hidden=true; return; } sec.hidden=false; const hb=B[state.have], m=match(it), wb=state.want?B[state.want]:null;
   $("rTitle").textContent=hb.label+" "+it.code+(wb?" to "+wb.label:"");
-  $("pA").style.background=$("fA").style.background=it.hex; chipText($("cA"),hb.label,it); chipText($("fcA"),hb.label,it);
+  const shade=(state.want==="dmc"&&m&&m.items.length)?m.items[0].hex:it.hex; $("pA").style.background=$("fA").style.background=shade; chipText($("cA"),hb.label,it); chipText($("fcA"),hb.label,it);
   const pb=$("pB"), fb=$("fB");
   const more=$("more"); more.textContent="";
-  if(m&&m.items.length){ const o=m.items[0]; pb.style.background=fb.style.background=o.hex; chipText($("cB"),wb.label,o); chipText($("fcB"),wb.label,o);
+  if(m&&m.items.length){ const o=m.items[0]; pb.style.background=fb.style.background=shade; chipText($("cB"),wb.label,o); chipText($("fcB"),wb.label,o);
     const line=(lab,list)=>{ if(!list.length) return; const d=document.createElement("div"); d.append(lab+" "); list.forEach((x,i)=>{ const a=document.createElement("b"); a.textContent=x.code; d.append(a); if(i<list.length-1) d.append(", "); }); more.appendChild(d); };
     line("Also suggested:",m.items.slice(1).concat(m.alts));
     if(m.s==="doubt"){ const d=document.createElement("div"); d.textContent="This match looks doubtful, so please check it against real thread."; more.appendChild(d); } }
@@ -156,11 +156,11 @@ function drawTable(){ const hb=B[state.have], wb=state.want?B[state.want]:null; 
   seg($("famSeg"),FAMS.map(f=>[f,f]),state.fam,f=>{ state.fam=f; drawTable(); });
   [...$("sortSeg").children].forEach(b=>{ b.setAttribute("aria-pressed",String(b.dataset.s===state.sort)); b.onclick=()=>{ state.sort=b.dataset.s; drawTable(); }; });
   let rows=hb.items.filter(o=>state.fam==="All"||o.fam===state.fam); rows=rows.slice().sort(state.sort==="number"?natural:(a,b)=>b.lab[0]-a.lab[0]);
-  $("count").textContent=rows.length+(rows.length===1?" colour":" colours"); $("tnote").textContent=wb?"Each row shows the "+hb.label+" colour on the left and its "+wb.label+" match on the right. Tap a row to see it large.":""; const tb=$("tb"); tb.textContent=""; const frag=document.createDocumentFragment();
+  $("count").textContent=rows.length+(rows.length===1?" colour":" colours"); $("tnote").textContent=wb?"Each row shows the "+hb.label+" number and its "+wb.label+" match. Tap a row to see the colour large.":""; const tb=$("tb"); tb.textContent=""; const frag=document.createDocumentFragment();
   rows.forEach(o=>{ const tr=document.createElement("tr"); tr.className="r"; const m=match(o);
     const td=(html,cls)=>{ const c=document.createElement("td"); if(cls) c.className=cls; tr.appendChild(c); return c; };
-    const sw=document.createElement("span"); sw.className="sw2"; const s1=document.createElement("i"); s1.style.background=o.hex; sw.appendChild(s1); if(m&&m.items.length){ const s2=document.createElement("i"); s2.style.background=m.items[0].hex; sw.appendChild(s2); } td().appendChild(sw);
-    const a=document.createElement("b"); a.textContent=o.code; td().appendChild(a); td("", "n").textContent=o.name||(o.rep?"shown as DMC "+o.rep:"");
+    const sw=document.createElement("span"); sw.className="sw2"; const s1=document.createElement("i"); s1.style.background=(state.want==="dmc"&&m&&m.items.length)?m.items[0].hex:o.hex; sw.appendChild(s1); td().appendChild(sw);
+    const a=document.createElement("b"); a.textContent=o.code; td().appendChild(a); td("", "n").textContent=o.name||"";
     const c4=td(); if(m&&m.items.length){ const w=document.createElement("b"); w.textContent=m.items[0].code; c4.appendChild(w); } else if(m) c4.textContent="No match";
     tr.onclick=()=>pick(o); frag.appendChild(tr); });
   tb.appendChild(frag); }

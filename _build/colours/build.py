@@ -75,6 +75,53 @@ d = {}
 for e in open(S + 'jpcoats_cyber.txt').read().strip().split(';'):
     a, v = e.split(' '); d[norm(a)] = {'p': v.split('/'), 's': 'one'}
 CONV['jpcoats'] = d
+# ---- Colour sense check. The published charts contain slips (a white matched to a dark grape, an olive to a dark brown).
+# Every thread code is shared by a group of DMC threads. A DMC thread whose measured colour is far from the rest of its
+# group is treated as a slip in the source and that match is removed. Nothing is invented: a slip leaves "No match"
+# unless another chart offers a number that passes the same check.
+import numpy as np
+from skimage.color import rgb2lab, deltaE_ciede2000
+_hex = {r[0]: r[2] for r in dmc}; _lab = {a: rgb2lab(np.array([[[int(h.lstrip('#')[i:i + 2], 16) / 255 for i in (0, 2, 4)]]]))[0, 0] for a, h in _hex.items()}
+def dE(a, b): return float(deltaE_ciede2000(_lab[a], _lab[b]))
+FAR = 23
+def natk(c):
+    m = re.match(r'(\d+)', c); return int(m.group(1)) if m else -1
+REPORT = []
+def sense(b, d):
+    for a in [a for a in d if a not in _lab]: del d[a]
+    for _ in range(4):
+        N = collections.defaultdict(list)
+        for a, e in d.items():
+            for c in e['p'] + e.get('a', []): N[c].append(a)
+        codes = sorted(N, key=natk); pos = {c: i for i, c in enumerate(codes)}
+        def fam(a, c):   # distance to the DMC threads matched to the neighbouring codes (makers number their colours in families)
+            i = pos[c]; o = [x for cc in codes[max(0, i - 3):i] + codes[i + 1:i + 4] for x in N[cc] if x != a and x not in N[c]]
+            return min([dE(a, x) for x in o] or [0])
+        bad = set()
+        for c, mem in N.items():
+            if len(mem) < 2: continue
+            near = {a: min(dE(a, x) for x in mem if x != a) for a in mem}
+            lone = [a for a in mem if near[a] > FAR]
+            if not lone: continue
+            if len(lone) < len(mem): bad.update((a, c) for a in lone)          # the rest of the group agree with each other
+            else:                                                              # nobody agrees: keep the one that fits the number family
+                keep = min(mem, key=lambda a: fam(a, c)); bad.update((a, c) for a in mem if a != keep)
+        if not bad: break
+        for a, c in sorted(bad):
+            e = d[a]; was = 'match' if c in e['p'] else 'also'
+            e['p'] = [x for x in e['p'] if x != c]; e['a'] = [x for x in e.get('a', []) if x != c]
+            if not e['p'] and e['a']: e['p'] = e['a'][:1]; e['a'] = e['a'][1:]
+            if not e['a']: e.pop('a', None)
+            REPORT.append((b, a, c, was, e['p'][0] if e['p'] else 'No match'))
+            if not e['p']: del d[a]
+# Slips found by eye, where a code has no group to be checked against: J&P Coats "3843" for DMC 995 is a DMC number and "3238" for
+# DMC 703 is a mistyped 6238; Madeira 0101 is a pale yellow given for the dark topaz DMC 780.
+for b, a, c in (('jpcoats', '995', '3843'), ('jpcoats', '703', '3238'), ('madeira', '780', '0101')):
+    e = CONV[b][a]; e['p'] = [x for x in e['p'] if x != c]; REPORT.append((b, a, c, 'match', e['p'][0] if e['p'] else 'No match'))
+    if not e['p']: del CONV[b][a]
+for b in CONV: sense(b, CONV[b])
+print('Colour sense check removed', len(REPORT), 'entries:')
+for r in REPORT: print('  ', *r)
 LABEL = {'sullivans': 'Sullivans', 'madeira': 'Madeira', 'anchor': 'Anchor', 'cosmo': 'Cosmo', 'jpcoats': 'J&P Coats'}
 ORDER = ['anchor', 'madeira', 'cosmo', 'sullivans', 'jpcoats']
 hexof = {r[0]: r[2].upper() for r in dmc}
