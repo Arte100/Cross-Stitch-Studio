@@ -2030,13 +2030,17 @@ function patternPages(PW,PHt){ PW=PW||1654; PHt=PHt||2339; const M=110, U=PW-2*M
   if(shop.rows.length){ const cx=[0.52,0.68,0.84,1].map(f=>M+U*f), cw=U*0.16-14;
     const shead=()=>{ g.font="bold 28px sans-serif"; g.fillText("DMC",M,y); g.fillText("Used for",M+U*0.14,y,U*0.2); g.textAlign="right"; ["Calculated",shop.opt.extra?"Extra "+shop.opt.extra+"%":"Extra","Total","Skeins"].forEach((t,k)=>g.fillText(t,cx[k],y,cw)); g.textAlign="left"; y+=16; g.fillRect(M,y,U,2); y+=44; };
     if(y>PHt-420){ foot(g); g=page(); y=M+30; } else y+=50;
-    g.font="bold 44px sans-serif"; g.fillText("Thread to buy",M,y); y+=70; shead();
+    g.font="bold 44px sans-serif"; g.fillText("Thread to buy",M,y); y+=56;
+    /* the strands, stated plainly before the amounts: a skein is 8 metres of thread made of 6 strands, and only some of them go in the needle */
+    { const sn=n=>n+(n===1?" strand":" strands"), hasX=shop.rows.some(r=>r.kind!=="lines"), hasL=shop.rows.some(r=>r.kind==="lines");
+      g.font="bold 28px sans-serif"; g.fillText([hasX?"Cross stitch: "+sn(shop.opt.st)+".":"",hasL?"Backstitch: "+sn(shop.opt.bs)+".":"","One skein is 8 metres of 6 strands."].filter(Boolean).join(" "),M,y,U); y+=64; }
+    shead();
     shop.rows.forEach(r=>{ if(y>PHt-140){ foot(g); g=page(); y=M+40; shead(); }
       g.font="30px sans-serif"; g.fillText(r.num,M,y); g.fillText(r.kind==="lines"?"backstitch":r.amount+(r.amount===1?" stitch":" stitches"),M+U*0.14,y,U*0.2);
       g.textAlign="right"; [mTxt(r.calc),"+ "+mTxt(r.extra),mTxt(r.total),r.first?String(r.skeins):""].forEach((t,k)=>g.fillText(t,cx[k],y,cw)); g.textAlign="left"; y+=52; });
     g.fillRect(M,y-30,U,2); y+=14; g.font="bold 30px sans-serif"; g.fillText("Skeins to buy: "+shop.totalSkeins,M,y); y+=56;
     g.font="26px sans-serif"; g.fillStyle="#333";
-    ["Cross stitches use "+shop.opt.st+(shop.opt.st===1?" strand":" strands")+" and backstitch uses "+shop.opt.bs+(shop.opt.bs===1?" strand.":" strands.")].concat(stx.how,["These figures are estimates. Thread use varies with how you stitch."])
+    stx.how.concat(["These figures are estimates. Thread use varies with how you stitch."])
       .forEach(par=>wrapText(g,par,U).forEach(t=>{ if(y>PHt-110){ foot(g); g=page(); y=M+40; g.font="26px sans-serif"; g.fillStyle="#333"; } g.fillText(t,M,y); y+=36; }));
     g.fillStyle="#000"; }
   foot(g);
