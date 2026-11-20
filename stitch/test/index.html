@@ -1997,6 +1997,11 @@ function patternPages(PW,PHt){ PW=PW||1654; PHt=PHt||2339; const M=110, U=PW-2*M
   const fit=(g,text,maxW,size,bold)=>{ let f=size; do{ g.font=(bold?"bold ":"")+f+"px sans-serif"; f-=2; }while(g.measureText(text).width>maxW&&f>14); };
   const pill=(g,text,cx,cy,col)=>{ const w=g.measureText(text).width+24; g.fillStyle="#fff"; rr(g,cx-w/2,cy-20,w,40,12); g.fill(); g.fillStyle=col; g.textAlign="center"; g.textBaseline="middle"; g.fillText(text,cx,cy+1); g.textAlign="left"; g.textBaseline="alphabetic"; };
   const inch=v=>(v/2.54).toFixed(1), F=shop.fabric;
+  /* chart pages: as many whole tens of stitches as the paper holds (50 wide and 70 high on upright A4) */
+  const cs=28, X0=M+40, Y0=M+110, TW=Math.max(10,Math.floor((U-40+8)/cs/10)*10), TH=Math.max(10,Math.floor((PHt-Y0-M-40)/cs/10)*10), midC=P.w/2, midR=P.h/2;
+  /* share the design evenly between the chart pages, still breaking on a bold ten line: 120 stitches on pages that hold 50 become 40, 40, 40 and not 50, 50, 20 */
+  const NX=Math.ceil(P.w/TW), NY=Math.ceil(P.h/TH), EW=Math.min(TW,Math.ceil(P.w/NX/10)*10), EH=Math.min(TH,Math.ceil(P.h/NY/10)*10);
+  const multi=NX*NY>1; let mapDraw=null;
   /* cover: the name, the finished design as a picture, a few facts and the thread colours */
   let g=page(), y=brand(g,"CROSS STITCH PATTERN")+110; g.fillStyle=INK; g.font="bold 84px sans-serif"; g.fillText(P.name,M,y,U); y+=56; g.font="32px sans-serif"; g.fillStyle=AC; g.fillText("Counted cross stitch pattern",M,y,U); y+=40;
   { const pic=imageCanvas(false), aw=U, ah=Math.max(160,PHt-y-424), k=Math.min(aw/pic.width,ah/pic.height), dw=Math.round(pic.width*k), dh=Math.round(pic.height*k), dx=Math.round((PW-dw)/2);
@@ -2008,7 +2013,7 @@ function patternPages(PW,PHt){ PW=PW||1654; PHt=PHt||2339; const M=110, U=PW-2*M
   foot(g);
   /* size and fabric: the design drawn on its fabric, with the sizes marked around it */
   g=page(); y=brand(g,P.name.toUpperCase())+90; g.fillStyle=INK; g.font="bold 56px sans-serif"; g.fillText("Size and fabric",M,y); y+=52; g.font="28px sans-serif"; g.fillStyle=MU;
-  wrapText(g,"A picture of the finished size. The spare fabric around the design is only a suggestion, handy if you plan to frame it or stretch it on a canvas.",U).forEach(t=>{ g.fillText(t,M,y); y+=38; }); y+=30;
+  wrapText(g,"A picture of the finished size. The spare fabric around the design is only a suggestion, handy if you plan to frame it or stretch it on a canvas."+(multi?" The numbered circles are the page map: each shows the chart page that holds that part of the design.":""),U).forEach(t=>{ g.fillText(t,M,y); y+=38; }); y+=30;
   { const B=land?PHt-210:PHt-420, k=Math.max(2,Math.min((U-220)/F.fw,(B-y-140)/F.fh)), FW=Math.round(F.fw*k), FH=Math.round(F.fh*k), fx=Math.round((PW-FW)/2), fy=Math.round(y+Math.max(0,(B-y-140-FH)/2)), mk=F.margin*k, dx=Math.round(fx+mk), dy=Math.round(fy+mk), DW=FW-2*Math.round(mk), DH=FH-2*Math.round(mk);
     const dimH=(x1,x2,yy)=>{ g.fillStyle=AC; g.fillRect(x1,yy-2,x2-x1,4); g.fillRect(x1-2,yy-14,4,28); g.fillRect(x2-2,yy-14,4,28); }, dimV=(xx,y1,y2)=>{ g.fillStyle=AC; g.fillRect(xx-2,y1,4,y2-y1); g.fillRect(xx-14,y1-2,28,4); g.fillRect(xx-14,y2-2,28,4); };
     /* the fabric: a light weave and a dashed edge, no solid fill, to save ink */
@@ -2022,8 +2027,17 @@ function patternPages(PW,PHt){ PW=PW||1654; PHt=PHt||2339; const M=110, U=PW-2*M
     dimH(fx,fx+FW,fy+FH+44); g.textAlign="center"; g.fillStyle=AC; g.font="bold 30px sans-serif"; g.fillText("Suggested fabric: "+F.fw+" cm",fx+FW/2,fy+FH+92); g.fillStyle=MU; g.font="24px sans-serif"; g.fillText(inch(F.fw)+" inches",fx+FW/2,fy+FH+126);
     dimV(fx+FW+44,fy,fy+FH); g.textAlign="left"; g.fillStyle=AC; g.font="bold 30px sans-serif"; g.fillText(F.fh+" cm",fx+FW+66,fy+FH/2+10,Math.max(60,PW-30-(fx+FW+66)));
     /* what the two outlines mean, then three short facts */
-    g.font="24px sans-serif"; const la="Suggested fabric", lb="Stitched design", wa=g.measureText(la).width, wb=g.measureText(lb).width, tot=44+wa+50+44+wb; let lx=Math.round((PW-tot)/2); const ly=B+36;
+    g.font="24px sans-serif"; const la="Suggested fabric", lb="Stitched design", lc=multi?"Chart page":"", wa=g.measureText(la).width, wb=g.measureText(lb).width, tot=44+wa+50+44+wb+(lc?50+44+g.measureText(lc).width:0); let lx=Math.round((PW-tot)/2); const ly=B+36;
     g.strokeStyle="#b89b6a"; g.lineWidth=3; g.setLineDash([8,6]); g.strokeRect(lx,ly-22,32,24); g.setLineDash([]); g.fillStyle=MU; g.fillText(la,lx+44,ly); lx+=44+wa+50; g.strokeStyle=INK; g.strokeRect(lx,ly-22,32,24); g.fillText(lb,lx+44,ly);
+    if(lc){ lx+=44+wb+50; g.strokeStyle=AC; g.beginPath(); g.arc(lx+16,ly-10,14,0,Math.PI*2); g.stroke(); g.fillText(lc,lx+44,ly); }
+    /* the page map: dashed lines where the chart pages meet, and the page number in a circle on each part. Drawn later, once the number of the first chart page is known */
+    if(multi){ const gs=g; mapDraw=first=>{ const kx=DW/P.w, ky=DH/P.h, ln=(x1,y1,x2,y2)=>{ gs.beginPath(); gs.moveTo(x1,y1); gs.lineTo(x2,y2); gs.stroke(); }; gs.save();
+      for(const pass of [0,1]){ gs.strokeStyle=pass?AC:"#fff"; gs.lineWidth=pass?3:7; gs.setLineDash(pass?[12,8]:[]);
+        for(let c=EW;c<P.w;c+=EW){ const x=Math.round(dx+c*kx); ln(x,dy,x,dy+DH); } for(let r=EH;r<P.h;r+=EH){ const yy=Math.round(dy+r*ky); ln(dx,yy,dx+DW,yy); } }
+      gs.setLineDash([]); gs.textAlign="center"; gs.textBaseline="middle"; let k=0;
+      for(let tr=0;tr<P.h;tr+=EH) for(let tc=0;tc<P.w;tc+=EW){ const cw=Math.min(EW,P.w-tc), ch=Math.min(EH,P.h-tr), cx=dx+(tc+cw/2)*kx, cy=dy+(tr+ch/2)*ky, rad=Math.max(11,Math.min(30,cw*kx*0.36,ch*ky*0.36));
+        gs.beginPath(); gs.arc(cx,cy,rad,0,Math.PI*2); gs.fillStyle="#fff"; gs.fill(); gs.strokeStyle=AC; gs.lineWidth=3; gs.stroke(); gs.fillStyle=AC; gs.font="bold "+Math.round(rad*1.05)+"px sans-serif"; gs.fillText(String(first+k),cx,cy+1); k++; }
+      gs.restore(); }; }
     if(!land){ const by=B+70, gap=20, bw=(U-2*gap)/3; [["Fabric",P.count+" count Aida, "+P.fabric.toLowerCase()],["Thread","DMC stranded cotton, "+shop.opt.st+(shop.opt.st===1?" strand":" strands")],["Where to start","The centre, marked by arrows on the chart"]].forEach((t,i)=>{ const x=M+i*(bw+gap);
       g.strokeStyle=PK; g.lineWidth=3; rr(g,x,by,bw,130,22); g.stroke(); g.fillStyle=INK; g.font="bold 26px sans-serif"; g.fillText(t[0],x+28,by+50,bw-56); g.fillStyle=MU; fit(g,t[1],bw-56,24,false); g.fillText(t[1],x+28,by+92); }); }
     g.fillStyle="#000"; }
@@ -2058,12 +2072,17 @@ function patternPages(PW,PHt){ PW=PW||1654; PHt=PHt||2339; const M=110, U=PW-2*M
       .forEach(par=>wrapText(g,par,U).forEach(t=>{ if(y>PHt-110){ foot(g); g=page(); y=M+40; g.font="26px sans-serif"; g.fillStyle="#333"; } g.fillText(t,M,y); y+=36; }));
     g.fillStyle="#000"; }
   foot(g);
-  /* chart pages: as many whole tens of stitches as the paper holds (50 wide and 70 high on upright A4) */
-  const cs=28, X0=M+40, Y0=M+110, TW=Math.max(10,Math.floor((U-40+8)/cs/10)*10), TH=Math.max(10,Math.floor((PHt-Y0-M-40)/cs/10)*10), midC=P.w/2, midR=P.h/2;
-  /* share the design evenly between the chart pages, still breaking on a bold ten line: 120 stitches on pages that hold 50 become 40, 40, 40 and not 50, 50, 20 */
-  const NX=Math.ceil(P.w/TW), NY=Math.ceil(P.h/TH), EW=Math.min(TW,Math.ceil(P.w/NX/10)*10), EH=Math.min(TH,Math.ceil(P.h/NY/10)*10);
+  /* the page map on the size page waited for this: the number of the first chart page */
+  const firstChart=pages.length+1; if(mapDraw) mapDraw(firstChart);
   for(let tr=0;tr<P.h;tr+=EH) for(let tc=0;tc<P.w;tc+=EW){ g=page(); const cw=Math.min(EW,P.w-tc), ch=Math.min(EH,P.h-tr);
-    g.font="bold 36px sans-serif"; g.fillText(P.name,M,M+20); g.font="26px sans-serif"; g.fillText("Columns "+(tc+1)+" to "+(tc+cw)+", rows "+(tr+1)+" to "+(tr+ch)+". Arrows mark the centre of the design.",M,M+60,U);
+    const mw=multi?Math.round(Math.min(170,100*P.w/P.h)):0, mh=multi?Math.round(mw*P.h/P.w):0, HW=U-(multi?mw+30:0);
+    g.font="bold 36px sans-serif"; g.fillText(P.name,M,M+20,HW); g.font="26px sans-serif"; g.fillText("Columns "+(tc+1)+" to "+(tc+cw)+", rows "+(tr+1)+" to "+(tr+ch)+". Arrows mark the centre of the design.",M,M+60,HW);
+    /* a small page map, top right: every chart page as a box with its number, and this page filled in */
+    if(multi){ const mx=PW-M-mw, my=M-26, kx=mw/P.w, ky=mh/P.h; let k=0; g.textAlign="center"; g.textBaseline="middle";
+      for(let r2=0;r2<P.h;r2+=EH) for(let c2=0;c2<P.w;c2+=EW){ const w2=Math.min(EW,P.w-c2)*kx, h2=Math.min(EH,P.h-r2)*ky, x2=mx+c2*kx, y2=my+r2*ky, me=r2===tr&&c2===tc;
+        g.fillStyle=me?AC:"#fff"; g.fillRect(x2,y2,w2,h2); g.strokeStyle=AC; g.lineWidth=2; g.strokeRect(x2,y2,w2,h2);
+        if(Math.min(w2,h2)>=20){ g.fillStyle=me?"#fff":AC; g.font="bold "+Math.round(Math.min(22,Math.min(w2,h2)*0.6))+"px sans-serif"; g.fillText(String(firstChart+k),x2+w2/2,y2+h2/2+1); } k++; }
+      g.textAlign="left"; g.textBaseline="alphabetic"; g.fillStyle="#000"; }
     g.textAlign="center"; g.textBaseline="middle";
     for(let r=0;r<ch;r++) for(let c=0;c<cw;c++){ const v=P.cells[(tr+r)*P.w+tc+c]; if(!v) continue; const hex=PHEX[v-1]; g.fillStyle=hex; g.fillRect(X0+c*cs,Y0+r*cs,cs,cs);
       g.fillStyle=lum(hex)<0.5?"#fff":"#000"; g.font="20px sans-serif"; g.fillText(SYM[(v-1)%SYM.length],X0+c*cs+cs/2,Y0+r*cs+cs/2+1); }
