@@ -372,9 +372,13 @@ input[type=text],input[type=number],input[type=search],select{border:1px solid v
       <label for="prSize">Paper size<select id="prSize"></select></label>
       <label for="prTurn">Direction<select id="prTurn"><option value="p">Portrait (tall)</option><option value="l">Landscape (wide)</option></select></label>
     </div>
+    <div class="row">
+      <label for="prMargin">Spare fabric on every side<select id="prMargin"></select></label>
+    </div>
     <p id="prInfo"></p>
     <button class="btn primary" id="prGo" type="button">Save the pattern</button>
     <p>The file has the finished picture, the thread key, the shopping list and the chart. Open it from your downloads and choose Print.</p>
+    <p>The spare fabric is only a suggestion. It is drawn on the size page and counted in the fabric to buy.</p>
   </div>
 </section>
 
@@ -1819,7 +1823,7 @@ function replaceThread(i,num){ const old=P.palette[i]; if(old===undefined){ clos
   pushSnap(before); refreshPalette(); renderKey(); openSheet("sheet-key"); redraw(); toast("DMC "+old+" replaced with DMC "+num); }
 
 /* shopping list: thread and fabric to buy, with every step of the sum shown */
-[["shSt",[1,2,3,4,5,6],v=>v+(v===1?" strand":" strands")],["shBs",[1,2,3,4,5,6],v=>v+(v===1?" strand":" strands")],["shEx",[0,10,15,20,30,40,50],v=>v?v+"% extra":"No extra"],["shMg",[5,7.5,10,15],v=>v+" cm"]]
+[["shSt",[1,2,3,4,5,6],v=>v+(v===1?" strand":" strands")],["shBs",[1,2,3,4,5,6],v=>v+(v===1?" strand":" strands")],["shEx",[0,10,15,20,30,40,50],v=>v?v+"% extra":"No extra"],["shMg",[5,7.5,10,15],v=>v+" cm"],["prMargin",[5,7.5,10,15],v=>v+" cm"]]
   .forEach(d=>d[1].forEach(v=>{ const o=document.createElement("option"); o.value=v; o.textContent=d[2](v); $(d[0]).append(o); }));
 const mTxt=v=>v.toFixed(2)+" m", numTxt=v=>String(Math.round(v*10)/10);
 function shopLines(s){ const f=s.fabric, per=48/s.opt.st;
@@ -2089,7 +2093,9 @@ function paperNow(){ const q=PAPERS.find(x=>x[0]===$("prSize").value)||PAPERS[0]
 function printInfo(){ const q=paperNow(), px=v=>Math.round(v/25.4*200), U=px(q.w)-220, tw=Math.max(10,Math.floor((U-40+8)/28/10)*10), th=Math.max(10,Math.floor((px(q.h)-220-110-40)/28/10)*10), nx=Math.ceil(P.w/tw), ny=Math.ceil(P.h/th);
   $("prInfo").textContent="Each chart page holds "+tw+" stitches across and "+th+" down, so this design needs "+(nx*ny)+(nx*ny===1?" chart page.":" chart pages."); store(KEY+"paper",JSON.stringify({size:q.id,turn:q.land?"l":"p"})); }
 $("prSize").addEventListener("change",printInfo); $("prTurn").addEventListener("change",printInfo);
-$("mPrint").onclick=()=>{ try{ const s=JSON.parse(load(KEY+"paper")||"null"); if(s){ if(PAPERS.some(x=>x[0]===s.size)) $("prSize").value=s.size; $("prTurn").value=s.turn==="l"?"l":"p"; } }catch(e){} printInfo(); openSheet("sheet-print"); };
+/* the spare fabric round the design can be chosen here too, where the pattern is made. It is the same setting as on the shopping list, kept with the design */
+$("prMargin").addEventListener("change",()=>{ P.opt=Object.assign({},optOf(P),{margin:Number($("prMargin").value)}); autosave(); });
+$("mPrint").onclick=()=>{ $("prMargin").value=optOf(P).margin; try{ const s=JSON.parse(load(KEY+"paper")||"null"); if(s){ if(PAPERS.some(x=>x[0]===s.size)) $("prSize").value=s.size; $("prTurn").value=s.turn==="l"?"l":"p"; } }catch(e){} printInfo(); openSheet("sheet-print"); };
 $("prGo").onclick=async()=>{ const q=paperNow(), px=v=>Math.round(v/25.4*200); closeSheet(); toast("Preparing the pattern"); await new Promise(r=>setTimeout(r,30)); const pages=patternPages(px(q.w),px(q.h));
   try{ if(window.jspdf&&window.jspdf.jsPDF){ const doc=new window.jspdf.jsPDF({unit:"mm",format:[q.w,q.h],orientation:q.land?"landscape":"portrait"});
       pages.forEach((c,i)=>{ if(i) doc.addPage([q.w,q.h],q.land?"landscape":"portrait"); doc.addImage(c.toDataURL("image/jpeg",0.9),"JPEG",0,0,q.w,q.h); });
