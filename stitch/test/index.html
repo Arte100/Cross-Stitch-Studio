@@ -2060,7 +2060,9 @@ function patternPages(PW,PHt){ PW=PW||1654; PHt=PHt||2339; const M=110, U=PW-2*M
   foot(g);
   /* chart pages: as many whole tens of stitches as the paper holds (50 wide and 70 high on upright A4) */
   const cs=28, X0=M+40, Y0=M+110, TW=Math.max(10,Math.floor((U-40+8)/cs/10)*10), TH=Math.max(10,Math.floor((PHt-Y0-M-40)/cs/10)*10), midC=P.w/2, midR=P.h/2;
-  for(let tr=0;tr<P.h;tr+=TH) for(let tc=0;tc<P.w;tc+=TW){ g=page(); const cw=Math.min(TW,P.w-tc), ch=Math.min(TH,P.h-tr);
+  /* share the design evenly between the chart pages, still breaking on a bold ten line: 120 stitches on pages that hold 50 become 40, 40, 40 and not 50, 50, 20 */
+  const NX=Math.ceil(P.w/TW), NY=Math.ceil(P.h/TH), EW=Math.min(TW,Math.ceil(P.w/NX/10)*10), EH=Math.min(TH,Math.ceil(P.h/NY/10)*10);
+  for(let tr=0;tr<P.h;tr+=EH) for(let tc=0;tc<P.w;tc+=EW){ g=page(); const cw=Math.min(EW,P.w-tc), ch=Math.min(EH,P.h-tr);
     g.font="bold 36px sans-serif"; g.fillText(P.name,M,M+20); g.font="26px sans-serif"; g.fillText("Columns "+(tc+1)+" to "+(tc+cw)+", rows "+(tr+1)+" to "+(tr+ch)+". Arrows mark the centre of the design.",M,M+60,U);
     g.textAlign="center"; g.textBaseline="middle";
     for(let r=0;r<ch;r++) for(let c=0;c<cw;c++){ const v=P.cells[(tr+r)*P.w+tc+c]; if(!v) continue; const hex=PHEX[v-1]; g.fillStyle=hex; g.fillRect(X0+c*cs,Y0+r*cs,cs,cs);
@@ -2099,7 +2101,7 @@ function patternPages(PW,PHt){ PW=PW||1654; PHt=PHt||2339; const M=110, U=PW-2*M
 PAPERS.forEach(q=>{ const o=document.createElement("option"); o.value=q[0]; o.textContent=q[1]+" ("+(q[0]==="letter"?"8.5 × 11 inches":q[0]==="legal"?"8.5 × 14 inches":q[2]+" × "+q[3]+" mm")+")"; $("prSize").append(o); });
 function paperNow(){ const q=PAPERS.find(x=>x[0]===$("prSize").value)||PAPERS[0], land=$("prTurn").value==="l"; return {id:q[0],name:q[1],land,w:land?q[3]:q[2],h:land?q[2]:q[3]}; }
 function printInfo(){ const q=paperNow(), px=v=>Math.round(v/25.4*200), U=px(q.w)-220, tw=Math.max(10,Math.floor((U-40+8)/28/10)*10), th=Math.max(10,Math.floor((px(q.h)-220-110-40)/28/10)*10), nx=Math.ceil(P.w/tw), ny=Math.ceil(P.h/th);
-  $("prInfo").textContent="Each chart page holds "+tw+" stitches across and "+th+" down, so this design needs "+(nx*ny)+(nx*ny===1?" chart page.":" chart pages."); store(KEY+"paper",JSON.stringify({size:q.id,turn:q.land?"l":"p"})); }
+  $("prInfo").textContent="Each chart page holds "+tw+" stitches across and "+th+" down, so this design needs "+(nx*ny)+(nx*ny===1?" chart page.":" chart pages, with the design shared evenly between them."); store(KEY+"paper",JSON.stringify({size:q.id,turn:q.land?"l":"p"})); }
 $("prSize").addEventListener("change",printInfo); $("prTurn").addEventListener("change",printInfo);
 /* the spare fabric round the design can be chosen here too, where the pattern is made. It is the same setting as on the shopping list, kept with the design */
 $("prMargin").addEventListener("change",()=>{ P.opt=Object.assign({},optOf(P),{margin:Number($("prMargin").value)}); autosave(); });
