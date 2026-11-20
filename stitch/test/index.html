@@ -994,8 +994,10 @@ function toB64(u8){ let s=""; for(let i=0;i<u8.length;i+=8192) s+=String.fromCha
 function fromB64(b){ const s=atob(b), u=new Uint8Array(s.length); for(let i=0;i<s.length;i++) u[i]=s.charCodeAt(i); return u; }
 function pack(p){ const o={v:1,id:p.id||null,name:p.name,w:p.w,h:p.h,count:p.count,fabric:p.fabric,palette:p.palette,cur:p.cur,cells:toB64(p.cells)}; if(p.done&&p.done.some(v=>v)) o.done=toB64(p.done);
   if(p.lines&&p.lines.length) o.lines=p.lines.map(l=>l.slice(0,6)); if(p.opt) o.opt=optOf(p); return o; }
-/* Shopping list settings kept with the design: strands for cross stitch and for backstitch, extra thread in percent, fabric margin in centimetres */
-function optOf(p){ const o=(p&&p.opt)||{}, pick=(v,list,d)=>list.includes(v)?v:d; return {st:pick(o.st,[1,2,3,4,5,6],2),bs:pick(o.bs,[1,2,3,4,5,6],1),extra:pick(o.extra,[0,10,20,30,40,50],30),margin:pick(o.margin,[5,7.5,10,15],7.5)}; }
+/* Shopping list settings kept with the design: strands for cross stitch and for backstitch, extra thread in percent, fabric margin in centimetres.
+   The extra starts at 15%. It was 30% until our own stitched test (November 2026, 14 count, 2 strands) used 68% to 85% of the calculated length,
+   so the calculation is already generous and a smaller extra still leaves a safe margin. A design saved with its own setting keeps it. */
+function optOf(p){ const o=(p&&p.opt)||{}, pick=(v,list,d)=>list.includes(v)?v:d; return {st:pick(o.st,[1,2,3,4,5,6],2),bs:pick(o.bs,[1,2,3,4,5,6],1),extra:pick(o.extra,[0,10,15,20,30,40,50],15),margin:pick(o.margin,[5,7.5,10,15],7.5)}; }
 /* Thread and fabric to buy. Lengths are metres of working thread, rounded up to the centimetre, so calculated plus extra always equals the total shown.
    Cross stitch follows the long-used rule of thumb from Kathleen Dyer's Needlework FAQ: one skein covers about 255 x fabric count / strands stitches
    (1,785 on 14 count with 2 strands), which agrees with measured tests of 1,650 to 1,850. That is 48000 / (255 x count) millimetres of working thread
@@ -1817,7 +1819,7 @@ function replaceThread(i,num){ const old=P.palette[i]; if(old===undefined){ clos
   pushSnap(before); refreshPalette(); renderKey(); openSheet("sheet-key"); redraw(); toast("DMC "+old+" replaced with DMC "+num); }
 
 /* shopping list: thread and fabric to buy, with every step of the sum shown */
-[["shSt",[1,2,3,4,5,6],v=>v+(v===1?" strand":" strands")],["shBs",[1,2,3,4,5,6],v=>v+(v===1?" strand":" strands")],["shEx",[0,10,20,30,40,50],v=>v?v+"% extra":"No extra"],["shMg",[5,7.5,10,15],v=>v+" cm"]]
+[["shSt",[1,2,3,4,5,6],v=>v+(v===1?" strand":" strands")],["shBs",[1,2,3,4,5,6],v=>v+(v===1?" strand":" strands")],["shEx",[0,10,15,20,30,40,50],v=>v?v+"% extra":"No extra"],["shMg",[5,7.5,10,15],v=>v+" cm"]]
   .forEach(d=>d[1].forEach(v=>{ const o=document.createElement("option"); o.value=v; o.textContent=d[2](v); $(d[0]).append(o); }));
 const mTxt=v=>v.toFixed(2)+" m", numTxt=v=>String(Math.round(v*10)/10);
 function shopLines(s){ const f=s.fabric, per=48/s.opt.st;
