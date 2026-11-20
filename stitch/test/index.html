@@ -1843,7 +1843,7 @@ function shopLines(s){ const f=s.fabric, per=48/s.opt.st;
   return {fabric:"Design: "+f.dw+" × "+f.dh+" cm\nMargin: "+f.margin+" cm on every side, which adds "+numTxt(2*f.margin)+" cm each way\nFabric to cut: "+f.fw+" × "+f.fh+" cm ("+(f.fw/2.54).toFixed(1)+" × "+(f.fh/2.54).toFixed(1)+" inches)",
     how:["One square on "+P.count+" count Aida is "+s.square.toFixed(2)+" mm wide.","A cross stitch is counted as about 7.4 times that width. This follows a long-used rule of thumb: with "+s.opt.st+(s.opt.st===1?" strand":" strands")+" on "+P.count+" count, one skein covers about "+Math.round(255*P.count/s.opt.st).toLocaleString("en-GB")+" stitches.","Backstitch is counted as 3 times the length of its line: once on the front and twice on the back.",
       "Calculated is that length for every stitch added together."+(s.opt.extra?" The extra "+s.opt.extra+"% is a safety margin for mistakes and for colours scattered around the design, which use more thread.":""),"Total is the calculated length plus the extra.",
-      "One skein holds 8 metres of thread made of 6 strands. Stitching with "+s.opt.st+(s.opt.st===1?" strand":" strands")+", one skein gives "+numTxt(per)+" metres. Skeins are rounded up to whole skeins."]}; }
+      "One skein holds 8 metres (8.7 yards) of thread made of 6 strands. Stitching with "+s.opt.st+(s.opt.st===1?" strand":" strands")+", one skein gives "+numTxt(per)+" metres. Skeins are rounded up to whole skeins."]}; }
 function renderShop(){ const s=shopping(P), o=s.opt, body=$("shBody"); $("shSt").value=o.st; $("shBs").value=o.bs; $("shEx").value=o.extra; $("shMg").value=o.margin; body.textContent="";
   $("shExH").textContent=o.extra?"Extra "+o.extra+"%":"Extra";
   s.rows.forEach(r=>{ const tr=document.createElement("tr"), td=(t)=>{ const d=document.createElement("td"); d.textContent=t; tr.append(d); return d; };
@@ -2066,7 +2066,7 @@ function patternPages(PW,PHt){ PW=PW||1654; PHt=PHt||2339; const M=110, U=PW-2*M
     g.font="bold 44px sans-serif"; g.fillText("Thread to buy",M,y); y+=56;
     /* the strands, stated plainly before the amounts: a skein is 8 metres of thread made of 6 strands, and only some of them go in the needle */
     { const sn=n=>n+(n===1?" strand":" strands"), hasX=shop.rows.some(r=>r.kind!=="lines"), hasL=shop.rows.some(r=>r.kind==="lines");
-      g.font="bold 28px sans-serif"; g.fillText([hasX?"Cross stitch: "+sn(shop.opt.st)+".":"",hasL?"Backstitch: "+sn(shop.opt.bs)+".":"","One skein is 8 metres of 6 strands."].filter(Boolean).join(" "),M,y,U); y+=64; }
+      g.font="bold 28px sans-serif"; g.fillText([hasX?"Cross stitch: "+sn(shop.opt.st)+".":"",hasL?"Backstitch: "+sn(shop.opt.bs)+".":"","One skein is 8 metres (8.7 yards) of 6 strands."].filter(Boolean).join(" "),M,y,U); y+=64; }
     shead();
     shop.rows.forEach(r=>{ if(y>PHt-140){ foot(g); g=page(); y=M+40; shead(); }
       g.font="30px sans-serif"; g.fillText(r.num,M,y); g.fillText(r.kind==="lines"?"backstitch":r.amount+(r.amount===1?" stitch":" stitches"),M+U*0.14,y,U*0.2);
