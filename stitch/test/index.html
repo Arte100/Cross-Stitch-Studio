@@ -382,6 +382,14 @@ input[type=text],input[type=number],input[type=search],select{border:1px solid v
   </div>
 </section>
 
+<section class="sheet" id="sheet-also" hidden aria-label="Save the project file too?">
+  <header><h2>Save the project file too?</h2><button class="btn" data-close type="button">Not now</button></header>
+  <div class="body">
+    <p>The pattern is saved. The project file is the design itself. With it you can open the design here again, change it, or tick stitches off on screen as you sew.</p>
+    <button class="btn primary" id="alsoGo" type="button">Save the project file</button>
+  </div>
+</section>
+
 <section class="sheet" id="sheet-guard" hidden aria-label="Keep the current design?">
   <header><h2>Keep the current design?</h2><button class="btn" data-close type="button">Cancel</button></header>
   <div class="body">
@@ -2099,9 +2107,12 @@ $("mPrint").onclick=()=>{ $("prMargin").value=optOf(P).margin; try{ const s=JSON
 $("prGo").onclick=async()=>{ const q=paperNow(), px=v=>Math.round(v/25.4*200); closeSheet(); toast("Preparing the pattern"); await new Promise(r=>setTimeout(r,30)); const pages=patternPages(px(q.w),px(q.h));
   try{ if(window.jspdf&&window.jspdf.jsPDF){ const doc=new window.jspdf.jsPDF({unit:"mm",format:[q.w,q.h],orientation:q.land?"landscape":"portrait"});
       pages.forEach((c,i)=>{ if(i) doc.addPage([q.w,q.h],q.land?"landscape":"portrait"); doc.addImage(c.toDataURL("image/jpeg",0.9),"JPEG",0,0,q.w,q.h); });
-      if(!report(await offer(fileBase()+"-pattern.pdf",doc.output("blob")))) return; } }catch(e){}
+      const r=await offer(fileBase()+"-pattern.pdf",doc.output("blob"));
+      /* once the pattern is saved, offer the project file as well: the pattern is for paper, the project file is the design itself */
+      if(!report(r)){ if(r==="saved") openSheet("sheet-also"); return; } } }catch(e){}
   showPics(pages); };
 
+$("alsoGo").onclick=()=>$("mBackup").onclick();
 $("mBackup").onclick=async()=>{ closeSheet(); const txt=JSON.stringify(pack(P)); if(!report(await offer(fileBase()+"-project.json",txt))) return; toast("Project files cannot be saved in this view"); };
 $("mRestore").onclick=()=>$("restoreFile").click();
 $("restoreFile").onchange=e=>{ const f=e.target.files[0]; e.target.value=""; if(!f) return; const rd=new FileReader();
