@@ -173,6 +173,9 @@ input[type=text],input[type=number],input[type=search],select{border:1px solid v
 .ex canvas{width:60px;height:60px;object-fit:contain;image-rendering:pixelated;border-radius:4px}
 #phPrev{width:100%;max-height:45vh;object-fit:contain;image-rendering:pixelated;border:1px solid var(--line);border-radius:6px}
 #pics img{max-width:100%;border:1px solid var(--line);border-radius:6px;background:#fff}
+#prPrev{display:flex;gap:8px;overflow-x:auto;align-items:flex-start;padding-bottom:6px}
+#prPrev img{height:210px;width:auto;flex:none;border:1px solid var(--line);border-radius:6px;background:#fff;cursor:pointer}
+#prPrev img.big{height:auto;width:100%}
 </style>
 </head>
 <body>
@@ -376,6 +379,8 @@ input[type=text],input[type=number],input[type=search],select{border:1px solid v
       <label for="prMargin">Spare fabric on every side<select id="prMargin"></select></label>
     </div>
     <p id="prInfo"></p>
+    <p id="prPrevInfo"></p>
+    <div id="prPrev" aria-label="Preview of the pattern pages"></div>
     <button class="btn primary" id="prGo" type="button">Save the pattern</button>
     <p>The file has the finished picture, the thread key, the shopping list and the chart. Open it from your downloads and choose Print.</p>
     <p>The spare fabric is only a suggestion. It is drawn on the size page and counted in the fabric to buy.</p>
@@ -2120,10 +2125,20 @@ function patternPages(PW,PHt){ PW=PW||1654; PHt=PHt||2339; const M=110, U=PW-2*M
 PAPERS.forEach(q=>{ const o=document.createElement("option"); o.value=q[0]; o.textContent=q[1]+" ("+(q[0]==="letter"?"8.5 × 11 inches":q[0]==="legal"?"8.5 × 14 inches":q[2]+" × "+q[3]+" mm")+")"; $("prSize").append(o); });
 function paperNow(){ const q=PAPERS.find(x=>x[0]===$("prSize").value)||PAPERS[0], land=$("prTurn").value==="l"; return {id:q[0],name:q[1],land,w:land?q[3]:q[2],h:land?q[2]:q[3]}; }
 function printInfo(){ const q=paperNow(), px=v=>Math.round(v/25.4*200), U=px(q.w)-220, tw=Math.max(10,Math.floor((U-40+8)/28/10)*10), th=Math.max(10,Math.floor((px(q.h)-220-110-40)/28/10)*10), nx=Math.ceil(P.w/tw), ny=Math.ceil(P.h/th);
-  $("prInfo").textContent="Each chart page holds "+tw+" stitches across and "+th+" down, so this design needs "+(nx*ny)+(nx*ny===1?" chart page.":" chart pages, with the design shared evenly between them."); store(KEY+"paper",JSON.stringify({size:q.id,turn:q.land?"l":"p"})); }
+  $("prInfo").textContent="Each chart page holds "+tw+" stitches across and "+th+" down, so this design needs "+(nx*ny)+(nx*ny===1?" chart page.":" chart pages, with the design shared evenly between them."); store(KEY+"paper",JSON.stringify({size:q.id,turn:q.land?"l":"p"})); printPreview(); }
+/* the preview: every page of the pattern as a small picture, made again whenever the paper, the direction or the spare fabric changes */
+let prevRun=0, prevT=0;
+function printPreview(){ clearTimeout(prevT); const run=++prevRun, box=$("prPrev"); $("prPrevInfo").textContent="Preparing the preview";
+  prevT=setTimeout(async()=>{ const q=paperNow(), px=v=>Math.round(v/25.4*200); let pages; try{ pages=patternPages(px(q.w),px(q.h)); }catch(e){ $("prPrevInfo").textContent=""; return; }
+    if(run!==prevRun) return; box.querySelectorAll("img").forEach(i=>URL.revokeObjectURL(i.src)); box.textContent="";
+    for(let i=0;i<pages.length;i++){ const c=pages[i], t=document.createElement("canvas"), k=Math.min(1,700/c.width); t.width=Math.round(c.width*k); t.height=Math.round(c.height*k);
+      const tg=t.getContext("2d"); tg.imageSmoothingQuality="high"; tg.drawImage(c,0,0,t.width,t.height); c.width=c.height=0; const b=await canvasBlob(t,"image/jpeg",0.85); if(run!==prevRun) return; if(!b) continue;
+      const img=document.createElement("img"); img.alt="Page "+(i+1)+" of the pattern"; img.src=URL.createObjectURL(b);
+      img.onclick=()=>{ const big=img.classList.toggle("big"); box.querySelectorAll("img").forEach(o=>{ if(o!==img) o.classList.remove("big"); }); if(big) img.scrollIntoView({block:"nearest",inline:"start"}); }; box.append(img); }
+    $("prPrevInfo").textContent="Preview: "+pages.length+(pages.length===1?" page":" pages")+". Swipe to see them all. Tap a page to make it larger, and tap it again to make it small."; },150); }
 $("prSize").addEventListener("change",printInfo); $("prTurn").addEventListener("change",printInfo);
 /* the spare fabric round the design can be chosen here too, where the pattern is made. It is the same setting as on the shopping list, kept with the design */
-$("prMargin").addEventListener("change",()=>{ P.opt=Object.assign({},optOf(P),{margin:Number($("prMargin").value)}); autosave(); });
+$("prMargin").addEventListener("change",()=>{ P.opt=Object.assign({},optOf(P),{margin:Number($("prMargin").value)}); autosave(); printPreview(); });
 $("mPrint").onclick=()=>{ $("prMargin").value=optOf(P).margin; try{ const s=JSON.parse(load(KEY+"paper")||"null"); if(s){ if(PAPERS.some(x=>x[0]===s.size)) $("prSize").value=s.size; $("prTurn").value=s.turn==="l"?"l":"p"; } }catch(e){} printInfo(); openSheet("sheet-print"); };
 $("prGo").onclick=async()=>{ const q=paperNow(), px=v=>Math.round(v/25.4*200); closeSheet(); toast("Preparing the pattern"); await new Promise(r=>setTimeout(r,30)); const pages=patternPages(px(q.w),px(q.h));
   try{ if(window.jspdf&&window.jspdf.jsPDF){ const doc=new window.jspdf.jsPDF({unit:"mm",format:[q.w,q.h],orientation:q.land?"landscape":"portrait"});
