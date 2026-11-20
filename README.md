@@ -26,7 +26,7 @@ No account and no download are needed. Both work on phones, tablets and computer
 - Cross Stitch it: tick stitches off as you sew, with a count of what is done and what is left
 - Shopping list: thread to buy for each colour, shown as the calculated length, the extra and the total, with skeins, plus the fabric size to cut
 - Save as an image with or without the grid, and save a printable pattern with the finished picture, a thread key, the shopping list and charts with centre marks, on A4, A3, A5, US Letter or US Legal paper, upright or sideways
-- Backup files to keep or send a design
+- Project files to keep or send a design
 - Six colour themes
 
 ## Thread colour converter

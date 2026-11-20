@@ -286,8 +286,8 @@ input[type=text],input[type=number],input[type=search],select{border:1px solid v
     <h3>Save</h3>
     <div class="mcard">
       <button class="mrow" id="mImage" type="button"><span class="chip mint"><svg aria-hidden="true" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="9" cy="10" r="1.6"></circle><path d="M21 16l-5-5-8 8"></path></svg></span><span><b>Save as image</b><small>A picture of the design</small></span></button>
-      <button class="mrow" id="mBackup" type="button"><span class="chip mint"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"></path><path d="M14 3v5h5M12 11v6M9.5 14.5L12 17l2.5-2.5"></path></svg></span><span><b>Save as backup</b><small>A file you can keep or send</small></span></button>
-      <button class="mrow" id="mRestore" type="button"><span class="chip mint"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><path d="M12 16v-5M9.5 13.5L12 11l2.5 2.5"></path></svg></span><span><b>Open the backup</b><small>Bring a saved design back</small></span></button>
+      <button class="mrow" id="mBackup" type="button"><span class="chip mint"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"></path><path d="M14 3v5h5M12 11v6M9.5 14.5L12 17l2.5-2.5"></path></svg></span><span><b>Save project</b><small>A file you can keep or send</small></span></button>
+      <button class="mrow" id="mRestore" type="button"><span class="chip mint"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><path d="M12 16v-5M9.5 13.5L12 11l2.5 2.5"></path></svg></span><span><b>Open project</b><small>Bring a saved design back</small></span></button>
       <button class="mrow" id="mPrint" type="button"><span class="chip mint"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M7 9V4h10v5"></path><rect x="4" y="9" width="16" height="8" rx="2"></rect><path d="M7 14h10v6H7z"></path></svg></span><span><b>Print the pattern</b><small>Choose the paper, then save it to print</small></span></button>
     </div>
     <h3 class="app-only">The Jolly Makery</h3>
@@ -383,8 +383,8 @@ input[type=text],input[type=number],input[type=search],select{border:1px solid v
 <section class="sheet" id="sheet-guard" hidden aria-label="Keep the current design?">
   <header><h2>Keep the current design?</h2><button class="btn" data-close type="button">Cancel</button></header>
   <div class="body">
-    <p>Starting something new replaces the design on screen. Save a backup file first if you want to keep it.</p>
-    <button class="btn primary" id="gSave" type="button">Save a backup, then continue</button>
+    <p>Starting something new replaces the design on screen. Save the project file first if you want to keep it.</p>
+    <button class="btn primary" id="gSave" type="button">Save the project, then continue</button>
     <button class="btn" id="gSkip" type="button">Continue without saving</button>
   </div>
 </section>
@@ -1693,9 +1693,9 @@ $("phUse").onclick=function(){ if(!phRes){ toast("Choose a photo first"); return
 /* ask before replacing a design that has stitches */
 function guard(fn){ if(counts(P)[0]===P.cells.length&&!P.lines.length){ fn(); return; } pending=fn; openSheet("sheet-guard"); }
 $("gSkip").onclick=()=>{ const f=pending; pending=null; closeSheet(); if(f) f(); };
-$("gSave").onclick=async()=>{ const r=await offer(fileBase()+"-backup.json",JSON.stringify(pack(P)));
+$("gSave").onclick=async()=>{ const r=await offer(fileBase()+"-project.json",JSON.stringify(pack(P)));
   if(r==="saved"){ const f=pending; pending=null; closeSheet(); if(f) f(); }
-  else if(r==="declined") toast("Not saved"); else toast("The backup could not be saved here"); };
+  else if(r==="declined") toast("Not saved"); else toast("The project file could not be saved here"); };
 
 /* trace a photo: a picture shown under the grid as a guide */
 let ovT=0;
@@ -2032,13 +2032,17 @@ function patternPages(PW,PHt){ PW=PW||1654; PHt=PHt||2339; const M=110, U=PW-2*M
   if(shop.rows.length){ const cx=[0.52,0.68,0.84,1].map(f=>M+U*f), cw=U*0.16-14;
     const shead=()=>{ g.font="bold 28px sans-serif"; g.fillText("DMC",M,y); g.fillText("Used for",M+U*0.14,y,U*0.2); g.textAlign="right"; ["Calculated",shop.opt.extra?"Extra "+shop.opt.extra+"%":"Extra","Total","Skeins"].forEach((t,k)=>g.fillText(t,cx[k],y,cw)); g.textAlign="left"; y+=16; g.fillRect(M,y,U,2); y+=44; };
     if(y>PHt-420){ foot(g); g=page(); y=M+30; } else y+=50;
-    g.font="bold 44px sans-serif"; g.fillText("Thread to buy",M,y); y+=70; shead();
+    g.font="bold 44px sans-serif"; g.fillText("Thread to buy",M,y); y+=56;
+    /* the strands, stated plainly before the amounts: a skein is 8 metres of thread made of 6 strands, and only some of them go in the needle */
+    { const sn=n=>n+(n===1?" strand":" strands"), hasX=shop.rows.some(r=>r.kind!=="lines"), hasL=shop.rows.some(r=>r.kind==="lines");
+      g.font="bold 28px sans-serif"; g.fillText([hasX?"Cross stitch: "+sn(shop.opt.st)+".":"",hasL?"Backstitch: "+sn(shop.opt.bs)+".":"","One skein is 8 metres of 6 strands."].filter(Boolean).join(" "),M,y,U); y+=64; }
+    shead();
     shop.rows.forEach(r=>{ if(y>PHt-140){ foot(g); g=page(); y=M+40; shead(); }
       g.font="30px sans-serif"; g.fillText(r.num,M,y); g.fillText(r.kind==="lines"?"backstitch":r.amount+(r.amount===1?" stitch":" stitches"),M+U*0.14,y,U*0.2);
       g.textAlign="right"; [mTxt(r.calc),"+ "+mTxt(r.extra),mTxt(r.total),r.first?String(r.skeins):""].forEach((t,k)=>g.fillText(t,cx[k],y,cw)); g.textAlign="left"; y+=52; });
     g.fillRect(M,y-30,U,2); y+=14; g.font="bold 30px sans-serif"; g.fillText("Skeins to buy: "+shop.totalSkeins,M,y); y+=56;
     g.font="26px sans-serif"; g.fillStyle="#333";
-    ["Cross stitches use "+shop.opt.st+(shop.opt.st===1?" strand":" strands")+" and backstitch uses "+shop.opt.bs+(shop.opt.bs===1?" strand.":" strands.")].concat(stx.how,["These figures are estimates. Thread use varies with how you stitch."])
+    stx.how.concat(["These figures are estimates. Thread use varies with how you stitch."])
       .forEach(par=>wrapText(g,par,U).forEach(t=>{ if(y>PHt-110){ foot(g); g=page(); y=M+40; g.font="26px sans-serif"; g.fillStyle="#333"; } g.fillText(t,M,y); y+=36; }));
     g.fillStyle="#000"; }
   foot(g);
@@ -2092,10 +2096,10 @@ $("prGo").onclick=async()=>{ const q=paperNow(), px=v=>Math.round(v/25.4*200); c
       if(!report(await offer(fileBase()+"-pattern.pdf",doc.output("blob")))) return; } }catch(e){}
   showPics(pages); };
 
-$("mBackup").onclick=async()=>{ closeSheet(); const txt=JSON.stringify(pack(P)); if(!report(await offer(fileBase()+"-backup.json",txt))) return; toast("Backup files cannot be saved in this view"); };
+$("mBackup").onclick=async()=>{ closeSheet(); const txt=JSON.stringify(pack(P)); if(!report(await offer(fileBase()+"-project.json",txt))) return; toast("Project files cannot be saved in this view"); };
 $("mRestore").onclick=()=>$("restoreFile").click();
 $("restoreFile").onchange=e=>{ const f=e.target.files[0]; e.target.value=""; if(!f) return; const rd=new FileReader();
-  rd.onload=()=>{ let p; try{ p=unpack(JSON.parse(rd.result)); p.id=null; }catch(err){ toast("That file is not a backup from this tool"); return; }
+  rd.onload=()=>{ let p; try{ p=unpack(JSON.parse(rd.result)); p.id=null; }catch(err){ toast("That file is not a project file from this tool"); return; }
     guard(()=>{ setProject(p); closeSheet(); toast("Opened "+p.name); }); };
   rd.onerror=()=>toast("The file could not be read"); rd.readAsText(f); };
 
