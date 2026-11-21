@@ -268,7 +268,7 @@ input[type=text],input[type=number],input[type=search],select{border:1px solid v
     </div>
     <h3>Edit</h3>
     <div class="mcard">
-      <button class="mrow" id="mSetup" type="button"><span class="chip lav"><svg aria-hidden="true" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="1"></rect><path d="M4 9.3h16M4 14.7h16M9.3 4v16M14.7 4v16"></path></svg></span><span><b>Fabric and size</b><small>Aida count, colour, size and name</small></span></button>
+      <button class="mrow" id="mSetup" type="button"><span class="chip lav"><svg aria-hidden="true" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="1"></rect><path d="M4 9.3h16M4 14.7h16M9.3 4v16M14.7 4v16"></path></svg></span><span><b>Edit project</b><small>Name, size, fabric sheet and colour</small></span></button>
       <button class="mrow" id="mKey" type="button"><span class="chip lav"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"></path><circle cx="4.5" cy="6" r="1.2"></circle><circle cx="4.5" cy="12" r="1.2"></circle><circle cx="4.5" cy="18" r="1.2"></circle></svg></span><span><b>Threads used</b><small>Thread key, stitch counts, replace a colour</small></span></button>
       <button class="mrow" id="mText" type="button"><span class="chip lav"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 7V4h14v3M12 4v16M9 20h6"></path></svg></span><span><b>Add lettering</b><small>A name, a date or a short message</small></span></button>
       <button class="mrow" id="mSelect" type="button"><span class="chip lav"><svg aria-hidden="true" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"></rect><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"></path></svg></span><span><b>Copy or move a part</b><small>Repeat, mirror or turn part of the design</small></span></button>
@@ -405,8 +405,8 @@ input[type=text],input[type=number],input[type=search],select{border:1px solid v
   </div>
 </section>
 
-<section class="sheet" id="sheet-setup" hidden aria-label="Fabric and size">
-  <header><h2 id="fTitle">Fabric and size</h2><button class="btn" data-close type="button">Close</button></header>
+<section class="sheet" id="sheet-setup" hidden aria-label="Edit project">
+  <header><h2 id="fTitle">Edit project</h2><button class="btn" data-close type="button">Close</button></header>
   <div class="body">
     <label for="fName">Design name<input type="text" id="fName" maxlength="60"></label>
     <div class="row">
@@ -1938,7 +1938,7 @@ FABRICS.forEach(f=>{ const o=document.createElement("option"); o.value=f[0]; o.t
 function formVals(){ const cl=v=>Math.max(5,Math.min(300,Math.round(Number(v)||0))); return {name:$("fName").value.trim()||"Untitled",w:cl($("fW").value),h:cl($("fH").value),count:Number($("fCount").value),fabric:$("fFabric").value}; }
 function formSize(){ const f=formVals(); $("fSize").textContent="Finished size: "+sizeText(f.w,f.h,f.count)+". Sizes run from 5 to 300 stitches."; }
 ["fW","fH","fCount"].forEach(id=>$(id).addEventListener("input",formSize));
-function openSetup(isNew){ setupNew=isNew; $("fTitle").textContent=isNew?"New blank design":"Fabric and size"; $("fApply").textContent=isNew?"Start the design":"Apply to this design";
+function openSetup(isNew){ setupNew=isNew; $("fTitle").textContent=isNew?"New blank design":"Edit project"; $("fApply").textContent=isNew?"Start the design":"Apply to this design";
   $("fHint").textContent=isNew?"This opens an empty grid in the size you chose.":"Applying keeps your stitches. A smaller size trims from the right and bottom edges, and removes any line that reaches past the new edge.";
   $("fName").value=isNew?"My design":P.name; $("fW").value=isNew?60:P.w; $("fH").value=isNew?60:P.h; $("fCount").value=P.count; $("fFabric").value=P.fabric; formSize(); openSheet("sheet-setup"); }
 $("mSetup").onclick=()=>openSetup(false); $("mNew").onclick=()=>openSetup(true);
