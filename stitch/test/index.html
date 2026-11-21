@@ -320,9 +320,11 @@ input[type=text],input[type=number],input[type=search],select{border:1px solid v
     <button class="btn primary" id="phPick" type="button">Choose a photo</button>
     <input type="file" id="phFile" accept="image/*" hidden>
     <div class="row">
-      <label for="phW">Width in stitches<input type="number" id="phW" min="20" max="300" value="80" inputmode="numeric"></label>
-      <label for="phN">Thread colours<select id="phN"><option>6</option><option>8</option><option>12</option><option selected>16</option><option>24</option><option>32</option><option>48</option></select></label>
+      <label for="phW">Width in stitches<input type="number" id="phW" min="5" max="300" value="80" inputmode="numeric"></label>
+      <label for="phH">Height in stitches<input type="number" id="phH" min="5" max="300" inputmode="numeric"></label>
     </div>
+    <label for="phLock" style="flex-direction:row;align-items:center;gap:8px;font-weight:400"><input type="checkbox" id="phLock" checked style="width:20px;height:20px"> Keep the photo's shape</label>
+    <label for="phN">Thread colours, any number from 2 to 100<input type="number" id="phN" min="2" max="100" value="16" inputmode="numeric"></label>
     <label for="phWhite" style="flex-direction:row;align-items:center;gap:8px;font-weight:400"><input type="checkbox" id="phWhite" style="width:20px;height:20px"> Leave white areas as bare fabric</label>
     <p id="phInfo">The photo stays on your phone. Simple pictures with clear shapes and few colours convert best.</p>
     <canvas id="phPrev" hidden></canvas>
@@ -1689,15 +1691,20 @@ $("exCount").textContent=EXAMPLES.length+" ready-made designs";
 $("mExamples").onclick=()=>{ buildExamples(); $("exSearch").value=""; filterExamples(); openSheet("sheet-examples"); };
 
 /* photo to pattern */
-let phImg=null, phRes=null, phName="Photo pattern", phT=0;
+let phImg=null, phRes=null, phName="Photo pattern", phT=0, phEdit="w";
 function runPhoto(){ if(!phImg) return; const iw=phImg.naturalWidth, ih=phImg.naturalHeight; if(!iw||!ih) return;
-  let w=Math.max(20,Math.min(300,Math.round(Number($("phW").value)||80))), hh=Math.max(5,Math.round(w*ih/iw)); if(hh>300){ w=Math.max(5,Math.round(w*300/hh)); hh=300; }
+  /* width and height, 5 to 300 stitches each. With "Keep the photo's shape" ticked, the box typed in last leads and the other follows. Unticked, both are free and the photo is stretched to fit */
+  const cl=v=>Math.max(5,Math.min(300,Math.round(v))), lock=$("phLock").checked, vw=Number($("phW").value), vh=Number($("phH").value); let w, hh;
+  if(!lock){ w=cl(vw||80); hh=cl(vh||w*ih/iw); }
+  else if(phEdit==="h"&&vh>0){ hh=cl(vh); w=cl(hh*iw/ih); if(Math.round(hh*iw/ih)>300) hh=cl(300*ih/iw); $("phW").value=w; }
+  else { w=cl(vw||80); hh=cl(w*ih/iw); if(Math.round(w*ih/iw)>300) w=cl(300*iw/ih); $("phH").value=hh; }
+  const nCol=Math.max(2,Math.min(100,Math.round(Number($("phN").value)||16)));
   try{ const t=document.createElement("canvas"); t.width=w; t.height=hh; const g=t.getContext("2d",{willReadFrequently:true}); g.imageSmoothingEnabled=true; g.imageSmoothingQuality="high"; g.drawImage(phImg,0,0,w,hh);
-    const r=photoToPattern(g.getImageData(0,0,w,hh).data,w,hh,Number($("phN").value),$("phWhite").checked); phRes={w,h:hh,palette:r.palette,cells:r.cells};
+    const r=photoToPattern(g.getImageData(0,0,w,hh).data,w,hh,nCol,$("phWhite").checked); phRes={w,h:hh,palette:r.palette,cells:r.cells};
     const pv=$("phPrev"); pv.width=w; pv.height=hh; const pg=pv.getContext("2d"); pg.fillStyle=fabricHex(P.fabric); pg.fillRect(0,0,w,hh);
     for(let i=0;i<r.cells.length;i++){ const v=r.cells[i]; if(v){ pg.fillStyle=BY[r.palette[v-1]].hex; pg.fillRect(i%w,Math.floor(i/w),1,1); } }
     pv.hidden=false; $("phUse").hidden=false;
-    $("phInfo").textContent=w+" × "+hh+" stitches in "+r.palette.length+" DMC threads. Finished size on "+P.count+" count Aida: "+sizeText(w,hh,P.count)+".";
+    $("phInfo").textContent=w+" × "+hh+" stitches in "+r.palette.length+" DMC threads. Finished size on "+P.count+" count Aida: "+sizeText(w,hh,P.count)+"."+(lock?"":" The photo is stretched to this size.");
   }catch(e){ phRes=null; $("phInfo").textContent="That photo could not be converted. Try a different picture."; } }
 function queuePhoto(){ clearTimeout(phT); phT=setTimeout(runPhoto,250); }
 $("mPhoto").onclick=()=>openSheet("sheet-photo");
@@ -1707,7 +1714,7 @@ $("phFile").onchange=e=>{ const f=e.target.files[0]; e.target.value=""; if(!f) r
   img.onload=()=>{ phImg=img; runPhoto(); URL.revokeObjectURL(url); };
   img.onerror=()=>{ URL.revokeObjectURL(url); $("phInfo").textContent="This phone's browser could not open that file. Try a JPEG or PNG picture."; };
   img.src=url; };
-["phW","phN","phWhite"].forEach(id=>$(id).addEventListener("input",queuePhoto));
+["phW","phH","phLock","phN","phWhite"].forEach(id=>$(id).addEventListener("input",()=>{ if(id==="phW") phEdit="w"; else if(id==="phH") phEdit="h"; queuePhoto(); }));
 $("phUse").onclick=function(){ if(!phRes){ toast("Choose a photo first"); return; }
   const go=()=>{ const p=newProject(phName,phRes.w,phRes.h,P.count,P.fabric); p.palette=phRes.palette.slice(); p.cells=phRes.cells.slice(); p.cur=0; setProject(p); closeSheet(); toast("Pattern ready with "+p.palette.length+" threads"); };
   guard(go); };
