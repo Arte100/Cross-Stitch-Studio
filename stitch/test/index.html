@@ -1665,6 +1665,10 @@ function twoTap(btn,fn){ if(btn.dataset.armed){ delete btn.dataset.armed; btn.te
 document.querySelectorAll(".tools [data-tool]").forEach(b=>b.onclick=()=>{ setTool(b.dataset.tool); redraw(); if(b.dataset.tool==="line") toast("Drag from one corner to another"); });
 $("symBtn").onclick=$("symBtn2").onclick=()=>{ sym=!sym; $("symBtn").setAttribute("aria-pressed",sym?"true":"false"); $("symBtn2").setAttribute("aria-pressed",sym?"true":"false"); if(sym&&view.s*dpr<12) toast("Zoom in to see the symbols"); redraw(); };
 $("undo").onclick=doUndo; $("redo").onclick=doRedo;
+/* keyboard: Ctrl+Z is Undo, Ctrl+Y or Ctrl+Shift+Z is Redo (Cmd on a Mac). Not while typing in a box, and not while a sheet is open. It does what the buttons do, so it follows the same rules */
+document.addEventListener("keydown",e=>{ if(!(e.ctrlKey||e.metaKey)||e.altKey) return; const k=(e.key||"").toLowerCase(); if(k!=="z"&&k!=="y") return;
+  const t=e.target, tag=t&&t.tagName; if(tag==="INPUT"||tag==="TEXTAREA"||tag==="SELECT"||(t&&t.isContentEditable)) return; if(document.querySelector(".sheet:not([hidden])")) return;
+  const b=$(k==="y"||e.shiftKey?"redo":"undo"); e.preventDefault(); if(!b.disabled&&!b.hidden) b.click(); });
 $("menuBtn").onclick=()=>{ if(txt) endText(); if(sel) endSel(); renderSaved(); openSheet("sheet-menu"); };
 $("mFit").onclick=()=>{ closeSheet(); fit(); };
 
